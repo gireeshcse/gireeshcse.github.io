@@ -65,9 +65,12 @@ add&lt;&lt;&lt;1, 1&gt;&gt;&gt;(N, x, y);</code></pre><h3 id="memory-allocation-
 <li>Called in CPU code.</li>
 </ul>
 <p>Although CUDA kernel launches are asynchronous, all GPU-related tasks placed in one stream (which is the default behavior) are executed sequentially.</p>
-<pre><code>    kernel1&lt;&lt;&lt;X,Y&gt;&gt;&gt;(...); // kernel start execution, CPU continues to next statement
-    kernel2&lt;&lt;&lt;X,Y&gt;&gt;&gt;(...); // kernel is placed in queue and will start after kernel1 finishes, CPU continues to next statement
-    cudaMemcpy(...); // CPU blocks until memory is copied, memory copy starts only after kernel2 finishes</code></pre><p>using <strong>cudaDeviceSynchronize()</strong> is appropriate would be when you have several cudaStreams running, and you would like to have them exchange some information.</p>
+<pre><code>    // kernel start execution, CPU continues to next statement
+    kernel1&lt;&lt;&lt;X,Y&gt;&gt;&gt;(...); 
+    // kernel is placed in queue and will start after kernel1 finishes, CPU continues to next statement
+    kernel2&lt;&lt;&lt;X,Y&gt;&gt;&gt;(...);
+    // CPU blocks until memory is copied, memory copy starts only after kernel2 finishes 
+    cudaMemcpy(...); </code></pre><p>using <strong>cudaDeviceSynchronize()</strong> is appropriate would be when you have several cudaStreams running, and you would like to have them exchange some information.</p>
 <pre><code>// Wait for GPU to finish before accessing on host
 cudaDeviceSynchronize();</code></pre><h3 id="important-info">Important Info</h3>
 <ul>
