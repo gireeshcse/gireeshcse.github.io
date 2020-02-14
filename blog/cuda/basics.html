@@ -52,23 +52,46 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                            <h2 style="text-align: center;" class="widget_title">CUDA Posts</h2>
-                </div>
-            </div>
-            <div class="row">
-                    <div class="col-lg-4">
-                        <div class="blog_right_sidebar">
-                                <aside class="single_sidebar_widget popular_post_widget">
-                                    <div class="media post_item">
-                                        <div class="media-body">
-                                            <a href="basics.html"><h3>CUDA C++ :: Introduction</h3></a>
-                                            <p>13th Feb 2020</p>
-                                        </div>
-                                    </div>
-                                </aside>
-                        </div>
-                    </div>
-            </div>
+                            <h2 style="text-align: center;" class="widget_title">CUDA C++ :: Introduction</h2>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-lg-3  col-md-3">
+					<div class="blog_info text-right">
+						<div class="post_tag">
+							<a href="#">C++, </a>
+							<a class="active" href="index.html">CUDA</a>
+						</div>
+						<ul class="blog_meta list">
+							<li><a href="#">Gireesh<i class="lnr lnr-user"></i></a></li>
+							<li><a href="#">13 Feb, 2020<i class="lnr lnr-calendar-full"></i></a></li>
+							
+						</ul>
+						<h4>Credits</h4>
+						<ul class="blog_meta list">
+							<li><a target="_blank" href="https://devblogs.nvidia.com/even-easier-introduction-cuda/">Nvidia</a></li>
+							<li><a target="_blank" href="https://developer.nvidia.com/cuda-toolkit">CUDA Tool Kit</a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="col-lg-9 col-md-9 blog_details">
+					<h2>Introduction</h2>
+					<p class="excert">
+						CUDA C++ is just one of the ways we can create massively parallel applications with CUDA.
+						It lets us use the powerful C++ programming language to develop high performance algorithms accelerated 
+						by thousands of parallel threads running on GPUs.
+					</p>
+					<div id="myContent">
+					<iframe id="iframe" src = "./basics/sample.md.html"></iframe>
+					</div>
+					<p id="includedContent">
+						
+					</p>
+					<p>
+						
+					</p>
+				</div>
+			</div><!--Row-->
         </div>
     </section>
     <!--================Blog Area =================-->
@@ -111,6 +134,17 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 	<script src="../../js/jquery.ajaxchimp.min.js"></script>
 	<script src="../../js/mail-script.js"></script>
 	<script src="../../js/theme.js"></script>
+	<script>
+	
+		
+		var iframe = document.getElementById("iframe");
+    
+		// Adjusting the iframe height onload event
+		iframe.onload = function(){
+			iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+		}
+	
+	</script>
 </body>
 
 </html>

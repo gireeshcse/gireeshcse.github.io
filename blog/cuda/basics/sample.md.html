@@ -1,0 +1,23 @@
+<pre><code>__global__</code></pre><p>It tells CUDA c++ compiler that this function runs on the GPU and can be called from CPU Code.</p>
+<pre><code>/**
+* CUDA kernel function to add the elements of 2 arrays on the GPU
+*/
+__global__
+void add(int n, float *x, float *y)
+{
+    for(int i=0;i&lt;n;i++)
+    {
+        y[i] = x[i] + y[i];
+    }
+}</code></pre><h3 id="memory-allocation-in-c">Memory Allocation in C</h3>
+<h4 id="malloc">malloc()</h4>
+<ul>
+<li><p><strong>malloc()</strong> allocates memory block of given size (in bytes) and returns a pointer to the beginning of the block. </p>
+</li>
+<li><p><strong>malloc()</strong> doesn’t initialize the allocated memory.</p>
+<p>  void* malloc(size_t size); </p>
+</li>
+</ul>
+<h4 id="calloc">calloc()</h4>
+<p><strong>calloc()</strong> allocates the memory and also initializes the allocated memory block to zero.</p>
+<pre><code>void* calloc(size_t num, size_t size);</code></pre>
