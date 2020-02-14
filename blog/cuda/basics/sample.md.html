@@ -9,15 +9,172 @@ void add(int n, float *x, float *y)
     {
         y[i] = x[i] + y[i];
     }
-}</code></pre><h3 id="memory-allocation-in-c">Memory Allocation in C</h3>
+}
+
+// To launch the add() kernel, which invokes it on the GPU
+add&lt;&lt;&lt;1, 1&gt;&gt;&gt;(N, x, y);</code></pre><h3 id="memory-allocation-in-c">Memory Allocation in C</h3>
 <h4 id="malloc">malloc()</h4>
 <ul>
 <li><p><strong>malloc()</strong> allocates memory block of given size (in bytes) and returns a pointer to the beginning of the block. </p>
 </li>
 <li><p><strong>malloc()</strong> doesn’t initialize the allocated memory.</p>
-<p>  void* malloc(size_t size); </p>
-</li>
+<pre><code>  void* malloc(size_t size);
+  arr = (int*)malloc(5 * sizeof(int)); // 5*4bytes = 20 bytes  </code></pre></li>
 </ul>
 <h4 id="calloc">calloc()</h4>
-<p><strong>calloc()</strong> allocates the memory and also initializes the allocated memory block to zero.</p>
-<pre><code>void* calloc(size_t num, size_t size);</code></pre>
+<ul>
+<li><p><strong>calloc()</strong> allocates the memory and also initializes the allocated memory block to zero.</p>
+<pre><code>  void* calloc(size_t num, size_t size);
+  arr = (int*)calloc(5, sizeof(int));</code></pre></li>
+</ul>
+<p><strong>Return Value:</strong> </p>
+<p>After successful allocation in malloc() and calloc(), a <strong>pointer</strong> to the block of memory is returned otherwise <strong>NULL</strong> value is returned which indicates the failure of allocation.</p>
+<pre><code>    // Deallocates memory previously allocated 
+    free(arr); </code></pre><h3 id="memory-allocation-in-c-1">Memory Allocation in C++</h3>
+<p>C++ supports <strong>calloc()</strong> and <strong>malloc()</strong> functions and also has two operators <strong>new</strong> and <strong>delete</strong> that perform the task of allocating and freeing the memory in a better and easier way.</p>
+<pre><code>    int N = 1&lt;&lt;20; // 1M elements
+    float *x = new float[N];
+    int *p = new int(25); // Intialize with 25
+
+    int *q = NULL; 
+    q = new int;   
+
+    // Free memory
+    delete [] x;
+    delete p;
+    delete q;</code></pre><h3 id="memory-allocation-in-cuda">Memory Allocation in CUDA</h3>
+<p><strong>Unified Memory</strong></p>
+<ul>
+<li><p>Single memory space accessible by all GPU&#39;s and CPU&#39;s in our system.    </p>
+<pre><code>  // Allocate Unified Memory -- accessible from CPU or GPU
+  float *x, *y;
+  cudaMallocManaged(&amp;x, N*sizeof(float));
+  cudaMallocManaged(&amp;y, N*sizeof(float));
+
+  // Free memory
+  cudaFree(x);
+  cudaFree(y);</code></pre></li>
+<li><p><strong>race condition</strong> can occur since multiple parallel threads would both read and write the same locations.So care has to be taken otherwise the output may be inapproriate.</p>
+</li>
+</ul>
+<h3 id="cudadevicesynchronize">cudaDeviceSynchronize()</h3>
+<ul>
+<li>Blocks until the device has completed all preceding requested tasks.Otherwise CPU continues to execute remaining while GPU is computing.</li>
+<li>returns an error if one of the preceding tasks has failed</li>
+<li>Wait for compute device to finish.</li>
+<li>Called in CPU code.</li>
+</ul>
+<p>Although CUDA kernel launches are asynchronous, all GPU-related tasks placed in one stream (which is the default behavior) are executed sequentially.</p>
+<pre><code>    kernel1&lt;&lt;&lt;X,Y&gt;&gt;&gt;(...); // kernel start execution, CPU continues to next statement
+    kernel2&lt;&lt;&lt;X,Y&gt;&gt;&gt;(...); // kernel is placed in queue and will start after kernel1 finishes, CPU continues to next statement
+    cudaMemcpy(...); // CPU blocks until memory is copied, memory copy starts only after kernel2 finishes</code></pre><p>using <strong>cudaDeviceSynchronize()</strong> is appropriate would be when you have several cudaStreams running, and you would like to have them exchange some information.</p>
+<pre><code>// Wait for GPU to finish before accessing on host
+cudaDeviceSynchronize();</code></pre><h3 id="important-info">Important Info</h3>
+<ul>
+<li>CUDA files have the file extension .cu</li>
+<li><strong>nvcc</strong>, the CUDA C++ compiler.</li>
+</ul>
+<h4 id="compilation">Compilation</h4>
+<pre><code>nvcc add.cu -o add_cuda</code></pre><h4 id="profiling">Profiling</h4>
+<pre><code>nvprof ./add_cuda</code></pre><h3 id="threads">Threads</h3>
+<p><strong>Execution configuration</strong>: It tells how many parallel threads to use.</p>
+<p><code>&lt;&lt;&lt;no_of_thread_blocks,threads_in_thread_block&gt;&gt;&gt;</code></p>
+<h4 id="important">Important</h4>
+<ul>
+<li><strong>gridDim.x</strong>     : No of blocks in the grid.</li>
+<li><strong>blockIdx.x</strong>    : index of current thread block.</li>
+<li><strong>blockDim.x</strong>    : No of threads in a block(current exection thread block)</li>
+<li><strong>threadIdx.x</strong>   : index of current thread in current block</li>
+</ul>
+<h4 id="examples">Examples</h4>
+<pre><code>    // For 256 parallel threads.
+
+    add&lt;&lt;&lt;1, 256&gt;&gt;&gt;(N, x, y);
+    __global__
+    void add(int n, float *x, float *y)
+    {
+    int index = threadIdx.x;
+    int stride = blockDim.x;// 256
+    for (int i = index; i &lt; n; i += stride)
+        y[i] = x[i] + y[i];
+    }</code></pre><p>CUDA GPUs have many parallel processors grouped into Streaming Multiprocessors, or SMs. Each SM can run multiple concurrent thread blocks.</p>
+<pre><code>    int blockSize = 256;
+    int numBlocks = (N + blockSize - 1) / blockSize;
+    add&lt;&lt;&lt;numBlocks, blockSize&gt;&gt;&gt;(N, x, y);</code></pre><p>index = blockIdx.x * blockDim.x + threadIdx.x;</p>
+<p>index = 2 * 256 + 3 = 515</p>
+<pre><code>    __global__
+    void add(int n, float *x, float *y)
+    {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x; // total number of threads in the grid
+    for (int i = index; i &lt; n; i += stride)
+        y[i] = x[i] + y[i];
+    }</code></pre><h3 id="scalability-and-thread-use">Scalability and Thread Use</h3>
+<p>No.of blocks - Multiple of number of Streaming Multiprocessors (SMs) on the device to balance the utilization.</p>
+<pre><code>int nDevices;
+cudaGetDeviceCount(&amp;nDevices);
+
+int numSMs;
+cudaDeviceGetAttribute(&amp;numSMs,cudaDevAttrMultiProcessorCount,deviceId);
+add&lt;&lt;&lt;32*numSMs,256&gt;&gt;&gt;(1&lt;&lt;20,x,y);</code></pre><p>Serial Host Implementation (Generally for Debugging)</p>
+<pre><code>add&lt;&lt;&lt;1,1&gt;&gt;&gt;(1&lt;&lt;20,x,y);</code></pre><h3 id="querying-device-properties">Querying device properties</h3>
+<pre><code>int nDevices,i,numSMs;
+cudaGetDeviceCount(&amp;nDevices);
+for(i=0; i&lt;nDevices; i++){
+
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&amp;prop,i);
+    cudaDeviceGetAttribute(&amp;numSMs,cudaDevAttrMultiProcessorCount,i);
+    cout &lt;&lt; &quot;\n&quot; &lt;&lt; prop.name &lt;&lt; &quot;\n Clock Rate: &quot; &lt;&lt; prop.memoryClockRate
+         &lt;&lt; &quot;\n MemoryBusWidth: &quot; &lt;&lt; prop.memoryBusWidth &lt;&lt; &quot;\n Num of SMs: &quot; &lt;&lt; numSMs &lt;&lt; &quot;\n\n&quot;;
+
+}</code></pre><h3 id="caliculating-total-sms-in-a-system">Caliculating total SMs in a system.</h3>
+<pre><code>int numSMs,nDevices,totalSMs = 0;
+cudaGetDeviceCount(&amp;nDevices);
+for(i = 0; i &lt; nDevices;i++)
+{
+    cudaDeviceGetAttribute(&amp;numSMs,cudaDevAttrMultiProcessorCount,i);
+    totalSMs += numSMs;    
+}
+std::cout &lt;&lt; &quot;\n Total SMS &quot; &lt;&lt; totalSMs</code></pre><h3 id="hardware-implementation">Hardware Implementation</h3>
+<p>The NVIDIA GPU architecture is built around a scalable array of multithreaded Streaming Multiprocessors (SMs). When a CUDA program on the host CPU invokes a kernel grid, the blocks of the grid are enumerated and distributed to multiprocessors with available execution capacity. The threads of a thread block execute concurrently on one multiprocessor, and multiple thread blocks can execute concurrently on one multiprocessor. As thread blocks terminate, new blocks are launched on the vacated multiprocessors.</p>
+<h3 id="wrap-size">Wrap Size</h3>
+<p>Warp size is the number of threads in a warp.
+The block of threads is actually divided into sub-blocks called &quot;warps&quot;.</p>
+<h3 id="device-info">Device Info</h3>
+<table>
+<thead>
+<tr>
+<th align="right">Device</th>
+<th align="right">Compute Capability</th>
+<th align="center">Micro-architecture</th>
+<th align="center">Wrap Size</th>
+<th align="center">SMs</th>
+<th align="center">Maximum number of threads per block</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">Tesla K40</td>
+<td align="right">3.5</td>
+<td align="center">Kepler</td>
+<td align="center">32</td>
+<td align="center">15</td>
+<td align="center">1024</td>
+</tr>
+<tr>
+<td align="right">GeForce940M</td>
+<td align="right">5.0</td>
+<td align="center">Maxwell</td>
+<td align="center">32</td>
+<td align="center"></td>
+<td align="center">1024</td>
+</tr>
+<tr>
+<td align="right"></td>
+<td align="right"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
