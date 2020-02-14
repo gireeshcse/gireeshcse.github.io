@@ -83,9 +83,12 @@ C++ supports **calloc()** and **malloc()** functions and also has two operators 
 
 Although CUDA kernel launches are asynchronous, all GPU-related tasks placed in one stream (which is the default behavior) are executed sequentially.
 
-        kernel1<<<X,Y>>>(...); // kernel start execution, CPU continues to next statement
-        kernel2<<<X,Y>>>(...); // kernel is placed in queue and will start after kernel1 finishes, CPU continues to next statement
-        cudaMemcpy(...); // CPU blocks until memory is copied, memory copy starts only after kernel2 finishes
+        // kernel start execution, CPU continues to next statement
+        kernel1<<<X,Y>>>(...); 
+        // kernel is placed in queue and will start after kernel1 finishes, CPU continues to next statement
+        kernel2<<<X,Y>>>(...);
+        // CPU blocks until memory is copied, memory copy starts only after kernel2 finishes 
+        cudaMemcpy(...); 
 
 using **cudaDeviceSynchronize()** is appropriate would be when you have several cudaStreams running, and you would like to have them exchange some information.
 
@@ -181,7 +184,7 @@ Serial Host Implementation (Generally for Debugging)
 
 	}
 
-    
+
 ### Caliculating total SMs in a system.
 
     int numSMs,nDevices,totalSMs = 0;
