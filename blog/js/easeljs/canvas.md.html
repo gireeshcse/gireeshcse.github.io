@@ -1,0 +1,14 @@
+<h4 id="basics-of-canvas">Basics of Canvas</h4>
+<pre><code>&lt;canvas&gt;&lt;/canvas&gt;</code></pre><ul>
+<li><p>Requires closing tag.</p>
+</li>
+<li><p>Default size 300 X 150 (Width X Height)</p>
+</li>
+<li><p>width and height properties are important(Not CSS height and Width)</p>
+<pre><code>  var canvas = document.getElementById(&#39;canvas&#39;);
+  var context = canvas.getContext(&#39;2d&#39;); // d is small letter
+  context.fillStyle = rgba(0,0,200,0.5);
+  context.fillRect(10,10,50,50);
+  context.fillStyle = rgba(200,0,0,0.5);
+  context.fillRect(30,30,50,50);</code></pre></li>
+</ul>
