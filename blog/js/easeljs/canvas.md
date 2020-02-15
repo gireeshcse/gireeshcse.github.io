@@ -90,6 +90,73 @@ The  arc is tangential to both segments
     },false);
     img.src = "url_of_image";
 
+*Note*: false(default) - The event handler is executed in the bubbling phase. WHen *true* executed in the capturing phase.
 
+
+### Transformations
+
+**save()**
+
+saves the entire state of the canvas.
+
+**restore()**
+
+restores the most recently saved canvas state.
+
+States stored are
+
+* strokeStyle, fillStyle, globalAlpha, lineWidth, lineCap, lineJoin, miterLimit, lineDashOffset, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, globalCompositeOperation, font, textAlign, textBaseline, direction, imageSmoothingEnabled.
+* translate,rotate,scale.
+* clipping path
+
+**translate(x,y)**
+
+* Moves canvas and its origin on the grid.
+* x is horizontal distance & y is vertical distance
+
+            contextImg.save(); //save state
+			contextImg.translate(275,125);//move origin to 200,100
+			contextImg.fillRect(0,0,25,25);
+			contextImg.restore();//restore the origin to (0,0)
+			contextImg.fillRect(0,0,25,25);
+
+**rotate(angle)**
+
+* used to rotate(clockwise) canvas around the current origin.
+* angle in radians
+
+            contextImg.save(); //save state
+			contextImg.fillStyle = 'rgba(200,0,0,0.5)';
+			contextImg.rotate(15 * (Math.PI/180));//move origin to 200,100
+			contextImg.fillRect(270,-65,25,25);
+			contextImg.fillRect(10,0,25,25);
+			contextImg.restore();//restore the origin to (0,0)
+
+**scale(x, y)**
+
+* Used to increase or decrease the units in our canvas grid.
+* < 1 reduces , > 1 increases, 1 same size. 
+* negative numbers axis mirroring
+
+To create Cartesian coordinate system with the origin in the bottom left corner
+
+* translate(0,canvas.height); 
+* scale(1,-1);
+
+
+            var canvas_scale = document.getElementById('canvas_scale');
+			var ctx = canvas_scale.getContext('2d');
+			ctx.save();
+			ctx.scale(10, 3);
+			ctx.fillRect(1, 10, 10, 10);
+			ctx.restore();
+			
+			ctx.fillStyle = 'rgba(200,0,0,0.5)';
+			ctx.fillRect(1, 10, 10, 10);
+
+			// mirror horizontally
+			ctx.scale(-1, 1);
+			ctx.font = '48px serif';
+			ctx.fillText('INDIA', -135, 120);
 
 

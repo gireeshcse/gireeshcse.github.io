@@ -1,1 +1,63 @@
 <h3 id="about-easeljs">About EaselJS</h3>
+<ul>
+<li>In EaselJs a <strong>Stage</strong> is root level container for <em>display list</em>.</li>
+<li>It wraps a CANVAS element and adds <strong>DiplayObject</strong> intances as children.</li>
+<li>Supports<ul>
+<li><strong>Bitmap</strong>(Images)</li>
+<li><strong>Shape</strong> and <strong>Graphics</strong> (Vector Graphics)</li>
+<li>Animated bitmaps using <strong>SpriteSheet</strong> and <strong>Sprite</strong></li>
+<li>Simple text instances using <strong>Text</strong></li>
+<li>Containers that hold oter DisplayObjects using <strong>Container</strong></li>
+<li>Control HTML DOM elements using <strong>DOMElement</strong></li>
+</ul>
+</li>
+</ul>
+<p><strong>Note</strong>: All display objects can be added to the stage as children, or drawn to a canvas directly.</p>
+<h3 id="example-">Example ()</h3>
+<pre><code>    &lt;script src=&quot;https://code.createjs.com/1.0.0/easeljs.min.js&quot;&gt;&lt;/script&gt;
+
+
+    //Create a stage by getting a reference to the canvas
+    var stage = new createjs.Stage(&quot;demoCanvas&quot;);
+
+    //Create a Shape DisplayObject.
+    circle = new createjs.Shape();
+    circle.graphics.beginFill(&quot;red&quot;).drawCircle(0, 0, 40);
+
+    //Set position of Shape instance.
+    circle.x = circle.y = 50;
+
+    //Add Shape instance to stage display list.
+    stage.addChild(circle);
+
+    //Update stage will render next frame
+    stage.update();
+
+    displayObject.addEventListener(&quot;click&quot;, handleClick);
+
+    function handleClick(event){
+        // Click happenened
+    }
+
+    displayObject.addEventListener(&quot;mousedown&quot;, handlePress);
+
+    function handlePress(event) {
+        // A mouse press happened.
+        // Listen for mouse move while the mouse is down:
+        event.addEventListener(&quot;mousemove&quot;, handleMove);
+    }
+
+    function handleMove(event) {
+
+    }
+
+     //Update stage will render next frame
+     createjs.Ticker.addEventListener(&quot;tick&quot;, handleTick);
+
+    function handleTick() {
+    //Circle will move 10 units to the right.
+        circle.x += 10;
+        //Will cause the circle to wrap back
+        if (circle.x &gt; stage.canvas.width) { circle.x = 0; }
+        stage.update();
+    }</code></pre>

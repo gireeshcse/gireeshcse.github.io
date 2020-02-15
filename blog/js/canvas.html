@@ -92,7 +92,14 @@
                         <canvas id="canvas"></canvas>
 					</div>
 					<div style="text-align: center;">
-                        <canvas id="canvas_image"></canvas>
+						<canvas id="canvas_image"></canvas>
+						<p>Image Canvas</p>
+					</div>   
+					
+					<div style="text-align: center;">
+						
+						<canvas id="canvas_scale"></canvas>
+						<p>Scaling Canvas</p>
                     </div>   
                     
 					
@@ -212,6 +219,34 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 			},false);
 			img.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/India_%28orthographic_projection%29.svg/500px-India_%28orthographic_projection%29.svg.png";
 
+			contextImg.save(); //save state
+			contextImg.translate(275,125);//move origin to 200,100
+			contextImg.fillRect(0,0,25,25);
+			contextImg.restore();//restore the origin to (0,0)
+			contextImg.fillRect(0,0,25,25);
+
+			contextImg.save(); //save state
+			contextImg.fillStyle = 'rgba(200,0,0,0.5)';
+			contextImg.rotate(15 * (Math.PI/180));//move origin to 200,100
+			contextImg.fillRect(270,-65,25,25);
+			contextImg.fillRect(10,0,25,25);
+			contextImg.restore();//restore the origin to (0,0)
+
+			//scaling
+			var canvas_scale = document.getElementById('canvas_scale');
+			var ctx = canvas_scale.getContext('2d');
+			ctx.save();
+			ctx.scale(10, 3);
+			ctx.fillRect(1, 10, 10, 10);
+			ctx.restore();
+
+			ctx.fillStyle = 'rgba(200,0,0,0.5)';
+			ctx.fillRect(1, 10, 10, 10);
+
+			// mirror horizontally
+			ctx.scale(-1, 1);
+			ctx.font = '48px serif';
+			ctx.fillText('INDIA', -135, 120);
         });
 	</script>
 </body>

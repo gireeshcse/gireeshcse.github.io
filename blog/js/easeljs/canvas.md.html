@@ -83,4 +83,63 @@ var img = new Image();
 img.addEventListener(&#39;load&#39;,function(){
     contextImg.drawImage(img,0,0,300,150);
 },false);
-img.src = &quot;url_of_image&quot;;</code></pre>
+img.src = &quot;url_of_image&quot;;</code></pre><p><em>Note</em>: false(default) - The event handler is executed in the bubbling phase. WHen <em>true</em> executed in the capturing phase.</p>
+<h3 id="transformations">Transformations</h3>
+<p><strong>save()</strong></p>
+<p>saves the entire state of the canvas.</p>
+<p><strong>restore()</strong></p>
+<p>restores the most recently saved canvas state.</p>
+<p>States stored are</p>
+<ul>
+<li>strokeStyle, fillStyle, globalAlpha, lineWidth, lineCap, lineJoin, miterLimit, lineDashOffset, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, globalCompositeOperation, font, textAlign, textBaseline, direction, imageSmoothingEnabled.</li>
+<li>translate,rotate,scale.</li>
+<li>clipping path</li>
+</ul>
+<p><strong>translate(x,y)</strong></p>
+<ul>
+<li><p>Moves canvas and its origin on the grid.</p>
+</li>
+<li><p>x is horizontal distance &amp; y is vertical distance</p>
+<pre><code>      contextImg.save(); //save state
+      contextImg.translate(275,125);//move origin to 200,100
+      contextImg.fillRect(0,0,25,25);
+      contextImg.restore();//restore the origin to (0,0)
+      contextImg.fillRect(0,0,25,25);</code></pre></li>
+</ul>
+<p><strong>rotate(angle)</strong></p>
+<ul>
+<li><p>used to rotate(clockwise) canvas around the current origin.</p>
+</li>
+<li><p>angle in radians</p>
+<pre><code>      contextImg.save(); //save state
+      contextImg.fillStyle = &#39;rgba(200,0,0,0.5)&#39;;
+      contextImg.rotate(15 * (Math.PI/180));//move origin to 200,100
+      contextImg.fillRect(270,-65,25,25);
+      contextImg.fillRect(10,0,25,25);
+      contextImg.restore();//restore the origin to (0,0)</code></pre></li>
+</ul>
+<p><strong>scale(x, y)</strong></p>
+<ul>
+<li>Used to increase or decrease the units in our canvas grid.</li>
+<li>&lt; 1 reduces , &gt; 1 increases, 1 same size. </li>
+<li>negative numbers axis mirroring</li>
+</ul>
+<p>To create Cartesian coordinate system with the origin in the bottom left corner</p>
+<ul>
+<li>translate(0,canvas.height); </li>
+<li>scale(1,-1);</li>
+</ul>
+<pre><code>        var canvas_scale = document.getElementById(&#39;canvas_scale&#39;);
+        var ctx = canvas_scale.getContext(&#39;2d&#39;);
+        ctx.save();
+        ctx.scale(10, 3);
+        ctx.fillRect(1, 10, 10, 10);
+        ctx.restore();
+
+        ctx.fillStyle = &#39;rgba(200,0,0,0.5)&#39;;
+        ctx.fillRect(1, 10, 10, 10);
+
+        // mirror horizontally
+        ctx.scale(-1, 1);
+        ctx.font = &#39;48px serif&#39;;
+        ctx.fillText(&#39;INDIA&#39;, -135, 120);</code></pre>
