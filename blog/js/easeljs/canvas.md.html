@@ -7,8 +7,80 @@
 <li><p>width and height properties are important(Not CSS height and Width)</p>
 <pre><code>  var canvas = document.getElementById(&#39;canvas&#39;);
   var context = canvas.getContext(&#39;2d&#39;); // d is small letter
-  context.fillStyle = rgba(0,0,200,0.5);
+  context.fillStyle = &quot;rgba(0,0,200,0.5)&quot;; // Quotes are required
   context.fillRect(10,10,50,50);
-  context.fillStyle = rgba(200,0,0,0.5);
+  context.fillStyle = &quot;rgba(200,0,0,0.5)&quot;;
   context.fillRect(30,30,50,50);</code></pre></li>
+<li><p>Canvas Uses grid system which starts with (0,0)</p>
+</li>
+<li><p>1 Unit =  1 Pixel</p>
+</li>
+<li><p>CANVAS only supports rectangles and paths(list of points connected by lines)</p>
+</li>
+<li><p><strong>fillRect</strong> Filled Rectangle</p>
+</li>
+<li><p><strong>strokeRect</strong> Rectangular outline.</p>
+</li>
+<li><p><strong>clearRect</strong> clears specified rectangular area.(transparent)</p>
+</li>
+<li><p><strong>beginPath()</strong> creates new path</p>
+</li>
+<li><p><strong>closePath</strong></p>
+</li>
+<li><p><strong>stroke()</strong> draws otline </p>
+</li>
+<li><p><strong>fill()</strong> draws a solid shape by filling the paths content area.</p>
+</li>
+<li><p><strong>lineTo</strong> draws a line from current drawing position specified bt x and y.</p>
+</li>
 </ul>
+<p><strong>Triangle</strong></p>
+<pre><code>context.beginPath();
+context.moveTo(100,50);
+context.lineTo(200,75);
+context.lineTo(200,25);
+// Any open shapes are closed automatically when fill() is called. No need to call closePath()
+context.fill(); </code></pre><p><strong>arc(x,y,radius,startAngle,endAngle,antiClockwise)</strong></p>
+<ul>
+<li><p>Center - x,y</p>
+</li>
+<li><p>antiClockwise - boolean(true/false)
+Angles have to be given in radians 
+radian = ( Math.PI / 180 ) * degrees</p>
+<pre><code>      var startAngle = 0 * (Math.PI/180);
+      var endAngle = 360 * (Math.PI/180);
+      context.beginPath();
+      context.arc(100,100,50,startAngle,endAngle,false);
+      //Important to draw otline not even closePath draws the arc
+      context.stroke();</code></pre></li>
+</ul>
+<p><strong>arcTo(x1,y1,x2,y2,radius)</strong></p>
+<p>The  arc is tangential to both segments</p>
+<pre><code>        context.beginPath();
+        context.strokeStyle = &#39;black&#39;;
+        context.lineWidth = 5;
+        // 1st Segment (200,20) &amp; (200,130)
+        // 2nd segment (50,20) &amp; (200,130)
+        context.moveTo(200, 20);
+        context.arcTo(200,130, 50,20, 40);
+        context.stroke();</code></pre><p><strong>rect(x,y,width,height)</strong></p>
+<pre><code>context.beginPath();
+context.rect(250,10,50,50);
+context.fill();</code></pre><p><strong>fillText(text,x,y[,maxWidth])</strong></p>
+<pre><code>context.font = &#39;12px serif&#39;;
+context.fillText(&#39;(100,100)&#39;,100,100);</code></pre><p><strong>Loading image</strong></p>
+<pre><code>context.drawImage(image,x,y);
+context.drawImage(image,x,y,width,height);// For scaling image
+// Geting somepart of the image loading it on to the canvas
+drawImage(image,sourceX,sourceY,destinationX,destinationY,width,height);
+
+
+// Example
+var canvasImg = document.getElementById(&#39;canvas_image&#39;);
+var contextImg = canvasImg.getContext(&#39;2d&#39;);
+
+var img = new Image();
+img.addEventListener(&#39;load&#39;,function(){
+    contextImg.drawImage(img,0,0,300,150);
+},false);
+img.src = &quot;url_of_image&quot;;</code></pre>

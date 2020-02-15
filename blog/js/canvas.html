@@ -58,14 +58,14 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                            <h2 style="text-align: center;" class="widget_title">EaselJS :: Introduction</h2>
+                            <h2 style="text-align: center;" class="widget_title">Canvas</h2>
 				</div>
 			</div>
 			<div class="row">
 				<div class="col-lg-3  col-md-3">
 					<div class="blog_info text-right">
 						<div class="post_tag">
-                            <a href="#">EaselJS, </a>
+                            <a href="#">Canvas, </a>
 							<a class="active" href="index.html">JS</a>
 						</div>
 						<ul class="blog_meta list">
@@ -74,33 +74,26 @@
 						</ul>
 						<h4>Credits</h4>
 						<ul class="blog_meta list">
-
-							<li><a target="_blank" href="https://www.createjs.com/docs/easeljs/modules/EaselJS.html">EaselJS</a></li>
-                            <li><a target="_blank" href="https://github.com/CreateJS/EaselJS">EaselJS Github</a></li>
+                            <li><a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial">Canvas</a></li>
 						</ul>
 					</div>
 				</div>
 				<div class="col-lg-9 col-md-9 blog_details">
-					<h2>Introduction</h2>
-					<p class="excert">
-						
-                    A JavaScript library that makes working with the HTML5 Canvas element easy.<br>
-                    Useful for creating games, generative art, and other highly graphical experiences.<br>
-                    It consists of a <strong>full, hierarchical display list, a core interaction model, 
-                    and helper classes</strong> to make working with Canvas much easier.
-                    </p>
-                    <p>
-                        EaselJS is a library for building high-performance interactive 2D content in HTML5.<br>
-                        It provides a feature-rich display list to allow you to manipulate and animate graphics.<br>
-                         It also provides a robust interactive model for mouse and touch interactions.<br>
-                         It is excellent for building games, generative art, ads, <strong>data visualization</strong>, and other highly graphical experiences
-                    </p>
 
+                    <h2>About Canvas</h2>
+                    <p>
+                         Canvas is an HTML element which can be used to draw graphics via  JavaScript. 
+                            Canvas can be used to draw graphs, combine photos, or create simple animations.<br>
+                            First introduced in WebKit by Apple for the OS X Dashboard.Today, all major browsers support it.
+                            Knowledge of canvas is required for understanding the EaselJS.
                     
-                    <iframe id="iframe1" style="width: 100%;border: none;" src = "./easeljs/easeljs.md.html"></iframe>
+                    <iframe id="iframe1" style="width: 100%;border: none;" src = "./easeljs/canvas.md.html"></iframe>
                     <div style="text-align: center;">
                         <canvas id="canvas"></canvas>
-                    </div>  
+					</div>
+					<div style="text-align: center;">
+                        <canvas id="canvas_image"></canvas>
+                    </div>   
                     
 					
 				</div>
@@ -159,7 +152,66 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
             }
         }
         $(document).ready(function(){
-           
+            var canvas = document.getElementById('canvas');
+            var context = canvas.getContext('2d'); // d is small letter
+            context.fillStyle = 'rgba(0,0,200,0.5)';
+            context.fillRect(10,10,50,50);
+            context.fillStyle = 'rgba(200,0,0,0.5)';
+            context.fillRect(30,30,50,50);
+
+            //Traingle
+            context.beginPath();
+            context.moveTo(100,50);
+            context.lineTo(200,75);
+            context.lineTo(200,25);
+            // Any open shapes are closed automatically when fill() is called. No need to call closePath()
+            context.fill(); 
+            // arc
+            var startAngle = 0 * (Math.PI/180);
+            var endAngle = 360 * (Math.PI/180);
+            context.beginPath();
+            context.arc(100,100,50,startAngle,endAngle,false);
+            context.stroke();//Important to draw otline not even closePath draws the arc
+            
+            //arcTo
+            context.beginPath();
+            context.strokeStyle = 'black';
+            context.lineWidth = 5;
+            context.moveTo(200, 20);
+            context.arcTo(200,130, 50,20, 40);
+            context.stroke();
+
+            //Points
+            context.beginPath();
+            context.lineWidth = 2;
+            startAngle = 0 * (Math.PI/180);
+            endAngle = 360 * (Math.PI/180);
+            context.strokeStyle = 'red';
+            context.arc(200,20,2,startAngle,endAngle,false);
+            context.arc(200,130,2,startAngle,endAngle,false);
+            context.arc(50,20,2,startAngle,endAngle,false);
+            context.stroke();
+
+            context.beginPath();
+            context.rect(250,10,50,50);
+            context.fill();
+
+            // Text
+            context.beginPath();
+            context.arc(100,100,2,startAngle,endAngle,false);
+            context.stroke();
+            context.font = '12px serif';
+			context.fillText('(100,100)',100,100);
+
+			var canvasImg = document.getElementById('canvas_image');
+			var contextImg = canvasImg.getContext('2d');
+			
+			var img = new Image();
+			img.addEventListener('load',function(){
+				contextImg.drawImage(img,0,0,300,150);
+			},false);
+			img.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/India_%28orthographic_projection%29.svg/500px-India_%28orthographic_projection%29.svg.png";
+
         });
 	</script>
 </body>
