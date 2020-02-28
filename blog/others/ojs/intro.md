@@ -1,4 +1,5 @@
 https://docs.pkp.sfu.ca/dev/documentation/en/getting-started
+https://pkp.sfu.ca/ojs/doxygen/master/html/index.html
 
 Fork and clone the project
 
