@@ -78,10 +78,11 @@ minikube status</code></pre><h2 id="kubectl-commands">kubectl commands</h2>
 
     or
 
-    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/\
+    v2.0.0-beta8/aio/deploy/recommended.yaml
     kubectl describe secret -n kube-system</code></pre><p>From above command copy the token of type <strong>kubernetes.io/service-account-token</strong></p>
-<pre><code>    kubectl proxy</code></pre><p>Error:  first record does not look like a tls handshake kubernetes</p>
-<p>Change</p>
+<pre><code>    kubectl proxy</code></pre><h3 id="error--first-record-does-not-look-like-a-tls-handshake-kubernetes">Error:  first record does not look like a tls handshake kubernetes</h3>
+<p>Change (https to http)</p>
 <p><a href="http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/">http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/</a></p>
 <p>to </p>
 <p><a href="http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/">http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/</a></p>
@@ -106,7 +107,161 @@ minikube status</code></pre><h2 id="kubectl-commands">kubectl commands</h2>
 <p>  Scale your application up and down with a simple command, with a UI, or automatically based on CPU usage.</p>
 </li>
 </ul>
-<h1 id="pods">PODS</h1>
+<h1 id="pods">Pods</h1>
+<ul>
+<li><p>A Pod is the basic execution unit of a Kubernetes application-the smallest and simplest unit in the Kubernetes object model that you create or deploy.</p>
+</li>
+<li><p>Pods run containers</p>
+</li>
+<li><p>Pods acts as a environment for containers.</p>
+</li>
+<li><p>As a Developer we need to organise the application &quot;parts&quot; into <strong>Pods</strong> (Server, caching, APIs, database, etc.)</p>
+</li>
+<li><p>Pod IP, memory, volumes, etc. shared across containers</p>
+</li>
+<li><p>we can scale horizontally by adding Pod replicas</p>
+</li>
+<li><p><strong>Pods live and die but never come back to life.</strong> New one is created</p>
+</li>
+<li><p>Pod containers share the same Network namespace(share IP/port)</p>
+</li>
+<li><p>Pod containers have the same loopback network interfaces(localhost)</p>
+</li>
+<li><p>Containers processes need to bind to different ports within a Pod</p>
+</li>
+<li><p>Ports can be reused by containers in separate Pods</p>
+</li>
+<li><p>Pods never span nodes</p>
+</li>
+</ul>
+<p>Note: Pods have different ips (10.0.0.33, 10.0.0.43)</p>
+<h2 id="running-a-pod">Running a Pod</h2>
+<p>Use any of the following</p>
+<ul>
+<li><p>kubectl run command</p>
+</li>
+<li><p>kubectl create/apply command with a yaml file.</p>
+<pre><code>  # Run the nginx:alpine container in a Pod
+  kubectl run [podname]  --image=nginx:alpine
+  kubectl create deployment [podname] --image=nginx:alpine
+
+  # Examples
+  kubectl run sample-nginx-alpine-pod --image=nginx:alpine # deprecated
+  kubectl create deployment nginx-pod --image=nginx:alpine
+
+  # list only pods
+  kubectl get pods
+  kubectl get pods --watch
+  # list all resources 
+  kubectl get all</code></pre></li>
+</ul>
+<p><strong>Pods and containers are only accessible within the kubernetes cluster by default</strong>
+<strong>One way to expose a container port externally: kubectl port-forward</strong>
+<strong>Image to run a pod is a docker image</strong></p>
+<pre><code>    # Enable Pod Container to be 
+    # called externally
+    kubectl port-forward [name-of-pd]  external_port:internal_port
+    kubectl port-forward pod/nginx-pod-6fc99f67cd-h4zxr  8001:80 
+    # 127.0.0.1:8001 to access the application
+
+    # will cause pod to be recreated
+    kubectl delete pod [name-of-pod]
+    kubectl delete pod nginx-pod-6fc99f67cd-h4zxr
+
+    # Delete Deployment that manages the pod
+    # use kubectl get all to get deployment name of the pod
+    kubectl delete deployment [name-of-deployment] 
+    kubectl delete deployment nginx-pod</code></pre><h3 id="yaml-review">YAML Review</h3>
+<ul>
+<li>Composed of maps and lists</li>
+<li>Indentation matters (be consistent!)</li>
+<li>ALways use spaces</li>
+<li>Maps:<ul>
+<li>name:value pairs</li>
+<li>Maps can contain other maps for more complex data structures</li>
+</ul>
+</li>
+<li>Lists:<ul>
+<li>Sequence of items</li>
+<li>Multipe maps can be defined in a list</li>
+</ul>
+</li>
+</ul>
+<h4 id="example">Example</h4>
+<pre><code>key: value
+complexMap:
+    key1: value
+    key2:
+    subKey: value
+
+items:
+    - item1
+    - item2
+    itemsMap:
+    - map1: value
+        map1Prop: value
+    - map2L value
+        map2Prop: value</code></pre><h3 id="nginxpodyml">nginx.pod.yml</h3>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: my-nginx
+spec:
+  containers:
+  - name: my-nginx
+    image: nginx:alpine</code></pre><h3 id="creating-a-pod-using-yaml">creating a Pod using YAML</h3>
+<pre><code># perform a trial create and validate the YAML (validate true is default)
+kubectl create --filename file.pod.yml --dry-run --validate=true
+kubectl create -f nginx.prod.yml --dry-run --validate=true
+
+# Create a Pod from YAML
+# Will error if Pod already exists
+kubectl create -f file.pod.yml
+
+# altenative way to create or apply changes to a
+# Pod from YAML
+kubectl apply -f file.pod.yml
+kubectl apply -f nginx.prod.yml
+# above command creates a warning 
+# use --save-config when you what to use 
+# kubectl apply in future
+kubectl create -f file.prod.yml --save-config # Store current properties in resource&#39;s annotations</code></pre><p><strong>--save-config</strong> causes the resource&#39;s configuration settings to be saved in the <strong>annotations</strong>.Having this allows in-place changes to be made to a Pod in the future using <strong>kubectl apply</strong></p>
+<p>kubectl edit or kubectl patch can also be used to change small or subset of changes to a Pod.</p>
+<pre><code># delete a Pod
+kubectl delete pod [name-of-pod]
+
+# delete Pod using YAML file that created it
+kubectl delete -f file.pod.yml
+kubectl delete -f nginx.prod.yml</code></pre><h3 id="nginxpodyml-1">nginx.pod.yml</h3>
+<pre><code>apiVersion: v1
+kind: Pod
+metadata:
+  name: my-nginx
+  labels:
+    app: nginx
+    rel: stable
+spec:
+  containers:
+  - name: my-nginx
+    image: nginx:alpine
+    ports:
+    - containerPort: 80</code></pre><p>Note: labels are used in deployments</p>
+<pre><code>kubectl create -f nginx.prod.yml --save-config
+# shows output in YAML this is because of --save-config(added annotations to the o/p)
+kubectl get pod my-nginx -o yaml 
+# To trobleshoot the Pod this output is useful
+kubectl describe pod [pod-name]
+kubectl describe pod my-nginx
+kubectl apply -f nginx.prod.yml
+
+# to go into pod with interactive shell
+kubectl exec [pod-name] -it sh
+kubectl exec my-nginx -it sh # enter exit the shell
+
+kubectl edit -f nginx.pod.yml</code></pre><h3 id="error-socat-not-found---minikube">Error socat not found - minikube</h3>
+<pre><code>kubectl port-forward my-nginx 8001:80</code></pre><p><a href="https://github.com/kubernetes/minikube/issues/68#issuecomment-344346923">Solution Link</a>
+  if you&#39;re running the none driver, you&#39;ll need a whole host of dependencies that kubernetes requires: docker, iptables, socat, certain kernel modules enabled, etc
+  sudo apt-get install socat fixed the issue.</p>
 <h1 id="containers">Containers</h1>
 <h2 id="benefits-1">Benefits</h2>
 <ul>
