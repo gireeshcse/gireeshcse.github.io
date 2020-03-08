@@ -1,3 +1,11 @@
+<h1 id="containers">Containers</h1>
+<h2 id="benefits">Benefits</h2>
+<ul>
+<li>Accelerate Developer Onboarding </li>
+<li>Eliminate App Conflicts </li>
+<li>Environment Consistency</li>
+<li>Ship Software Faster</li>
+</ul>
 <h1 id="kubernetes">Kubernetes</h1>
 <p>Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.</p>
 <h2 id="advantages">Advantages</h2>
@@ -20,7 +28,7 @@
 <li>API Server(To interact with the cluster to give instruction to go from one state to other&lt;--kubectl)</li>
 </ul>
 <p><strong>Each node has a Kubelet to communicate with the master,Container runtime to run containers within the PODs and  Kube-Proxy ensures each pod has a IP address</strong></p>
-<h2 id="benefits">Benefits</h2>
+<h2 id="benefits-1">Benefits</h2>
 <ul>
 <li>Orchestrate Containers</li>
 <li>Zero-Downtime Deployements </li>
@@ -378,15 +386,229 @@ kubectl edit -f nginx.pod.yml</code></pre><h3 id="error-socat-not-found---miniku
         initialDelaySeconds: 2
         periodSeconds: 5</code></pre><p><strong>Indetion is very important in YAML file. If any there is a problem it may result in unknown validation field error</strong></p>
 <p><strong>Health checks provide a way to notify Kubernetes when a Pod has a problem</strong></p>
-<h1 id="containers">Containers</h1>
-<h2 id="benefits-1">Benefits</h2>
-<ul>
-<li>Accelerate Developer Onboarding </li>
-<li>Eliminate App Conflicts </li>
-<li>Environment Consistency</li>
-<li>Ship Software Faster</li>
-</ul>
 <h1 id="deployments">Deployments</h1>
+<ul>
+<li><p>A <strong>ReplicalSet</strong> is a declarative way to manage Pods.</p>
+</li>
+<li><p>A <strong>Deployment</strong> is a declarative way to manage Pods using a ReplicaSet.</p>
+</li>
+</ul>
+<p>Deployments and ReplicaSets ensure Pods stay running and can be used to scale Pods.</p>
+<h2 id="replicasets">ReplicaSets</h2>
+<ul>
+<li>Self-healing mechanism(Fault-tolerence)</li>
+<li>Ensure the requested number of pods are available</li>
+<li>Can be used to scale Pods (Horizontally)</li>
+<li>Relies on a Pod template</li>
+<li>No need to create Pods directly</li>
+<li>Used by Deployments</li>
+</ul>
+<h2 id="deployment-manages-pods">Deployment manages Pods</h2>
+<ul>
+<li>Pods are managed using ReplicaSets</li>
+<li>Scales ReplicaSets, which scale Pods</li>
+<li>Supports zero-downtime updates by creating and destroying ReplicaSets</li>
+<li>Provides rollback functionality</li>
+<li>Creates a unique label that is assigned to the ReplicaSet and generated Pods</li>
+<li>YAML is very similar to a ReplicaSet</li>
+</ul>
+<h3 id="defining-deployments-high-level">Defining Deployments (High-Level)</h3>
+<pre><code>    apiVersion: apps/v1 # Kubernetes API version
+    kind: Deployemnt  # Resource type
+    metadata: # Metadata about the Deployment 
+    spec:
+      selector: # Select Pod template label(s)
+      template: # template used to create the Pods
+        spec:
+        containers: # Containers that will run in the Pod.
+        - name: my-nginx
+          image: nginx:alpine</code></pre><h3 id="defining-a-deployment">Defining a Deployment</h3>
+<ul>
+<li><p>Kubernetes API version and resource type(Deployment)</p>
+</li>
+<li><p>Metadata about the Deployment </p>
+</li>
+<li><p>The Selector is used to &quot;select&quot; the template to use(based on labels)</p>
+</li>
+<li><p>Template to use to create the Pod/Containers(note that the selector matches the label)</p>
+<pre><code>  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: frontend
+    labels:
+      app: my-nginx
+      tier: frontend
+  spec:
+    selector:
+      matchLabels:
+        tier: frontend
+    template:
+      metadata:
+        labels:
+          tier: frontend
+      spec:
+        containers:
+        - name: my-nginx
+          image: nginx:alpine
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 15
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 1</code></pre></li>
+</ul>
+<h3 id="commandskubectl--deployments">Commands(kubectl + Deployments)</h3>
+<pre><code>    # Create a deployment
+    kubectl create -f file.deployment.yml
+    # Alternate way to create or apply changes to a 
+    # Deployment from YAML
+    kubectl apply -f file.deployment.yml
+    # Use --save-config when you want to use
+    # kubectl apply in the future
+    kubectl create -f file.deployment.yml --save-config
+    # List all deployments
+    kubectl get deployments
+    kubectl get deployments --show-labels # Deployments and their labels
+    # get all deployments with a specific label
+    kubectl get deployments -l app=nginx
+    # Delete Deployment (All associated Pods/COntainers)
+    kubectl delete deployment [deployment-name]</code></pre><h3 id="scaling-pods-horizontally">Scaling Pods Horizontally</h3>
+<p>Update the YAML file or use the kubectl scale command</p>
+<pre><code>    # Scale the Deployment Pods to 5
+    kubectl scale deployment [deployment-name]  --replicas=5
+
+    # Scale by refencing the YAML file
+    kubectl scale -f file.deployment.yml --replicas=5
+
+    spec:
+      replicas: 3
+      selector:
+        tier: frontend</code></pre><h4 id="examples">Examples</h4>
+<pre><code>    kubectl create -f  nginx.deployment.yml --save-config
+    kubectl describe deployment my-nginx
+    kubectl get deploy
+    kubectl get deployment
+    kubectl get deployments
+    kubectl get deployments --show-labels
+    kubectl get deployments -l app=nginx
+    kubectl scale -f nginx.deployment.yml --replicas=3
+    kubectl delete -f nginx.deployment.yml</code></pre><h4 id="yaml-file-3">YAML File</h4>
+<pre><code>    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-nginx
+    labels:
+      app: my-nginx
+    spec:
+      replicas: 2
+      selector:
+        matchLabels:
+        app: my-nginx
+      template:
+        metadata:
+        labels:
+            app: my-nginx
+        spec:
+          containers:
+          - name: my-nginx
+            image: nginx:alpine
+            ports:
+            - containerPort: 80
+            resources:
+            limits:
+                memory: &quot;128Mi&quot; # 128 MB NO spaces between 128 and Mi
+                cpu: &quot;200m&quot; # 200 millicpu (0.2 cpu or 20% of the cpu)</code></pre><h3 id="deployment-options">Deployment Options</h3>
+<ul>
+<li>Zero downtime deployments allow software updates to be deployed to production without impacting end users.</li>
+<li>One of the strengths of Kubernetes is zero downtime deployments</li>
+<li>Update an applications Pods without impacting end users</li>
+<li>Several Options are availabe<ul>
+<li>Rolling updates</li>
+<li>Blue-green deployments(A&amp;B)(Mutiple environments are running with same environment)</li>
+<li>Canary deployments (Very small amount of traffic comes to new version)</li>
+<li>Rollbacks</li>
+</ul>
+</li>
+</ul>
+<h3 id="rolling-deployments">Rolling Deployments</h3>
+<p>If our applications contains 3 replicas of appV1 and if we want roll to appV2, here new pods with appV2 is created and after successful creation then one of old pod is removed and this repeated until all desired nodes are created.So there zero downtime in the application.</p>
+<p>Update a deployment by changing the YAML and applying changes to the cluster with kubectl apply</p>
+<pre><code>    # Apply changes made in a YAML file
+    kubectl apply -f file.deployment.yml
+
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: node-app
+    spec:
+      replicas: 2
+      minReadySeconds: 10
+      selector:
+        matchLabels:
+          app: node-app
+      template:
+        metadata:
+          labels:
+            app:node-app
+        spec:
+          containers:
+          - image: node-app:1.0
+            name: node-app
+            resources:</code></pre><p>Note: minReadySeconds: 10 # waits 10 seconds after container is started ensuring it didnot crash in first 10 seconds to get the traffic</p>
+<p><a href="https://github.com/gireeshcse/docker-projects/tree/master/nodejs_apps_to_demonstrate_zero_downtime_kubernetes">Demo Project</a></p>
 <h1 id="services">Services</h1>
+<ul>
+<li>A <strong>Service</strong> provides a single point of entry for accessing one or more Pods.</li>
+</ul>
+<p>We can&#39;t rely on IP address of Pods because these change a lot.So we need need services since Pods may only liva a short time.</p>
+<p>Also Pods can be horizontally scaled so each Pod get its own IP address.</p>
+<p>A Pod gets an IP address after it has been scheduled(No way for clients to know IP ahead of time)</p>
+<h2 id="role-of-services">Role of services</h2>
+<ul>
+<li>Services abstract Pod IP addresses from consumers</li>
+<li>Load balances between Pods</li>
+<li>Relies on labels to associate a service with a Pod.</li>
+<li>Node&#39;s kube-proxy creates a virtual IP for services</li>
+<li>Uses Layer 4 (TCP/UDP over IP)</li>
+<li>Services are not ephemeral(Not short lived)</li>
+<li>Creates endpoints which sit between a Service and Pod</li>
+<li>Services load balances the pods</li>
+</ul>
+<p>Note: <strong>Once the connection to Pod is established all the user requests will come to this Pod if it is alive.</strong></p>
+<h2 id="service-types">Service Types</h2>
+<ul>
+<li>ClusterIP - Expose the service on a cluster-internal IP (Default)</li>
+<li>NodePort  - Expose the service on each Node&#39;s IP at a static port.</li>
+<li>LoadBalancer - Provision an external IP to act as a load balancer for the service.</li>
+<li>ExternalName - Maps a service to a DNS name</li>
+</ul>
+<h3 id="clusterip-service">ClusterIP Service</h3>
+<ul>
+<li>Service IP is exposed internally within the cluster</li>
+<li>Only Pods within the cluster can talk to the Service</li>
+<li>Allows Pods to talk to other Pods</li>
+</ul>
+<h3 id="nodeport-service">NodePort Service</h3>
+<ul>
+<li>Exposes the service on each Node&#39;s IP at a static port.</li>
+<li>Allocates a port from a range (default is 30000-32767)</li>
+<li>Each Node proxies the allocated port.</li>
+</ul>
+<p>Helpful for testing to reach a particular Pod.</p>
+<h3 id="loadbalancer-service">LoadBalancer Service</h3>
+<ul>
+<li>Exposes a Service externally</li>
+<li>Useful when combined with a cloud provider&#39;s load balancer</li>
+<li>NodePort and ClusterIP Services are created.</li>
+<li>Each Node proxies the allocated port</li>
+</ul>
+<h3 id="externalname-service">ExternalName Service</h3>
+<ul>
+<li>Service that acts as an alias for an external service</li>
+<li>Allows a Service to act as the Proxy for an external service</li>
+<li>External service details are hidden from cluster(Easier to change)</li>
+</ul>
 <h1 id="storage-options">Storage Options</h1>
 <h1 id="configmaps-and-secrets">ConfigMaps and Secrets</h1>

@@ -1,3 +1,12 @@
+# Containers
+
+## Benefits
+
+* Accelerate Developer Onboarding 
+* Eliminate App Conflicts 
+* Environment Consistency
+* Ship Software Faster
+
 # Kubernetes 
 
 Kubernetes (K8s) is an open-source system for automating deployment, scaling, and management of containerized applications.
@@ -10,6 +19,7 @@ Kubernetes (K8s) is an open-source system for automating deployment, scaling, an
 * Scales containers
 * Updates containers without bringing down the application.
 * Have a robust networking and persistent storage options.
+
 
 **Conductor of containers**
 
@@ -434,20 +444,255 @@ Sample Requirements
 
 **Health checks provide a way to notify Kubernetes when a Pod has a problem**
 
-
-
-# Containers
-
-## Benefits
-
-* Accelerate Developer Onboarding 
-* Eliminate App Conflicts 
-* Environment Consistency
-* Ship Software Faster
-
 # Deployments
 
+* A **ReplicalSet** is a declarative way to manage Pods.
+
+* A **Deployment** is a declarative way to manage Pods using a ReplicaSet.
+
+Deployments and ReplicaSets ensure Pods stay running and can be used to scale Pods.
+
+## ReplicaSets
+
+- Self-healing mechanism(Fault-tolerence)
+- Ensure the requested number of pods are available
+- Can be used to scale Pods (Horizontally)
+- Relies on a Pod template
+- No need to create Pods directly
+- Used by Deployments
+
+## Deployment manages Pods
+
+- Pods are managed using ReplicaSets
+- Scales ReplicaSets, which scale Pods
+- Supports zero-downtime updates by creating and destroying ReplicaSets
+- Provides rollback functionality
+- Creates a unique label that is assigned to the ReplicaSet and generated Pods
+- YAML is very similar to a ReplicaSet
+
+### Defining Deployments (High-Level)
+
+        apiVersion: apps/v1 # Kubernetes API version
+        kind: Deployemnt  # Resource type
+        metadata: # Metadata about the Deployment 
+        spec:
+          selector: # Select Pod template label(s)
+          template: # template used to create the Pods
+            spec:
+            containers: # Containers that will run in the Pod.
+            - name: my-nginx
+              image: nginx:alpine
+
+### Defining a Deployment
+
+* Kubernetes API version and resource type(Deployment)
+* Metadata about the Deployment 
+* The Selector is used to "select" the template to use(based on labels)
+* Template to use to create the Pod/Containers(note that the selector matches the label)
+
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: frontend
+          labels:
+            app: my-nginx
+            tier: frontend
+        spec:
+          selector:
+            matchLabels:
+              tier: frontend
+          template:
+            metadata:
+              labels:
+                tier: frontend
+            spec:
+              containers:
+              - name: my-nginx
+                image: nginx:alpine
+                livenessProbe:
+                  httpGet:
+                    path: /index.html
+                    port: 80
+                  initialDelaySeconds: 15
+                  timeoutSeconds: 2
+                  periodSeconds: 5
+                  failureThreshold: 1
+
+### Commands(kubectl + Deployments)
+
+        # Create a deployment
+        kubectl create -f file.deployment.yml
+        # Alternate way to create or apply changes to a 
+        # Deployment from YAML
+        kubectl apply -f file.deployment.yml
+        # Use --save-config when you want to use
+        # kubectl apply in the future
+        kubectl create -f file.deployment.yml --save-config
+        # List all deployments
+        kubectl get deployments
+        kubectl get deployments --show-labels # Deployments and their labels
+        # get all deployments with a specific label
+        kubectl get deployments -l app=nginx
+        # Delete Deployment (All associated Pods/COntainers)
+        kubectl delete deployment [deployment-name]
+
+### Scaling Pods Horizontally
+
+Update the YAML file or use the kubectl scale command
+
+        # Scale the Deployment Pods to 5
+        kubectl scale deployment [deployment-name]  --replicas=5
+
+        # Scale by refencing the YAML file
+        kubectl scale -f file.deployment.yml --replicas=5
+
+        spec:
+          replicas: 3
+          selector:
+            tier: frontend
+
+#### Examples
+
+        kubectl create -f  nginx.deployment.yml --save-config
+        kubectl describe deployment my-nginx
+        kubectl get deploy
+        kubectl get deployment
+        kubectl get deployments
+        kubectl get deployments --show-labels
+        kubectl get deployments -l app=nginx
+        kubectl scale -f nginx.deployment.yml --replicas=3
+        kubectl delete -f nginx.deployment.yml
+
+#### YAML File
+
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: my-nginx
+        labels:
+          app: my-nginx
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+            app: my-nginx
+          template:
+            metadata:
+            labels:
+                app: my-nginx
+            spec:
+              containers:
+              - name: my-nginx
+                image: nginx:alpine
+                ports:
+                - containerPort: 80
+                resources:
+                limits:
+                    memory: "128Mi" # 128 MB NO spaces between 128 and Mi
+                    cpu: "200m" # 200 millicpu (0.2 cpu or 20% of the cpu)
+
+### Deployment Options
+
+* Zero downtime deployments allow software updates to be deployed to production without impacting end users.
+* One of the strengths of Kubernetes is zero downtime deployments
+* Update an applications Pods without impacting end users
+* Several Options are availabe
+    - Rolling updates
+    - Blue-green deployments(A&B)(Mutiple environments are running with same environment)
+    - Canary deployments (Very small amount of traffic comes to new version)
+    - Rollbacks
+
+### Rolling Deployments
+
+If our applications contains 3 replicas of appV1 and if we want roll to appV2, here new pods with appV2 is created and after successful creation then one of old pod is removed and this repeated until all desired nodes are created.So there zero downtime in the application.
+
+Update a deployment by changing the YAML and applying changes to the cluster with kubectl apply
+
+        # Apply changes made in a YAML file
+        kubectl apply -f file.deployment.yml
+
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: node-app
+        spec:
+          replicas: 2
+          minReadySeconds: 10
+          selector:
+            matchLabels:
+              app: node-app
+          template:
+            metadata:
+              labels:
+                app:node-app
+            spec:
+              containers:
+              - image: node-app:1.0
+                name: node-app
+                resources:
+
+Note: minReadySeconds: 10 # waits 10 seconds after container is started ensuring it didnot crash in first 10 seconds to get the traffic
+
+[Demo Project](https://github.com/gireeshcse/docker-projects/tree/master/nodejs_apps_to_demonstrate_zero_downtime_kubernetes)
+
 # Services
+
+* A **Service** provides a single point of entry for accessing one or more Pods.
+
+We can't rely on IP address of Pods because these change a lot.So we need need services since Pods may only liva a short time.
+
+Also Pods can be horizontally scaled so each Pod get its own IP address.
+
+A Pod gets an IP address after it has been scheduled(No way for clients to know IP ahead of time)
+
+## Role of services
+
+* Services abstract Pod IP addresses from consumers
+* Load balances between Pods
+* Relies on labels to associate a service with a Pod.
+* Node's kube-proxy creates a virtual IP for services
+* Uses Layer 4 (TCP/UDP over IP)
+* Services are not ephemeral(Not short lived)
+* Creates endpoints which sit between a Service and Pod
+* Services load balances the pods
+
+Note: **Once the connection to Pod is established all the user requests will come to this Pod if it is alive.**
+
+## Service Types
+
+- ClusterIP - Expose the service on a cluster-internal IP (Default)
+- NodePort  - Expose the service on each Node's IP at a static port.
+- LoadBalancer - Provision an external IP to act as a load balancer for the service.
+- ExternalName - Maps a service to a DNS name
+
+### ClusterIP Service
+
+* Service IP is exposed internally within the cluster
+* Only Pods within the cluster can talk to the Service
+* Allows Pods to talk to other Pods
+
+### NodePort Service
+
+* Exposes the service on each Node's IP at a static port.
+* Allocates a port from a range (default is 30000-32767)
+* Each Node proxies the allocated port.
+
+Helpful for testing to reach a particular Pod.
+
+### LoadBalancer Service
+
+* Exposes a Service externally
+* Useful when combined with a cloud provider's load balancer
+* NodePort and ClusterIP Services are created.
+* Each Node proxies the allocated port
+
+### ExternalName Service
+
+* Service that acts as an alias for an external service
+* Allows a Service to act as the Proxy for an external service
+* External service details are hidden from cluster(Easier to change)
+
+
 
 # Storage Options
 
