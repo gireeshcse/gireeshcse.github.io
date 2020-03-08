@@ -12,7 +12,9 @@ Kubernetes (K8s) is an open-source system for automating deployment, scaling, an
 * Have a robust networking and persistent storage options.
 
 **Conductor of containers**
+
 **Provides a declarative way to define a cluster' state**
+
 **Contains one or more master nodes and worker nodes(can be Physical servers,VMs).The workers nodes contains PODS which contains containers**
 
 * POD         ----> Suit
@@ -26,7 +28,7 @@ Kubernetes (K8s) is an open-source system for automating deployment, scaling, an
 ## Benefits
 
 * Orchestrate Containers
-* Zero-Downtime Deployemnts 
+* Zero-Downtime Deployements 
 * Self Healings
 * Scale Containers
 
@@ -35,12 +37,12 @@ Kubernetes (K8s) is an open-source system for automating deployment, scaling, an
 * Emulate production locally
 * Move from Docker Compose to Kubernetes
 * Create an end-to-end testing environment
-* To Ensure application scales properly
-* To Ensure secrets/config are working properly.
+* To ensure application scales properly
+* To ensure secrets/config are working properly.
 * Performance testing scenarios
 * Workload scenarios(CI/CD and more)
-* Learn how to leverage deployment options
-* Help DevOps create resources and solve problems
+* Helps in learning how to leverage deployment options
+* We can Help DevOps create resources and solve problems
 
 ## Running Locally
 
@@ -57,12 +59,13 @@ Note: sudo minikube start --vm-driver=none for Ubuntu 18.04 minikube version 1.6
 
     curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
     && chmod +x minikube
+
     sudo install minikube /usr/local/bin/
 
-## minikube Commands(Generally reuires sudo)
+## minikube Commands(Generally requires sudo)
 
     
-    # To starts a local kubernetes cluster Generally run with 
+    # To start a local kubernetes cluster Generally run with 
     # sudo minikube --vm-driver=none if running in host directly not in VM
     minikube start 
     minikube stop # stop a local kubernetes cluster
@@ -178,12 +181,14 @@ Use any of the following
         kubectl get all
 
 **Pods and containers are only accessible within the kubernetes cluster by default**
+
 **One way to expose a container port externally: kubectl port-forward**
+
 **Image to run a pod is a docker image**
 
         # Enable Pod Container to be 
         # called externally
-        kubectl port-forward [name-of-pd]  external_port:internal_port
+        kubectl port-forward [name-of-pod]  external_port:internal_port
         kubectl port-forward pod/nginx-pod-6fc99f67cd-h4zxr  8001:80 
         # 127.0.0.1:8001 to access the application
 
@@ -200,7 +205,7 @@ Use any of the following
 
 * Composed of maps and lists
 * Indentation matters (be consistent!)
-* ALways use spaces
+* Always use spaces
 * Maps:
     - name:value pairs
     - Maps can contain other maps for more complex data structures
@@ -222,7 +227,7 @@ Use any of the following
         itemsMap:
         - map1: value
             map1Prop: value
-        - map2L value
+        - map2: value
             map2Prop: value
 
 ### nginx.pod.yml
@@ -282,7 +287,7 @@ kubectl edit or kubectl patch can also be used to change small or subset of chan
         ports:
         - containerPort: 80
 
-Note: labels are used in deployments
+Note: **labels are used in deployments**
 
     kubectl create -f nginx.prod.yml --save-config
     # shows output in YAML this is because of --save-config(added annotations to the o/p)
@@ -304,8 +309,131 @@ Note: labels are used in deployments
     kubectl port-forward my-nginx 8001:80
     
 [Solution Link](https://github.com/kubernetes/minikube/issues/68#issuecomment-344346923)
-  if you're running the none driver, you'll need a whole host of dependencies that kubernetes requires: docker, iptables, socat, certain kernel modules enabled, etc
-  sudo apt-get install socat fixed the issue.
+
+if you're running the none driver, you'll need a whole host of dependencies that kubernetes requires: docker, iptables, socat, certain kernel modules enabled, etc
+
+  sudo apt-get install socat # fixed the issue.
+
+### Pod health
+
+* Kubernetes relies on Probes to determine the health of a Pod container.
+* A Probe is a diagnostic performed periodically by the **kubelet** on a container.
+* Types of Probes
+    - Liveness Probes
+        * Used to determine if a Pod is healthy and running as expected.(Should a POD is to be restarted)
+    - Readiness probes 
+        * Used to determine if a Pod should receive requests.(When the traffic has to be routed to the pod)
+* Failed Pod containers are recreated by default (restartPolicy defaults to Always)
+
+How to check the health of the probe.It depends on the container applications.We can execute direct actions on probes.Some of them are
+
+* ExecAction - Executes an action inside the container
+* HTTPGetAction - HTTP GET request against container
+* TCPSocketAction - TCP check against the containers IP address on a specified port
+* Probes can have the following results 
+    - Success
+    - Failure
+    - Unknown
+
+#### Defining an HTTP Liveness Probe
+Sample Requirements
+
+* Check /index.html on port 80
+* Wait 15 seconds
+* Timeout after 2 seconds
+* Check every 5 seconds
+* Alllow 1 failure before failing Pod
+
+##### YAML File
+
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: my-nginx
+          labels:
+            app: nginx
+            rel: stable
+        spec:
+          containers:
+          - name: my-nginx
+          image: nginx:alpine
+          ports:
+          - containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 15
+            timeoutSeconds: 2 # default is 1
+            periodSeconds: 5 # Default is 10
+            failureThreshold: 1 # Default is 3
+
+#### defining an ExecAction Liveness Probe
+
+* Define args for container
+* Define liveness probe
+* Define action/command to execute
+
+##### YAML File
+
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: busybox-liveness-pod
+        spec:
+          containers:
+        - name: busybox-liveness-pod
+          image: k8s.gcr.io/busybox
+          resources:
+            limits:
+              memory: "64Mi" # 64 MB
+              cpu: "50m" # 50 millicpu (.05 cpu or 5% of the cpu)
+          args:
+          - /bin/sh
+          - -c
+          - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+          livenessProbe:
+            exec:
+              command:
+              - cat
+              - /tmp/healthy
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+#### Defining a Readiness Probe
+
+* Define readiness probe
+* Check /index.html on port 80
+* wait 2 seconds
+* Check every 5 seconds until the probe is up and runnning.
+
+##### YAML File
+
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: my-nginx
+          labels:
+            app: nginx
+            rel: stable
+        spec:
+          containers:
+          - name: my-nginx
+          image: nginx:alpine
+          ports:
+          - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /index.html
+              port: 80
+            initialDelaySeconds: 2
+            periodSeconds: 5
+
+
+**Indetion is very important in YAML file. If any there is a problem it may result in unknown validation field error**
+
+**Health checks provide a way to notify Kubernetes when a Pod has a problem**
+
 
 
 # Containers

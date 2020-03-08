@@ -9,9 +9,9 @@
 <li>Updates containers without bringing down the application.</li>
 <li>Have a robust networking and persistent storage options.</li>
 </ul>
-<p><strong>Conductor of containers</strong>
-<strong>Provides a declarative way to define a cluster&#39; state</strong>
-<strong>Contains one or more master nodes and worker nodes(can be Physical servers,VMs).The workers nodes contains PODS which contains containers</strong></p>
+<p><strong>Conductor of containers</strong></p>
+<p><strong>Provides a declarative way to define a cluster&#39; state</strong></p>
+<p><strong>Contains one or more master nodes and worker nodes(can be Physical servers,VMs).The workers nodes contains PODS which contains containers</strong></p>
 <ul>
 <li>POD         ----&gt; Suit</li>
 <li>Container   ----&gt; Person</li>
@@ -23,7 +23,7 @@
 <h2 id="benefits">Benefits</h2>
 <ul>
 <li>Orchestrate Containers</li>
-<li>Zero-Downtime Deployemnts </li>
+<li>Zero-Downtime Deployements </li>
 <li>Self Healings</li>
 <li>Scale Containers</li>
 </ul>
@@ -32,12 +32,12 @@
 <li>Emulate production locally</li>
 <li>Move from Docker Compose to Kubernetes</li>
 <li>Create an end-to-end testing environment</li>
-<li>To Ensure application scales properly</li>
-<li>To Ensure secrets/config are working properly.</li>
+<li>To ensure application scales properly</li>
+<li>To ensure secrets/config are working properly.</li>
 <li>Performance testing scenarios</li>
 <li>Workload scenarios(CI/CD and more)</li>
-<li>Learn how to leverage deployment options</li>
-<li>Help DevOps create resources and solve problems</li>
+<li>Helps in learning how to leverage deployment options</li>
+<li>We can Help DevOps create resources and solve problems</li>
 </ul>
 <h2 id="running-locally">Running Locally</h2>
 <ul>
@@ -49,12 +49,12 @@
 <p>Note: sudo minikube start --vm-driver=none for Ubuntu 18.04 minikube version 1.6.2 worked <a href="https://github.com/kubernetes/minikube/releases/">minikube release</a></p>
 <ul>
 <li><p>To install latest minikube (Linux) Installed Binary</p>
-<p>  curl -Lo minikube <a href="https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64">https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64</a> <br>  &amp;&amp; chmod +x minikube
-  sudo install minikube /usr/local/bin/</p>
+<p>  curl -Lo minikube <a href="https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64">https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64</a> <br>  &amp;&amp; chmod +x minikube</p>
+<p>  sudo install minikube /usr/local/bin/</p>
 </li>
 </ul>
-<h2 id="minikube-commandsgenerally-reuires-sudo">minikube Commands(Generally reuires sudo)</h2>
-<pre><code># To starts a local kubernetes cluster Generally run with 
+<h2 id="minikube-commandsgenerally-requires-sudo">minikube Commands(Generally requires sudo)</h2>
+<pre><code># To start a local kubernetes cluster Generally run with 
 # sudo minikube --vm-driver=none if running in host directly not in VM
 minikube start 
 minikube stop # stop a local kubernetes cluster
@@ -155,12 +155,12 @@ minikube status</code></pre><h2 id="kubectl-commands">kubectl commands</h2>
   # list all resources 
   kubectl get all</code></pre></li>
 </ul>
-<p><strong>Pods and containers are only accessible within the kubernetes cluster by default</strong>
-<strong>One way to expose a container port externally: kubectl port-forward</strong>
-<strong>Image to run a pod is a docker image</strong></p>
+<p><strong>Pods and containers are only accessible within the kubernetes cluster by default</strong></p>
+<p><strong>One way to expose a container port externally: kubectl port-forward</strong></p>
+<p><strong>Image to run a pod is a docker image</strong></p>
 <pre><code>    # Enable Pod Container to be 
     # called externally
-    kubectl port-forward [name-of-pd]  external_port:internal_port
+    kubectl port-forward [name-of-pod]  external_port:internal_port
     kubectl port-forward pod/nginx-pod-6fc99f67cd-h4zxr  8001:80 
     # 127.0.0.1:8001 to access the application
 
@@ -175,7 +175,7 @@ minikube status</code></pre><h2 id="kubectl-commands">kubectl commands</h2>
 <ul>
 <li>Composed of maps and lists</li>
 <li>Indentation matters (be consistent!)</li>
-<li>ALways use spaces</li>
+<li>Always use spaces</li>
 <li>Maps:<ul>
 <li>name:value pairs</li>
 <li>Maps can contain other maps for more complex data structures</li>
@@ -200,7 +200,7 @@ items:
     itemsMap:
     - map1: value
         map1Prop: value
-    - map2L value
+    - map2: value
         map2Prop: value</code></pre><h3 id="nginxpodyml">nginx.pod.yml</h3>
 <pre><code>apiVersion: v1
 kind: Pod
@@ -245,7 +245,7 @@ spec:
   - name: my-nginx
     image: nginx:alpine
     ports:
-    - containerPort: 80</code></pre><p>Note: labels are used in deployments</p>
+    - containerPort: 80</code></pre><p>Note: <strong>labels are used in deployments</strong></p>
 <pre><code>kubectl create -f nginx.prod.yml --save-config
 # shows output in YAML this is because of --save-config(added annotations to the o/p)
 kubectl get pod my-nginx -o yaml 
@@ -259,9 +259,125 @@ kubectl exec [pod-name] -it sh
 kubectl exec my-nginx -it sh # enter exit the shell
 
 kubectl edit -f nginx.pod.yml</code></pre><h3 id="error-socat-not-found---minikube">Error socat not found - minikube</h3>
-<pre><code>kubectl port-forward my-nginx 8001:80</code></pre><p><a href="https://github.com/kubernetes/minikube/issues/68#issuecomment-344346923">Solution Link</a>
-  if you&#39;re running the none driver, you&#39;ll need a whole host of dependencies that kubernetes requires: docker, iptables, socat, certain kernel modules enabled, etc
-  sudo apt-get install socat fixed the issue.</p>
+<pre><code>kubectl port-forward my-nginx 8001:80</code></pre><p><a href="https://github.com/kubernetes/minikube/issues/68#issuecomment-344346923">Solution Link</a></p>
+<p>if you&#39;re running the none driver, you&#39;ll need a whole host of dependencies that kubernetes requires: docker, iptables, socat, certain kernel modules enabled, etc</p>
+<p>  sudo apt-get install socat # fixed the issue.</p>
+<h3 id="pod-health">Pod health</h3>
+<ul>
+<li>Kubernetes relies on Probes to determine the health of a Pod container.</li>
+<li>A Probe is a diagnostic performed periodically by the <strong>kubelet</strong> on a container.</li>
+<li>Types of Probes<ul>
+<li>Liveness Probes<ul>
+<li>Used to determine if a Pod is healthy and running as expected.(Should a POD is to be restarted)</li>
+</ul>
+</li>
+<li>Readiness probes <ul>
+<li>Used to determine if a Pod should receive requests.(When the traffic has to be routed to the pod)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Failed Pod containers are recreated by default (restartPolicy defaults to Always)</li>
+</ul>
+<p>How to check the health of the probe.It depends on the container applications.We can execute direct actions on probes.Some of them are</p>
+<ul>
+<li>ExecAction - Executes an action inside the container</li>
+<li>HTTPGetAction - HTTP GET request against container</li>
+<li>TCPSocketAction - TCP check against the containers IP address on a specified port</li>
+<li>Probes can have the following results <ul>
+<li>Success</li>
+<li>Failure</li>
+<li>Unknown</li>
+</ul>
+</li>
+</ul>
+<h4 id="defining-an-http-liveness-probe">Defining an HTTP Liveness Probe</h4>
+<p>Sample Requirements</p>
+<ul>
+<li>Check /index.html on port 80</li>
+<li>Wait 15 seconds</li>
+<li>Timeout after 2 seconds</li>
+<li>Check every 5 seconds</li>
+<li>Alllow 1 failure before failing Pod</li>
+</ul>
+<h5 id="yaml-file">YAML File</h5>
+<pre><code>    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: my-nginx
+      labels:
+        app: nginx
+        rel: stable
+    spec:
+      containers:
+      - name: my-nginx
+      image: nginx:alpine
+      ports:
+      - containerPort: 80
+      livenessProbe:
+        httpGet:
+          path: /index.html
+          port: 80
+        initialDelaySeconds: 15
+        timeoutSeconds: 2 # default is 1
+        periodSeconds: 5 # Default is 10
+        failureThreshold: 1 # Default is 3</code></pre><h4 id="defining-an-execaction-liveness-probe">defining an ExecAction Liveness Probe</h4>
+<ul>
+<li>Define args for container</li>
+<li>Define liveness probe</li>
+<li>Define action/command to execute</li>
+</ul>
+<h5 id="yaml-file-1">YAML File</h5>
+<pre><code>    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: busybox-liveness-pod
+    spec:
+      containers:
+    - name: busybox-liveness-pod
+      image: k8s.gcr.io/busybox
+      resources:
+        limits:
+          memory: &quot;64Mi&quot; # 64 MB
+          cpu: &quot;50m&quot; # 50 millicpu (.05 cpu or 5% of the cpu)
+      args:
+      - /bin/sh
+      - -c
+      - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+      livenessProbe:
+        exec:
+          command:
+          - cat
+          - /tmp/healthy
+        initialDelaySeconds: 5
+        periodSeconds: 5</code></pre><h4 id="defining-a-readiness-probe">Defining a Readiness Probe</h4>
+<ul>
+<li>Define readiness probe</li>
+<li>Check /index.html on port 80</li>
+<li>wait 2 seconds</li>
+<li>Check every 5 seconds until the probe is up and runnning.</li>
+</ul>
+<h5 id="yaml-file-2">YAML File</h5>
+<pre><code>    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: my-nginx
+      labels:
+        app: nginx
+        rel: stable
+    spec:
+      containers:
+      - name: my-nginx
+      image: nginx:alpine
+      ports:
+      - containerPort: 80
+      readinessProbe:
+        httpGet:
+          path: /index.html
+          port: 80
+        initialDelaySeconds: 2
+        periodSeconds: 5</code></pre><p><strong>Indetion is very important in YAML file. If any there is a problem it may result in unknown validation field error</strong></p>
+<p><strong>Health checks provide a way to notify Kubernetes when a Pod has a problem</strong></p>
 <h1 id="containers">Containers</h1>
 <h2 id="benefits-1">Benefits</h2>
 <ul>

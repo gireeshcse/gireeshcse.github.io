@@ -1,0 +1,65 @@
+<p><a href="https://docs.pkp.sfu.ca/dev/documentation/en/getting-started">Getting Started</a>
+<a href="https://pkp.sfu.ca/ojs/doxygen/master/html/index.html">Documnetation</a></p>
+<h1 id="project-setup">Project Setup</h1>
+<h2 id="database-setup">Database setup</h2>
+<ul>
+<li><p>login inot mysql using root</p>
+</li>
+<li><p>Create ojs database</p>
+</li>
+<li><p>Create a new mysql User</p>
+<pre><code>  CREATE USER &#39;ojs&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;ojspassword&#39;;
+  GRANT ALL PRIVILEGES ON ojs. * TO &#39;ojs&#39;@&#39;localhost&#39;;
+  FLUSH PRIVILEGES; # to reload all the privileges</code></pre></li>
+</ul>
+<p><a href="https://www.digitalocean.com/community/tutorials/how-to-create-a-new-user-and-grant-permissions-in-mysql">More info on permissions</a></p>
+<h2 id="initial-setup">Initial Setup</h2>
+<p>Fork and clone the project</p>
+<pre><code>https://github.com/pkp/ojs
+cd ojs
+git submodule update --init --recursive
+cp config.TEMPLATE.inc.php config.inc.php</code></pre><p>In config.inc.php</p>
+<ul>
+<li><p>Set <strong>enable_cdn</strong> to off to use local copies of libraries instead of CDNs</p>
+</li>
+<li><p>Set database authentication info.</p>
+</li>
+</ul>
+<p>To get changes to the application that were made after you forked, add the upstream remote.</p>
+<pre><code>git remote add upstream git@github.com:pkp/ojs.git
+cd lib/pkp
+git remote add upstream git@github.com:pkp/pkp-lib.git
+cd ../ui-library
+git remote add upstream git@github.com:pkp/ui-library.git
+cd ../..</code></pre><p>Install dependencies with composer.</p>
+<pre><code>composer --working-dir=lib/pkp update
+composer --working-dir=plugins/paymethod/paypal update
+composer --working-dir=plugins/generic/citationStyleLanguage update</code></pre><p>Install dependencies with NPM.</p>
+<pre><code>npm install
+npm run build</code></pre><p>If downloading cypress takes times by doing npm install <a href="https://www.cypress.io/">download cypress</a> and run the following</p>
+<pre><code>CYPRESS_INSTALL_BINARY=/home/msg/Public/cypress.zip  npm install cypress</code></pre><p>Initially application access will redirect to install. Create admin account</p>
+<h1 id="to-run-the-application-using-phps-built-in-server">To run the application using PHP’s built-in server.</h1>
+<p>php -S localhost:8000</p>
+<h1 id="run-the-following-commands-whenever-you-want-to-pull-the-latest-changes-to-your-repository">Run the following commands whenever you want to pull the latest changes to your repository.</h1>
+<h2 id="update-the-app">Update the app</h2>
+<p>git checkout master
+git pull upstream master
+git push</p>
+<h2 id="update-the-pkp-lib-submodule">Update the pkp-lib submodule</h2>
+<p>cd lib/pkp
+git checkout master
+git pull upstream master
+git push</p>
+<h2 id="update-the-ui-library-submodule">Update the ui-library submodule</h2>
+<p>cd ../ui-library
+git checkout master
+git pull upstream master
+git push</p>
+<p>cd ../..</p>
+<h2 id="updates">Updates</h2>
+<p>When you have pulled down changes from the upstream remote, run the following to sync the lib/pkp and lib/ui-library submodules.</p>
+<pre><code>git submodule update --init --recursive</code></pre><p>You may need to update dependencies and rebuild the JavaScript package.</p>
+<pre><code>composer --working-dir=lib/pkp update
+npm install
+npm run build</code></pre><p>Sometimes a code change will modify the database structure and you will need to run the upgrade script.</p>
+<pre><code>php tools/upgrade.php upgrade</code></pre>
