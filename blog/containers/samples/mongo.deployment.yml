@@ -1,0 +1,116 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+reclaimPolicy: retain
+volumeBindingMode: WaitForFirstConsumer
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-storage
+  local:
+    path: /tmp/data/db # local machine file
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+            - minikube # docker-sektop
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: local-storage
+  resources:
+    requests:
+      storage: 1Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo
+spec:
+  selector:
+    app: mongo
+  ports:
+  - port: 27017
+    targetPort: 27017
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mongo
+  name: mongo
+spec:
+  serviceName: mongo
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+      spec:
+        containers:
+          - image: mongo
+            name: mongo
+            ports:
+            - containerPort: 27017
+            command:
+            - mongod
+            - "--auth"
+            resources: {}
+            volumeMounts:
+            - name: mongo-volume
+              mountPath: /data/db
+            env:
+              - name: MONGODB_DBNAME
+                valueFrom:
+                  configMapKeyRef:
+                    key: MONGODB_DBNAME
+                    name: mongo-env
+              - name: MONGODB_PASSWORD
+                valueFrom:
+                  configMapKeyRef:
+                    key: MONGODB_PASSWORD
+                    name: mongo-env
+              - name: MONGODB_ROLE
+                valueFrom:
+                  configMapKeyRef:
+                    key: MONGODB_ROLE
+                    name: mongo-env
+              - name: MONGODB_USERNAME
+                valueFrom:
+                  configMapKeyRef:
+                    key: MONGODB_USERNAME
+                    name: mongo-env
+
+    volumes:
+      - name: mongo-volume
+        persistentVolumeClaim:
+          claimName: mongo-pvc

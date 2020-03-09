@@ -982,17 +982,335 @@ Here it is exposed to the outside the cluster.
 
       # For Minikube
       sudo minikube service nodeapp-loadbalancer
-      -----------|----------------------|-------------|--------------------------|
+      |-----------|----------------------|-------------|--------------------------|
       | NAMESPACE |         NAME         | TARGET PORT |           URL            |
       |-----------|----------------------|-------------|--------------------------|
       | default   | nodeapp-loadbalancer |        8080 | http://192.168.1.4:31309 
 
       # to access http://192.168.1.4:31309
 
-
-
-
-
 # Storage Options
 
+* To store application state/data and exchange it between Pods with Kubernetes -- We need **Volumes**.
+* A **Volume** can be used to hold data and state for Pods and containers.
+* A Pod can have multiple Volumes attached to it.
+* Containers rely on a mountPath to access a Volume.
+
+* Kubernetes suppots:
+  - Volumes
+  - PersistentVolumes
+  - PersistentVolumeClaims
+  - StorageClasses
+
+* A Volume references a storage location
+* Must have a unique name
+* Attached to a Pod and may or may not be tied to the Pod's lifetime (depending on the Volume type)
+* A Volume Mount references a Volume by name and defines a mountPath
+
+## Volumes Type Examples
+
+* **emptyDir**- Empty directory for storing transient data(shares a Pod's lifetime) useful for sharing files between containers running in a Pod.
+* **hostPath**- Pod mounts into the nodes filesystem.
+* **nfs** - an NFS(Network file System) share mounted into the Pod
+* **configMap/secret** - Special types of voumes that provide a Pod with access to Kubernetes resources.
+* **persistentVolumeClaim** - Provides Pods with a more persistent storage option that is abstracted from the details.
+* **Cloud** - Cluster-wide storage.
+
+### Defining an emptyDir Volume
+
+
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: nginx-alpine-volume
+      spec:
+        volumes:
+          - name: html # Define Initial Volume 
+            emptyDir: {} # Lifetime of the Pod
+        containers:
+        - name: nginx
+          image: nginx:alpine
+          volumeMounts:
+            - name: html # Reference "html" Volume
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+        - name: html-updater
+          image: alpine
+          command: ["bin/sh","-c"]
+          args: # updates latest date every 10 sec
+            - while true; do date >> /html/index.html;
+                sleep 10; done
+          volumeMounts:
+            - name: html # Reference "html" Volume
+              mountPath: /html
+
+      # Commands
+      kubectl create -f emptydir.pod.yml --save-config
+      kubectl port-forward nginx-alpine-volume 8080:80
+
+2 containers one is creating and other is displaying
+
+### Defining an hostPath Volume
+
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: docker-volume
+        spec:
+          volumes:
+            - name: docker-socket # Define a socket volume
+              hostPath: # on host
+                path: /var/run/docker.sock
+                type: Socket
+          containers:
+          - name: docker
+            image: docker
+            command: ["sleep"]
+            args: ["100000"]
+            volumeMounts:
+              - name: docker-socket # Reference "html" Volume
+                mountPath: /usr/share/nginx/html
+
+Valid types include 
+  - DirectoryOrCreate
+  - Directory
+  - FileOrCreate
+  - File
+  - Socket
+  - CharDevice
+  - BlockDevice
+
+
+        #Commands
+        kubectl create -f hostpath.pod.yml --save-config
+
+        kubectl describe pod docker-volume
+        #Contains following info
+        Volumes:
+        docker-socket:
+          Type:          HostPath (bare host directory volume)
+          Path:          /var/run/docker.sock
+          HostPathType:  Socket
+        default-token-g5sp9:
+          Type:        Secret (a volume populated by a Secret)
+          SecretName:  default-token-g5sp9
+          Optional:    false
+
+        kubectl exec docker-volume -it sh
+
+
+### Cloud Volumes
+
+- Azure - Azure Disk and Azue File
+- AWS - Elastic Block Store
+- GCP - GCE Persistent Disk
+
+#### azure.pod.yml
+
+        apiVersion: v1
+        kind: Pod
+        spec:
+          volumes:
+            - name: data
+              azureFile:
+                secretName: <azure-secret>
+                shareName: <share-name>
+                readOnly: false
+          containers:
+          - name: my-app
+            image: someimage
+            volumeMounts:
+              - name: data # Reference "data" Volume
+                mountPath: /data/storage
+
+#### aws.pod.yml
+
+        apiVersion: v1
+        kind: Pod
+        spec:
+          volumes:
+            - name: data
+              awsElasticBlockStore:
+                volumeID: <volume_ID>
+                fsType: ext4
+          containers:
+          - name: my-app
+            image: someimage
+            volumeMounts:
+              - name: data # Reference "data" Volume
+                mountPath: /data/storage
+
+#### gcp.pod.yml
+
+          apiVersion: v1
+          kind: Pod
+          spec:
+            volumes:
+              - name: data
+                gcePersistentDisk:
+                  pdName: datastorage
+                  fsType: ext4
+            containers:
+            - name: my-app
+              image: someimage
+              volumeMounts:
+                - name: data # Reference "data" Volume
+                  mountPath: /data/storage
+
+      # To see info about volumes
+      kubectl describe pod [pod-name]
+      kubectl get pod [pod-name] -o yaml
+
+### PersistentVolume(PV)
+
+* A **PersistentVolume(PV)** is a cluster-wide storage unit provisioned by an administrator with a lifecycle independent from a Pod.
+* A **PersistentVolumeClaim(PVC)** is a request for a storage unit (PV).
+
+- A PersistentVolume is a cluster-wide storage resource that relies on network-attached storage(NAS)
+- Normally provisioned by a cluster administrator
+- Available to a Pod even if it gets rescheduled to a different Node
+- Rely on a storage provider such as NFS, cloud storage, or other options
+- Associated with a Pod using a PersistentVolumeClaim(PVC)
+
+#### azure.persistentvolume.yml
+
+        apiVersion: v1
+        kind: PersistentVolume
+        metadata:
+          name: my-pv
+        spec:
+          capacity: 10Gi
+          accessModes:
+            - ReadWriteOnce # One client can mount for read/write
+            - ReadOnlyMany # Many clients can mount for reading 
+          persistentVolumeReclaimPolicy: Retain 
+          # Retain even after claim is deleted
+          azureFile:
+            secretName: <azure-secret>
+            shareName: <name_from_azure>
+            readOnly: false
+
+#### pesistentvolumeclaim.yml
+
+        kind: PesistentVolumeClaim
+        apiVersion: v1
+        metadata:
+          name: pv-dd-account-hdd-5g
+          annotations:
+            volume.beta.kubernetes.io/storage-class: accounthdd
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+
+#### persistentclaim.pod.yml
+
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          name: pod-uses-account-hdd-5g
+          labels:
+            name: storage
+        spec:
+          containers:
+          - name: az-c-01
+            image: nginx
+            command: ["bin/sh","-c"]
+            args: # updates latest date every 1 sec
+              - while true; do echo $(date) >> /mnt/blobdisk/outfile;
+                  sleep 1; done
+            volumeMounts:
+              - name: blobdisk01 # Reference "blobdisk01" Volume
+                mountPath: /mnt/blobdisk
+          volumes:
+            - name: blobdisk01 # Define  Volume 
+              persistentVolumeClaim:
+                claimName: pv-dd-account-hdd-5g
+
+## Storage Class
+
+* A **StorageClass(SC)** is a type of storage template that can be used to dynamically provision storage.
+* Used to define different classes of storage
+* Act as a type of storage template
+* Supports dynamic provisioning of PersistentVolumes
+* Adminstrators don't have to create PVs in advance.
+
+### Define Localtorage
+
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: local-storage
+    reclaimPolicy: Retain # Default delete after PVC is released
+    provisioner: kubernetes.io/no-provisioner # Provisioner Used to create PV resource
+    volumeBindingMode: WaitForFirstConsumer 
+    #Wait to create until Pod making PVC is created
+    #Default is immediate(ceate once PVC is created)
+
+### Defining Local Storage PV
+
+      apiVersion: v1
+      kind: PesistentVolume
+      metadata:
+        name: my-pv
+      spec:
+        capacity:
+          storage: 10Gi
+        volumeMode: Block
+        accessModes:
+        - ReadWriteOnce
+        storageClassName: local-storage # Reference Storage class
+        local:
+          path: /data/storage # Path where data is stored on Node
+        nodeAffinity:
+          required:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - <node-name>
+
+In above, It selects the Node where the local storage PV is created based on conditions
+
+### PesistentVolume Claim
+
+        apiVersion: v1
+        kind: PersistentVolumeClaim
+        metadata:
+          name: my-pvc
+        spec:
+          accessModes:
+          - ReadWriteOnce
+          storageClassName: local-storage
+          resources:
+            requests:
+              storage: 1Gi
+
+
+### Using PVC
+
+
+      apiVersion: apps/v
+      kind: [Pod | Deployment | StatefulSet]
+
+      ...
+        spec:
+          volumes:
+          - name: my-volume
+            persistentVolumeClaim:
+              claimName: my-pvc
+
+### Kubernetes StatefulSet
+
+Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods.
+
 # ConfigMaps and Secrets
+
+# Credits
+
+[Great Site ](https://github.com/kubernetes/examples)
+
+[Main Credit](https://github.com/DanWahlin/CodeWithDanDockerServices/)

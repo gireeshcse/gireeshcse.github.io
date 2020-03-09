@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-uses-account-hdd-5g
+  labels:
+    name: storage
+spec:
+  
+  containers:
+  - name: az-c-01
+    image: nginx
+    command: ["bin/sh","-c"]
+    args: # updates latest date every 10 sec
+      - while true; do echo $(date) >> /mnt/blobdisk/outfile;
+          sleep 1; done
+    volumeMounts:
+      - name: blobdisk01 # Reference "blobdisk01" Volume
+        mountPath: /mnt/blobdisk
+  volumes:
+    - name: blobdisk01 # Define  Volume 
+      persistentVolumeClaim:
+        claimName: pv-dd-account-hdd-5g
