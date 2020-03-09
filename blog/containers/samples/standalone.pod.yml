@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: node-app-standalone
+spec:
+  containers:
+  - name: node-app-standalone
+    image: gireeshcse/node-demo-k8:v3

@@ -299,13 +299,13 @@ kubectl edit or kubectl patch can also be used to change small or subset of chan
 
 Note: **labels are used in deployments**
 
-    kubectl create -f nginx.prod.yml --save-config
+    kubectl create -f nginx.pod.yml --save-config
     # shows output in YAML this is because of --save-config(added annotations to the o/p)
     kubectl get pod my-nginx -o yaml 
-    # To trobleshoot the Pod this output is useful
+    # To troubleshoot the Pod this output is useful
     kubectl describe pod [pod-name]
     kubectl describe pod my-nginx
-    kubectl apply -f nginx.prod.yml
+    kubectl apply -f nginx.pod.yml
 
     # to go into pod with interactive shell
     kubectl exec [pod-name] -it sh
@@ -352,7 +352,7 @@ Sample Requirements
 * Wait 15 seconds
 * Timeout after 2 seconds
 * Check every 5 seconds
-* Alllow 1 failure before failing Pod
+* Allow 1 failure before failing Pod
 
 ##### YAML File
 
@@ -366,17 +366,17 @@ Sample Requirements
         spec:
           containers:
           - name: my-nginx
-          image: nginx:alpine
-          ports:
-          - containerPort: 80
-          livenessProbe:
-            httpGet:
-              path: /index.html
-              port: 80
-            initialDelaySeconds: 15
-            timeoutSeconds: 2 # default is 1
-            periodSeconds: 5 # Default is 10
-            failureThreshold: 1 # Default is 3
+            image: nginx:alpine
+            ports:
+            - containerPort: 80
+            livenessProbe:
+              httpGet:
+                path: /index.html
+                port: 80
+              initialDelaySeconds: 15
+              timeoutSeconds: 2 # default is 1
+              periodSeconds: 5 # Default is 10
+              failureThreshold: 1 # Default is 3
 
 #### defining an ExecAction Liveness Probe
 
@@ -392,23 +392,25 @@ Sample Requirements
           name: busybox-liveness-pod
         spec:
           containers:
-        - name: busybox-liveness-pod
-          image: k8s.gcr.io/busybox
-          resources:
-            limits:
-              memory: "64Mi" # 64 MB
-              cpu: "50m" # 50 millicpu (.05 cpu or 5% of the cpu)
-          args:
-          - /bin/sh
-          - -c
-          - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
-          livenessProbe:
-            exec:
-              command:
-              - cat
-              - /tmp/healthy
-            initialDelaySeconds: 5
-            periodSeconds: 5
+          - name: busybox-liveness-pod
+            image: k8s.gcr.io/busybox
+            resources:
+              limits:
+                memory: "64Mi" # 64 MB
+                cpu: "50m" # 50 millicpu (.05 cpu or 5% of the cpu)
+             args:
+             - /bin/sh
+             - -c
+             - touch /tmp/healthy; sleep 30; rm -rf /tmp/healthy; sleep 600
+            livenessProbe:
+              exec:
+                command:
+                - cat
+                - /tmp/healthy
+               initialDelaySeconds: 5
+               periodSeconds: 5
+
+The above one results in creation of new pods by deleting old pods after 30 seconds as /tmp/healthy file is removed.THis is repeated for new pods as well for this Pod created using above YAML file.
 
 #### Defining a Readiness Probe
 
@@ -429,15 +431,15 @@ Sample Requirements
         spec:
           containers:
           - name: my-nginx
-          image: nginx:alpine
-          ports:
-          - containerPort: 80
-          readinessProbe:
-            httpGet:
-              path: /index.html
-              port: 80
-            initialDelaySeconds: 2
-            periodSeconds: 5
+            image: nginx:alpine
+            ports:
+            - containerPort: 80
+            readinessProbe:
+              httpGet:
+                path: /index.html
+                port: 80
+              initialDelaySeconds: 2
+              periodSeconds: 5
 
 
 **Indetion is very important in YAML file. If any there is a problem it may result in unknown validation field error**
@@ -479,9 +481,9 @@ Deployments and ReplicaSets ensure Pods stay running and can be used to scale Po
           selector: # Select Pod template label(s)
           template: # template used to create the Pods
             spec:
-            containers: # Containers that will run in the Pod.
-            - name: my-nginx
-              image: nginx:alpine
+              containers: # Containers that will run in the Pod.
+              - name: my-nginx
+                image: nginx:alpine
 
 ### Defining a Deployment
 
@@ -533,7 +535,7 @@ Deployments and ReplicaSets ensure Pods stay running and can be used to scale Po
         kubectl get deployments --show-labels # Deployments and their labels
         # get all deployments with a specific label
         kubectl get deployments -l app=nginx
-        # Delete Deployment (All associated Pods/COntainers)
+        # Delete Deployment (All associated Pods/Containers)
         kubectl delete deployment [deployment-name]
 
 ### Scaling Pods Horizontally
@@ -543,7 +545,7 @@ Update the YAML file or use the kubectl scale command
         # Scale the Deployment Pods to 5
         kubectl scale deployment [deployment-name]  --replicas=5
 
-        # Scale by refencing the YAML file
+        # Scale by referencing the YAML file
         kubectl scale -f file.deployment.yml --replicas=5
 
         spec:
@@ -575,10 +577,10 @@ Update the YAML file or use the kubectl scale command
           replicas: 2
           selector:
             matchLabels:
-            app: my-nginx
+              app: my-nginx
           template:
             metadata:
-            labels:
+              labels:
                 app: my-nginx
             spec:
               containers:
@@ -587,8 +589,8 @@ Update the YAML file or use the kubectl scale command
                 ports:
                 - containerPort: 80
                 resources:
-                limits:
-                    memory: "128Mi" # 128 MB NO spaces between 128 and Mi
+                  limits:
+                    memory: "128Mi" # 128 MB No spaces between 128 and Mi
                     cpu: "200m" # 200 millicpu (0.2 cpu or 20% of the cpu)
 
 ### Deployment Options
@@ -604,7 +606,7 @@ Update the YAML file or use the kubectl scale command
 
 ### Rolling Deployments
 
-If our applications contains 3 replicas of appV1 and if we want roll to appV2, here new pods with appV2 is created and after successful creation then one of old pod is removed and this repeated until all desired nodes are created.So there zero downtime in the application.
+If our applications contains 3 replicas of appV1 and if we want roll to appV2, here new pods with appV2 are created one by one and after successful creation of one Pod then one of old pod is removed and this repeated until all desired nodes are created.So there zero downtime in the application.
 
 Update a deployment by changing the YAML and applying changes to the cluster with kubectl apply
 
@@ -639,7 +641,7 @@ Note: minReadySeconds: 10 # waits 10 seconds after container is started ensuring
 
 * A **Service** provides a single point of entry for accessing one or more Pods.
 
-We can't rely on IP address of Pods because these change a lot.So we need need services since Pods may only liva a short time.
+We can't rely on IP address of Pods because these change a lot.So we need need services since Pods may only live for a short time.
 
 Also Pods can be horizontally scaled so each Pod get its own IP address.
 
@@ -650,7 +652,7 @@ A Pod gets an IP address after it has been scheduled(No way for clients to know 
 * Services abstract Pod IP addresses from consumers
 * Load balances between Pods
 * Relies on labels to associate a service with a Pod.
-* Node's kube-proxy creates a virtual IP for services
+* Node's **kube-proxy** creates a virtual IP for services
 * Uses Layer 4 (TCP/UDP over IP)
 * Services are not ephemeral(Not short lived)
 * Creates endpoints which sit between a Service and Pod
@@ -671,13 +673,17 @@ Note: **Once the connection to Pod is established all the user requests will com
 * Only Pods within the cluster can talk to the Service
 * Allows Pods to talk to other Pods
 
+![ServiceIP](ServiceIP.png)
+
 ### NodePort Service
 
 * Exposes the service on each Node's IP at a static port.
 * Allocates a port from a range (default is 30000-32767)
 * Each Node proxies the allocated port.
 
-Helpful for testing to reach a particular Pod.
+Helpful for testing to reach a particular Pod using NodePort Service.
+
+<img src="NodePort.png" width="100%">
 
 ### LoadBalancer Service
 
@@ -686,11 +692,304 @@ Helpful for testing to reach a particular Pod.
 * NodePort and ClusterIP Services are created.
 * Each Node proxies the allocated port
 
+<img src="LoadBalancer.png" width="100%">
+
 ### ExternalName Service
 
 * Service that acts as an alias for an external service
 * Allows a Service to act as the Proxy for an external service
 * External service details are hidden from cluster(Easier to change)
+
+<img src="ExternalName.png" width="100%">
+
+## Creating a Service
+
+    # Listen on port 8080 locally and forward to port 80 in Pod
+    kubectl port-forward pod/[pod-name]  8080:80
+
+    # Listen on port 8080 locally and forward to
+    kubectl port-forward deployment/[deployment-name] 8080
+
+    # Listen on port 8080 locally and forward to Service's Pod
+    kubectl port-forward service/[service-name] 8080
+
+    # Examples
+    kubectl port-forward pod/node-app-85dcdf447c-mj6sv 8080:8080
+    kubectl port-forward deployment/node-app 8080
+    kubectl port-forward deployment/node-app 9000:8080
+
+**port-forward is used for debugging nad testing**
+
+### Defining Services with YAML
+
+
+      apiVersion: v1 # Kubernetes API version
+      kind: Service  # resource type
+      metadata:   # Metadata of the service
+      spec:
+        type:  # Type of service(ClusterIP,NodePort,LoadBalancer)
+               # Defaults to CLusterIP
+        selector: # Select Pod template label(s) 
+                  # that service will apply to
+
+        ports: # Define container target port and the
+               # port for the service
+
+
+#### Example (ClusterIP)
+
+        apiVersion: v1 # Kubernetes API version
+        kind: Service  # resource type
+        metadata:   # Metadata of the service
+          name: node-app # Name of Service
+                         # each service gets a DNS entry
+          labels:
+            app: node-app
+        spec:
+          selector:
+            app: node-app # Service will apply to the resource 
+                          # with a label of app: node-app
+          ports:
+          - name: http
+            port: 8080       # Port of the Service
+            targetPort: 8080 # Container Port
+
+Suppose there are two services with names **frontend** and **backend**. Now a frontend Pod can access a backend Pod using a backend:port
+
+#### Example (NodePort)
+
+        apiVersion: v1 # Kubernetes API version
+        kind: Service  # resource type
+        metadata:   # Metadata of the service
+          name: node-app # Name of Service
+                         # each service gets a DNS entry
+          labels:
+            app: node-app
+        spec:
+          selector:
+            type: NodePort
+            app: node-app # Service will apply to the resource 
+                          # with a label of app: node-app
+          ports:
+          - name: http
+            port: 8080       # Port of the Service
+            targetPort: 8080 # Container Port
+            nodePort: 31000  # Optionally set b/w 30000-32767
+
+
+#### Example (LoadBalancer)
+
+        apiVersion: v1 # Kubernetes API version
+        kind: Service  # resource type
+        metadata:   # Metadata of the service
+          name: node-app # Name of Service
+                         # each service gets a DNS entry
+          labels:
+            app: node-app
+        spec:
+          selector:
+            type: LoadBalancer  # normally used  with cloud providers
+            app: node-app # Service will apply to the resource 
+                          # with a label of app: node-app
+          ports:
+          - port: 8080       # Port of the Service defaults to 80
+            targetPort: 8080 # Container Port
+
+#### Example (ExternalName)
+
+* Other Pods can use this FQDN to access the external service
+* Service will proxy to FQDN
+
+        apiVersion: v1 # Kubernetes API version
+        kind: Service  # resource type
+        metadata:   # Metadata of the service
+          name: external-service
+          labels:
+            app: node-app
+        spec:
+          selector:
+            type: ExternalName
+            externalName: api.acmecorp.com
+          ports:
+          - port: 9000       # Port of the Service defaults to 80
+
+### Commands
+
+      # Creates CusterIP if we have not specified type
+      kubectl create -f file.service.yml 
+
+      # Update a Service
+      # Assumes --save-config was used with create
+      kubectl apply -f file.service.yml
+
+      # Shell into a Pod and test a URL. Add -c [containerID]
+      # in cases where multiple containers are running in the Pod
+      kubectl exec [pod-name]  -- curl -s http://podIP
+
+      # Install and use curl (example Alpine Linux)
+      kubectl exec [pod-name] -it sh
+      > apk add curl
+      > curl -s http://podIP
+
+### Example standalone.pod.yml
+
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: node-app
+      spec:
+        containers:
+        - name: node-app
+          image: gireeshcse/node-demo-k8:v3
+
+      kubectl create -f standalone.pod.yml --save-config
+      kubectl get pods
+      # Output of above command first one is standalone Pod
+      NAME                        READY   STATUS    RESTARTS   AGE
+      node-app                    1/1     Running   0          6m9s
+      node-app-85dcdf447c-mj6sv   1/1     Running   0          108m
+      node-app-85dcdf447c-x7492   1/1     Running   0          108m
+      # to Get IP of pod
+      kubectl get pod node-app-85dcdf447c-mj6sv -o yaml
+      kubectl describe pod node-app-85dcdf447c-mj6sv
+      # The above commands output contains
+      # podIP: 172.17.0.6  # First Command
+      # IP: 172.17.0.6  # 2nd Command
+
+      # open shell prompt in standalone Pod 
+      kubectl exec node-app -it sh
+      # uname -a
+      Linux node-app 5.0.0-29-generic #31~18.04.1-Ubuntu SMP Thu Sep 12 18:29:21 UTC 2019 x86_64 GNU/Linux
+      # curl http://172.17.0.6:8080
+      Hello World! Version1 -- node-app-85dcdf447c-mj6sv
+
+      # clusterIP.service.yml
+
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nodeapp-clusterip
+      spec:
+        type: ClusterIP
+        selector:
+          app: node-app
+        ports:
+        - port: 8001
+          targetPort: 8080
+
+      kubectl apply -f clusterIP.service.yml
+      kubectl get services
+      # Output
+      NAME                TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+      kubernetes          ClusterIP   10.96.0.1       <none>        443/TCP    71d
+      nodeapp-clusterip   ClusterIP   10.96.251.157   <none>        8001/TCP   52s
+
+      # open shell prompt in standalone Pod 
+      kubectl exec node-app -it sh
+      # curl 10.96.251.157:8001
+      Hello World! Version1 -- node-app-85dcdf447c-x7492
+      # curl http://nodeapp-clusterip:8001
+      Hello World! Version1 -- node-app-85dcdf447c-x7492
+
+      kubectl exec node-app-85dcdf447c-x7492 -it sh
+      # curl http://nodeapp-clusterip:8001
+      Hello World! Version1 -- node-app-85dcdf447c-mj6sv
+
+      kubectl get pods
+      NAME                        READY   STATUS    RESTARTS   AGE
+      node-app                    1/1     Running   0          31m
+      node-app-85dcdf447c-mj6sv   1/1     Running   0          133m
+      node-app-85dcdf447c-x7492   1/1     Running   0          133m
+
+      # Delete the service
+      kubectl delete -f clusterIP.service.yml
+
+The above demonstrates pods calling pods. Used for debugging
+
+### NodePort
+
+      # standalone.pod.yml
+
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: node-app-standalone
+      spec:
+        containers:
+        - name: node-app-standalone
+          image: gireeshcse/node-demo-k8:v3
+
+      kubectl create -f standalone.pod.yml --save-config
+
+      # nodeport.service.yml
+      
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nodeapp-nodeport
+      spec:
+        type: NodePort
+        selector:
+          app: node-app
+        ports:
+        - port: 8080
+          targetPort: 8080
+          nodePort: 31000
+
+      kubectl apply -f nodeport.service.yml
+      kubectl get services
+      # O/p of above command
+      NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+      kubernetes         ClusterIP   10.96.0.1       <none>        443/TCP          71d
+      nodeapp-nodeport   NodePort    10.96.201.120   <none>        8001:31000/TCP   38s
+
+      # Worked for
+      http://127.0.0.1:31001/
+      # http://localhost:31001 didn't work
+
+      # Delete
+      kubectl delete -f nodeport.service.yml
+
+Here it is exposed to the outside the cluster.
+
+### LoadBalancer
+
+
+      # loadbalancer.service.yml
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: nodeapp-loadbalancer
+      spec:
+        type: LoadBalancer
+        selector:
+          app: node-app
+        ports:
+        - name: "8002"
+          port: 8002
+          targetPort: 8080
+
+      kubectl create -f loadbalancer.service.yml --save-config
+
+      kubectl get services
+      # Output
+      NAME                           TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+      service/kubernetes             ClusterIP      10.96.0.1     <none>        443/TCP          71d
+      service/nodeapp-loadbalancer   LoadBalancer   10.96.9.158   <pending>     8080:31309/TCP   3m58s
+
+      # For Docker Destop EXTERNAL-IP of load-balancer will be localhost
+      # You can access localhost:8080
+
+      # For Minikube
+      sudo minikube service nodeapp-loadbalancer
+      -----------|----------------------|-------------|--------------------------|
+      | NAMESPACE |         NAME         | TARGET PORT |           URL            |
+      |-----------|----------------------|-------------|--------------------------|
+      | default   | nodeapp-loadbalancer |        8080 | http://192.168.1.4:31309 
+
+      # to access http://192.168.1.4:31309
+
+
 
 
 
