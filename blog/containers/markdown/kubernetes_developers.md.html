@@ -631,14 +631,14 @@ kubectl port-forward service/[service-name] 8080
 # Examples
 kubectl port-forward pod/node-app-85dcdf447c-mj6sv 8080:8080
 kubectl port-forward deployment/node-app 8080
-kubectl port-forward deployment/node-app 9000:8080</code></pre><p><strong>port-forward is used for debugging nad testing</strong></p>
+kubectl port-forward deployment/node-app 9000:8080</code></pre><p><strong>port-forward is used for debugging and testing</strong></p>
 <h3 id="defining-services-with-yaml">Defining Services with YAML</h3>
 <pre><code>  apiVersion: v1 # Kubernetes API version
   kind: Service  # resource type
   metadata:   # Metadata of the service
   spec:
     type:  # Type of service(ClusterIP,NodePort,LoadBalancer)
-           # Defaults to CLusterIP
+           # Defaults to ClusterIP
     selector: # Select Pod template label(s) 
               # that service will apply to
 
@@ -676,7 +676,8 @@ kubectl port-forward deployment/node-app 9000:8080</code></pre><p><strong>port-f
       - name: http
         port: 8080       # Port of the Service
         targetPort: 8080 # Container Port
-        nodePort: 31000  # Optionally set b/w 30000-32767</code></pre><h4 id="example-loadbalancer">Example (LoadBalancer)</h4>
+        nodePort: 31000  # Optionally set b/w 30000-32767</code></pre><p>Note: I can access the service using 127.0.0.1:31000 by not localhost:31000(Ubuntu 18.04)</p>
+<h4 id="example-loadbalancer">Example (LoadBalancer)</h4>
 <pre><code>    apiVersion: v1 # Kubernetes API version
     kind: Service  # resource type
     metadata:   # Metadata of the service
@@ -978,7 +979,8 @@ kubectl port-forward deployment/node-app 9000:8080</code></pre><p><strong>port-f
       SecretName:  default-token-g5sp9
       Optional:    false
 
-    kubectl exec docker-volume -it sh</code></pre><h3 id="cloud-volumes">Cloud Volumes</h3>
+    kubectl exec docker-volume -it sh</code></pre><p>The volumes key should be at the same level as containers (In deployments file)</p>
+<h3 id="cloud-volumes">Cloud Volumes</h3>
 <ul>
 <li>Azure - Azure Disk and Azue File</li>
 <li>AWS - Elastic Block Store</li>
@@ -1104,7 +1106,7 @@ kubectl port-forward deployment/node-app 9000:8080</code></pre><p><strong>port-f
 <li>Supports dynamic provisioning of PersistentVolumes</li>
 <li>Adminstrators don&#39;t have to create PVs in advance.</li>
 </ul>
-<h3 id="define-localtorage">Define Localtorage</h3>
+<h3 id="define-localstorage">Define LocalStorage</h3>
 <pre><code>apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -1147,7 +1149,7 @@ volumeBindingMode: WaitForFirstConsumer
       resources:
         requests:
           storage: 1Gi</code></pre><h3 id="using-pvc">Using PVC</h3>
-<pre><code>  apiVersion: apps/v
+<pre><code>  apiVersion: apps/v1
   kind: [Pod | Deployment | StatefulSet]
 
   ...

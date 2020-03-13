@@ -1,4 +1,5 @@
 [Getting Started](https://docs.pkp.sfu.ca/dev/documentation/en/getting-started)
+
 [Documnetation](https://pkp.sfu.ca/ojs/doxygen/master/html/index.html)
 
 # Project Setup

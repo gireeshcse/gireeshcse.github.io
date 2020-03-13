@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hostpathfile-volume-example
+spec:
+  replicas: 2
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app: hostpathfile-app
+  template:
+    metadata:
+      labels:
+        app: hostpathfile-app
+    spec:
+      containers:
+      - image: nginx:alpine
+        name: hostpathfile-app
+        resources:
+        volumeMounts:
+        - name: hostpath-file # Reference "hostpath-file" Volume
+          mountPath: /usr/share/nginx/html/new 
+      volumes:
+      - name: hostpath-file # Define a file volume
+        hostPath: # on host
+          path: /home/machine/public_html
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hostpathfile-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: hostpathfile-app # hostpathfile-app
+  ports:
+  - port: 8080
+    targetPort: 80 # container app port
+    nodePort: 31000

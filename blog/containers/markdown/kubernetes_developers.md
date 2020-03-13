@@ -718,7 +718,7 @@ Helpful for testing to reach a particular Pod using NodePort Service.
     kubectl port-forward deployment/node-app 8080
     kubectl port-forward deployment/node-app 9000:8080
 
-**port-forward is used for debugging nad testing**
+**port-forward is used for debugging and testing**
 
 ### Defining Services with YAML
 
@@ -728,7 +728,7 @@ Helpful for testing to reach a particular Pod using NodePort Service.
       metadata:   # Metadata of the service
       spec:
         type:  # Type of service(ClusterIP,NodePort,LoadBalancer)
-               # Defaults to CLusterIP
+               # Defaults to ClusterIP
         selector: # Select Pod template label(s) 
                   # that service will apply to
 
@@ -776,6 +776,7 @@ Suppose there are two services with names **frontend** and **backend**. Now a fr
             targetPort: 8080 # Container Port
             nodePort: 31000  # Optionally set b/w 30000-32767
 
+Note: I can access the service using 127.0.0.1:31000 by not localhost:31000(Ubuntu 18.04)
 
 #### Example (LoadBalancer)
 
@@ -1098,6 +1099,7 @@ Valid types include
 
         kubectl exec docker-volume -it sh
 
+The volumes key should be at the same level as containers (In deployments file)
 
 ### Cloud Volumes
 
@@ -1237,7 +1239,7 @@ Valid types include
 * Supports dynamic provisioning of PersistentVolumes
 * Adminstrators don't have to create PVs in advance.
 
-### Define Localtorage
+### Define LocalStorage
 
     apiVersion: storage.k8s.io/v1
     kind: StorageClass
@@ -1293,7 +1295,7 @@ In above, It selects the Node where the local storage PV is created based on con
 ### Using PVC
 
 
-      apiVersion: apps/v
+      apiVersion: apps/v1
       kind: [Pod | Deployment | StatefulSet]
 
       ...
