@@ -1309,6 +1309,16 @@ In above, It selects the Node where the local storage PV is created based on con
 
 Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods.
 
+Like a Deployment , a StatefulSet manages Pods that are based on an identical container spec. Unlike a Deployment, a StatefulSet maintains a sticky identity for each of their Pods. These pods are created from the same spec, but are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
+
+StatefulSets are valuable for applications that require one or more of the following.
+
+* Stable, unique network identifiers.
+* Stable, persistent storage.
+* Ordered, graceful deployment and scaling.
+* Ordered, automated rolling updates.
+
+
 # ConfigMaps and Secrets
 
 # Credits
