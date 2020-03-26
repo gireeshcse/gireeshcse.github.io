@@ -1,0 +1,350 @@
+<h1 id="docker">Docker</h1>
+<ul>
+<li>Debug your app, not your environment</li>
+<li>Securely build and share any application, anywhere</li>
+<li>The fastest way to design and deliver containerized applications and microservices on the desktop and cloud.</li>
+</ul>
+<p>To get started</p>
+<pre><code>docker run -dp 80:80 docker/getting-started</code></pre><ul>
+<li>-d - run the container in detached mode (in the background)</li>
+<li>-p 80:80 - map port 80 of the host to port 80 in the container</li>
+<li>docker/getting-started - the image to use</li>
+</ul>
+<h2 id="container">Container</h2>
+<ul>
+<li>Container is simply another process on your machine that has been isolated from all other processes on the host machine.</li>
+<li>A standard unit of software.</li>
+</ul>
+<h3 id="common-features">Common Features</h3>
+<ul>
+<li>They have to run on <strong>single</strong> host</li>
+<li>Containers have a <strong>root</strong> process.</li>
+<li>Isolated</li>
+</ul>
+<h4 id="chroot-in-linux">chroot in Linux</h4>
+<p>A <strong>chroot</strong> command on Unix operating systems is an operation that changes the apparent root directory for the current running process and its children. When you change root to another directory you cannot access files and commands outside that directory. This directory is called a <strong>chroot jail</strong>.</p>
+<h4 id="pivot_root-in-linux">pivot_root in Linux</h4>
+<p> Changes the <strong>root mount</strong> in the mount namespace of the calling process.  More precisely, it moves the root mount to the directory <strong>put_old</strong> and makes <strong>new_root</strong> the new root mount.</p>
+<p>Has the benefit of putting the old mounts into a separate directory. These old mounts could be unmounted afterwards to make the filesystem completely invisible to broken out processes.</p>
+<h3 id="container-image">Container Image</h3>
+<p>When running a container, it uses an isolated filesystem. This custom filesystem is provided by a container image. Since the image contains the container&#39;s filesystem, it must contain everything needed to run an application - all dependencies, configuration, scripts, binaries, etc. The image also contains other configuration for the container, such as environment variables, a default command to run, and other metadata.</p>
+<h2 id="example-1">Example: 1</h2>
+<ul>
+<li><p>Download the the app code from </p>
+<p>  <a href="https://github.com/docker/getting-started/tree/master/app">https://github.com/docker/getting-started/tree/master/app</a></p>
+</li>
+<li><p>Define <strong>Dockerfile</strong></p>
+<pre><code>  FROM node:12-alpine
+  WORKDIR /app
+  COPY . .
+  RUN yarn install --production
+  CMD [&quot;node&quot;, &quot;/app/src/index.js&quot;]</code></pre><ul>
+<li>CMD directive specifies the default command to run when starting a container from this image.</li>
+</ul>
+</li>
+<li><p>Run following command</p>
+<pre><code>  docker build -t getting-started .</code></pre><ul>
+<li>-t flag tags our image</li>
+</ul>
+</li>
+<li><p>Starting Container</p>
+<p>  docker run -dp 3000:3000 getting-started</p>
+<ul>
+<li>Access application <a href="http://localhost:3000/">http://localhost:3000/</a> in browser. </li>
+</ul>
+</li>
+<li><p>docker ps</p>
+<pre><code>  CONTAINER ID  IMAGE            COMMAND CREATED        STATUS        PORTS                 
+  5894edcec7d1  getting-started  &quot;docker 2 minutes ago  Up 2 minutes  0.0.0.0:3000-&gt;3000/tcp
+  ab95b5dcdb52  docker/getting-  &quot;nginx  50 minutes ago Up 50 minutes 0.0.0.0:80-&gt;80/tcp</code></pre></li>
+<li><p>Important Commands</p>
+<pre><code>  docker stop &lt;the-container-id&gt; # To stop container from running
+  docker rm &lt;the-container-id&gt; # To remove a container
+  docker rm -f &lt;the-container-id&gt; # force flag
+  docker image ls # to list the images in system
+  docker tag getting-started gireeshcse/getting-started # to create a tag 
+  docker login -u YOUR-USER-NAME # to login to the account i.e one time activity
+  docker exec &lt;container-id&gt; cat /data.txt 
+  docker run -it ubuntu ls /
+  docker logs -f &lt;container-id&gt; # We can watch logs </code></pre></li>
+<li><p>Update App</p>
+<ul>
+<li>Update Source code </li>
+<li>Build (docker build -t getting-started .)</li>
+<li>Stop and remove the running container.</li>
+</ul>
+</li>
+</ul>
+<h3 id="sharing-the-app">Sharing the App</h3>
+<ul>
+<li>Create an account in <a href="https://hub.docker.com/">Docker Hub</a></li>
+<li>Create Repo in Docker Hub (Public)</li>
+<li>Push the image (docker push gireeshcse/getting-started)</li>
+</ul>
+<h3 id="testing-your-images">Testing your images</h3>
+<p><a href="http://play-with-docker.com/">http://play-with-docker.com/</a></p>
+<p>Create instance and test your app.</p>
+<h3 id="persisting-our-db">Persisting our DB</h3>
+<h4 id="containers-filesystem">Containers Filesystem</h4>
+<p>When a container runs, it uses the various layers from an image for its filesystem. Each container also gets its own &quot;scratch space&quot; to create/update/remove files. Any changes won&#39;t be seen in another container, even if they are using the same image.</p>
+<h4 id="container-volumes">Container Volumes</h4>
+<p>Volumes provide the ability to connect specific filesystem paths of the container back to the host machine. If a directory in the container is mounted, changes in that directory are also seen on the host machine. If we mount that same directory across container restarts, we&#39;d see the same files.</p>
+<p><strong>Persisting Data</strong></p>
+<p>By creating a volume and attaching (often called &quot;mounting&quot;) it to the directory where the data is stored in , we can persist the data. 
+If our container writes to the mounted directory, it will be persisted to the host in the volume.</p>
+<p><strong>Named Volume</strong></p>
+<p>Named Volume is simply a bucket of data. Docker maintains the physical location on the disk and we need to remember the name of the volume(Every time we use the volume)</p>
+<pre><code> docker volume create todo-db
+ docker run -dp 3000:3000 -v todo-db:/etc/todos getting-started</code></pre><ul>
+<li>-v flag to specify a volume mount</li>
+</ul>
+<p><strong>Diving into our Volume</strong></p>
+<pre><code>        $ docker volume inspect todo-db
+        [
+            {
+                &quot;CreatedAt&quot;: &quot;2020-03-26T21:05:29+05:30&quot;,
+                &quot;Driver&quot;: &quot;local&quot;,
+                &quot;Labels&quot;: {},
+                &quot;Mountpoint&quot;: &quot;/var/lib/docker/volumes/todo-db/_data&quot;,
+                &quot;Name&quot;: &quot;todo-db&quot;,
+                &quot;Options&quot;: {},
+                &quot;Scope&quot;: &quot;local&quot;
+            }
+        ]</code></pre><p>Note: Generally We will need to have root access to access this directory from the host.</p>
+<p><strong>Bind Mounts</strong></p>
+<p>With bind mounts, we control the exact mountpoint on the host. We can use this to persist data, but is often used to provide additional data into containers. When working on an application, we can use a bind mount to mount our source code into the container to let it see code changes, respond, and let us see the changes right away.</p>
+<p><strong>Starting a Dev-Mode Container</strong></p>
+<ul>
+<li><p>Mount our source code into the container</p>
+</li>
+<li><p>Install all dependencies, including the &quot;dev&quot; dependencies</p>
+</li>
+<li><p>Start nodemon to watch for filesystem changes(For nodejs applications)</p>
+<pre><code>      docker run -dp 3000:3000 \
+          -w /app -v $PWD:/app \
+          node:12-alpine \
+          sh -c &quot;yarn install &amp;&amp; yarn run dev&quot;</code></pre></li>
+</ul>
+<pre><code>* -w /app - sets the &quot;working directory&quot; or the current directory that the command will run from</code></pre><ul>
+<li>After making changes and testing changes, we can finally build our new image.</li>
+</ul>
+<p>Note: <em>Bind mounts is very common for local development setups</em></p>
+<h3 id="rule-of-thumb">Rule of Thumb</h3>
+<p><strong>each container should do one thing and do it well</strong></p>
+<p><strong>Some of the Reasons</strong></p>
+<ul>
+<li>There&#39;s a good chance we&#39;d have to scale APIs and front-ends differently than databases</li>
+<li>Separate containers let us version and update versions in isolation</li>
+<li>While we may use a container for the database locally, we may want to use a managed service for the database in production. We don&#39;t want to ship your database engine with your app then.</li>
+<li>Running multiple processes will require a process manager (the container only starts one process), which adds complexity to container startup/shutdown</li>
+</ul>
+<h3 id="container-networking">Container Networking</h3>
+<p>If two containers are on the same network, they can talk to each other. If they aren&#39;t, they can&#39;t.</p>
+<ul>
+<li><p>Creating a network</p>
+<pre><code>  docker network create todo-app</code></pre></li>
+<li><p>Start MySQL Container</p>
+<pre><code>  docker run -d \
+      --network todo-app --network-alias mysql \
+      -v todo-mysql-data:/var/lib/mysql \
+      -e MYSQL_ROOT_PASSWORD=secret \
+      -e MYSQL_DATABASE=todos \
+      mysql:5.7</code></pre><ul>
+<li>-e to specify the environmental variables. FOr valid environmental varaibles for mysql,Refer <a href="https://hub.docker.com/_/mysql/">https://hub.docker.com/_/mysql/</a></li>
+</ul>
+</li>
+<li><p>To Verify</p>
+<pre><code>  docker exec -it &lt;mysql-container-id&gt; mysql -p</code></pre></li>
+</ul>
+<p>Enter the password and give show databases</p>
+<pre><code>    mysql&gt; show databases;
+    +--------------------+
+    | Database           |
+    +--------------------+
+    | information_schema |
+    | mysql              |
+    | performance_schema |
+    | sys                |
+    | todos              |
+    +--------------------+
+    5 rows in set (0.00 sec)</code></pre><ul>
+<li><p>To test and running another container in the same network</p>
+<p>  docker run -it --network todo-app nicolaka/netshoot
+  dig mysql # DNS Tool which we can look up the IP address fro hostname <strong>mysql</strong></p>
+<pre><code>  ; &lt;&lt;&gt;&gt; DiG 9.14.8 &lt;&lt;&gt;&gt; mysql
+  ;; global options: +cmd
+  ;; Got answer:
+  ;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 14072
+  ;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+  ;; QUESTION SECTION:
+  ;mysql.                         IN      A
+
+  ;; ANSWER SECTION:
+  mysql.                  600     IN      A       172.19.0.2
+
+  ;; Query time: 88 msec
+  ;; SERVER: 127.0.0.11#53(127.0.0.11)
+  ;; WHEN: Thu Mar 26 17:12:55 UTC 2020
+  ;; MSG SIZE  rcvd: 44</code></pre></li>
+</ul>
+<p><strong>MYSQl Environmental Variables</strong></p>
+<ul>
+<li>MYSQL_HOST - the hostname for the running MySQL server</li>
+<li>MYSQL_USER - the username to use for the connection</li>
+<li>MYSQL_PASSWORD - the password to use for the connection</li>
+<li>MYSQL_DB - the database to use once connected</li>
+</ul>
+<ul>
+<li><p>Run Our App using mysql containers</p>
+<pre><code>  $ docker run -dp 3000:3000 \
+  -w /app -v $PWD:/app \
+  --network todo-app \
+  -e MYSQL_HOST=mysql \
+  -e MYSQL_USER=root \
+  -e MYSQL_PASSWORD=secret \
+  -e MYSQL_DB=todos \
+  node:12-alpine \
+  sh -c &quot;yarn install &amp;&amp; yarn run dev&quot;
+
+  $ docker logs 0c48a4df697e
+  yarn install v1.22.0
+  [1/4] Resolving packages...
+  success Already up-to-date.
+  Done in 0.57s.
+  yarn run v1.22.0
+  $ nodemon src/index.js
+  [nodemon] 1.19.2
+  [nodemon] to restart at any time, enter `rs`
+  [nodemon] watching dir(s): *.*
+  [nodemon] starting `node src/index.js`
+  Waiting for mysql:3306.
+  Connected!
+  Connected to mysql db at host mysql
+  Listening on port 3000
+
+  $ docker exec -it 4934e3a2c10d mysql -p todos
+
+  mysql&gt; select * from todo_items;
+  +--------------------------------------+-------------------------+-----------+
+  | id                                   | name                    | completed |
+  +--------------------------------------+-------------------------+-----------+
+  | 344ba928-f463-45d4-8015-2e571fcc7948 | Wake up @5:00AM         |         0 |
+  | 1c3833af-4cde-45bc-9d21-663ce045e332 | Say Good Night to Finch |         0 |
+  +--------------------------------------+-------------------------+-----------+
+  2 rows in set (0.00 sec)</code></pre></li>
+</ul>
+<h2 id="docker-compose">Docker Compose</h2>
+<ul>
+<li><p>Docker Compose is a tool that was developed to help define and share multi-container applications.</p>
+</li>
+<li><p>With Compose, we can create a YAML file to define the services and with a single command, can spin everything up or tear it all down.</p>
+<pre><code>  $ docker-compose version
+  docker-compose version 1.24.1, build 4667896b
+  docker-py version: 3.7.3
+  CPython version: 3.6.8
+  OpenSSL version: OpenSSL 1.1.0j  20 Nov 2018</code></pre></li>
+<li><p>Create <strong>docker-compose.yml</strong></p>
+<pre><code>  version: &quot;3.7&quot;
+
+  services:
+    app:
+      image: node:12-alpine
+      command: sh -c &quot;yarn install &amp;&amp; yarn run dev&quot;
+      ports:
+        - 3000:3000
+      working_dir: /app
+      volumes:
+        - ./:/app
+      environment:
+        MYSQL_HOST: mysql
+        MYSQL_USER: root
+        MYSQL_PASSWORD: secret
+        MYSQL_DB: todos
+
+    mysql:
+      image: mysql:5.7
+      volumes:
+        - todo-mysql-data:/var/lib/mysql
+      environment: 
+        MYSQL_ROOT_PASSWORD: secret
+        MYSQL_DATABASE: todos
+
+  volumes:
+    todo-mysql-data:
+
+  $ docker-compose up -d
+  Creating network &quot;app_default&quot; with the default driver
+  Creating volume &quot;app_todo-mysql-data&quot; with default driver
+  Creating app_mysql_1 ... done
+  Creating app_app_1   ... done</code></pre></li>
+</ul>
+<p><strong>Note:</strong> By default, Docker Compose automatically creates a network specifically for the application stack (which is why we didn&#39;t define one in the compose file).</p>
+<p>TO Check the logs</p>
+<pre><code>    docker-compose logs -f</code></pre><p> The -f flag &quot;follows&quot; the log, so will give you live output as it&#39;s generated.</p>
+<pre><code>    docker-compose down
+    docker-compose down --volumes # Remove volumes as well</code></pre><h2 id="best-practices">Best Practices</h2>
+<pre><code>$ docker image history getting-started
+
+IMAGE               CREATED       CREATED BY                                      SIZE  
+2fd3a9645cf6        5 hours ago   /bin/sh -c #(nop)  CMD [&quot;node&quot; &quot;/app/src/ind…   0B                  
+ffa2a47db0b7        5 hours ago   /bin/sh -c yarn install --production            83.2MB              
+296afaf1a376        5 hours ago   /bin/sh -c #(nop) COPY dir:1bc092cfe17c580ca…   4.63MB              
+9c5526543a3f        6 hours ago   /bin/sh -c #(nop) WORKDIR /app                  0B                  
+f77abbe89ac1        2 days ago    /bin/sh -c #(nop)  CMD [&quot;node&quot;]                 0B                  
+&lt;missing&gt;           2 days ago    /bin/sh -c #(nop)  ENTRYPOINT [&quot;docker-entry…   0B                  
+&lt;missing&gt;           2 days ago    /bin/sh -c #(nop) COPY file:238737301d473041…   116B                
+&lt;missing&gt;           2 days ago    /bin/sh -c apk add --no-cache --virtual .bui…   7.62MB              
+&lt;missing&gt;           2 days ago    /bin/sh -c #(nop)  ENV YARN_VERSION=1.22.0      0B                  
+&lt;missing&gt;           2 days ago    /bin/sh -c addgroup -g 1000 node     &amp;&amp; addu…   74.9MB              
+&lt;missing&gt;           2 days ago    /bin/sh -c #(nop)  ENV NODE_VERSION=12.16.1     0B                  
+&lt;missing&gt;           2 days ago    /bin/sh -c #(nop)  CMD [&quot;/bin/sh&quot;]              0B                  
+&lt;missing&gt;           2 days ago    /bin/sh -c #(nop) ADD file:0c4555f363c2672e3…   5.6MB </code></pre><ul>
+<li><p>docker image history --no-trunc getting-started </p>
+<pre><code>  # Dockerfile
+  FROM node:12-alpine
+  WORKDIR /app
+  COPY . .
+  RUN yarn install --production
+  CMD [&quot;node&quot;, &quot;/app/src/index.js&quot;]
+
+  # Dockerfile
+  FROM node:12-alpine
+  WORKDIR /app
+  COPY package.json yarn.lock ./
+  RUN yarn install --production
+  COPY . .
+  CMD [&quot;node&quot;, &quot;/app/src/index.js&quot;]</code></pre></li>
+</ul>
+<p><strong>Once a layer changes, all downstream layers have to be recreated as well</strong></p>
+<h3 id="multi-stage-builds">Multi-Stage Builds</h3>
+<p>Multi-stage builds are an incredibly powerful tool to help use multiple stages to create an image. There are several advantages for them:</p>
+<ul>
+<li>Separate build-time dependencies from runtime dependencies</li>
+<li>Reduce overall image size by shipping only what your app needs to run</li>
+</ul>
+<h4 id="maventomcat-example¶">Maven/Tomcat Example¶</h4>
+<p>When building Java-based applications, a JDK is needed to compile the source code to Java bytecode. However, that JDK isn&#39;t needed in production. Also, you might be using tools like Maven or Gradle to help build the app. Those also aren&#39;t needed in our final image. Multi-stage builds help.</p>
+<pre><code>    FROM maven AS build
+    WORKDIR /app
+    COPY . .
+    RUN mvn package
+
+    FROM tomcat
+    COPY --from=build /app/target/file.war /usr/local/tomcat/webapps </code></pre><p>In this example, we use one stage (called build) to perform the actual Java build using Maven. In the second stage (starting at FROM tomcat), we copy in files from the build stage. The final image is only the last stage being created (which can be overridden using the --target flag).</p>
+<h4 id="react-example">React Example</h4>
+<p>When building React applications, we need a Node environment to compile the JS code (typically JSX), SASS stylesheets, and more into static HTML, JS, and CSS. If we aren&#39;t doing server-side rendering, we don&#39;t even need a Node environment for our production build. Why not ship the static resources in a static nginx container?</p>
+<pre><code>    FROM node:12 AS build
+    WORKDIR /app
+    COPY package* yarn.lock ./
+    RUN yarn install
+    COPY public ./public
+    COPY src ./src
+    RUN yarn run build
+
+    FROM nginx:alpine
+    COPY --from=build /app/build /usr/share/nginx/html</code></pre><p>Here, we are using a node:12 image to perform the build (maximizing layer caching) and then copying the output into an nginx container.</p>
+<h2 id="important-links">Important Links</h2>
+<ul>
+<li><a href="https://diogomonica.com/2017/03/27/why-you-shouldnt-use-env-variables-for-secret-data/">Why you shouldn&#39;t use ENV variables for secret data</a></li>
+</ul>

@@ -1321,6 +1321,25 @@ StatefulSets are valuable for applications that require one or more of the follo
 
 # ConfigMaps and Secrets
 
+* Provides a way to a store cofiguration info and provide it to containers.
+* Provides a way to inject configuration data into a container.
+* Can store entire files or provide key/value pairs.
+
+
+Access from Pod
+  - Environment variables(Key/Value)
+  - ConfigMap volume (Access as files)
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+  labels:
+    name: app-settings
+
+
+
+
 # Credits
 
 [Great Site ](https://github.com/kubernetes/examples)

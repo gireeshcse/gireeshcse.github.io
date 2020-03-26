@@ -1159,7 +1159,31 @@ volumeBindingMode: WaitForFirstConsumer
         persistentVolumeClaim:
           claimName: my-pvc</code></pre><h3 id="kubernetes-statefulset">Kubernetes StatefulSet</h3>
 <p>Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods.</p>
+<p>Like a Deployment , a StatefulSet manages Pods that are based on an identical container spec. Unlike a Deployment, a StatefulSet maintains a sticky identity for each of their Pods. These pods are created from the same spec, but are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.</p>
+<p>StatefulSets are valuable for applications that require one or more of the following.</p>
+<ul>
+<li>Stable, unique network identifiers.</li>
+<li>Stable, persistent storage.</li>
+<li>Ordered, graceful deployment and scaling.</li>
+<li>Ordered, automated rolling updates.</li>
+</ul>
 <h1 id="configmaps-and-secrets">ConfigMaps and Secrets</h1>
+<ul>
+<li>Provides a way to a store cofiguration info and provide it to containers.</li>
+<li>Provides a way to inject configuration data into a container.</li>
+<li>Can store entire files or provide key/value pairs.</li>
+</ul>
+<p>Access from Pod</p>
+<ul>
+<li>Environment variables(Key/Value)</li>
+<li>ConfigMap volume (Access as files)</li>
+</ul>
+<p>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-settings
+  labels:
+    name: app-settings</p>
 <h1 id="credits">Credits</h1>
 <p><a href="https://github.com/kubernetes/examples">Great Site </a></p>
 <p><a href="https://github.com/DanWahlin/CodeWithDanDockerServices/">Main Credit</a></p>
