@@ -66,7 +66,68 @@
   docker login -u YOUR-USER-NAME # to login to the account i.e one time activity
   docker exec &lt;container-id&gt; cat /data.txt 
   docker run -it ubuntu ls /
-  docker logs -f &lt;container-id&gt; # We can watch logs </code></pre></li>
+  docker logs -f &lt;container-id&gt; # We can watch logs 
+  docker ps # shows running containers by default 
+  docker ps -a #all containers which are running as well as stopped
+  docker image history &lt;image-name&gt;
+  docker inspect &lt;container_id&gt;
+  #  matches containers with the color label regardless of its value.
+  docker ps --filter &quot;label=color&quot; 
+  # matches containers with the color label with the blue value.
+  docker ps --filter &quot;label=color=blue&quot;
+  docker ps --filter &quot;name=nostalgic_stallman&quot;
+  docker ps --filter &quot;name=nostalgic&quot; # filter for a substring in a name 
+  docker ps -a --filter &#39;exited=0&#39;
+  # exited with status of 137 meaning a SIGKILL(9) killed them.
+  docker ps -a --filter &#39;exited=137&#39;
+  # created, restarting, running, removing, paused, exited and dead
+  docker ps --filter status=running
+  docker ps --filter publish=80
+  docker run -d --publish=80 busybox top
+  docker run -d --expose=8080 busybox top
+  # all containers that have exposed TCP port in the range of 8000-8080
+  docker ps --filter expose=8000-8080/tcp
+  docker ps --filter publish=80/udp
+  docker images -a | grep &quot;pattern&quot; | awk &#39;{print $3}&#39; | xargs docker rmi
+  docker images -a | grep &quot;^&lt;none&gt;.*&quot; | awk &#39;{print &quot;\&quot;image=&quot;$3&quot;\&quot;&quot;}&#39;</code></pre></li>
+<li><p>docker ps Formatting</p>
+<ul>
+<li><p>Placeholders</p>
+<ul>
+<li><p>.ID</p>
+</li>
+<li><p>.Image</p>
+</li>
+<li><p>.Command</p>
+</li>
+<li><p>.CreatedAt</p>
+</li>
+<li><p>.RunningFor</p>
+</li>
+<li><p>.Ports</p>
+</li>
+<li><p>.Status</p>
+</li>
+<li><p>.Size</p>
+</li>
+<li><p>.Names</p>
+</li>
+<li><p>.Labels</p>
+</li>
+<li><p>.Label</p>
+</li>
+<li><p>.Mounts</p>
+</li>
+<li><p>.Networks</p>
+<pre><code>      $ docker ps -a --format &quot;{{.ID}}: {{.Image}}&quot;
+      338b9bea3cb0: node:12-alpine
+      4fcc126a4a30: nicolaka/netshoot
+      f0fd3dd0beb3: ubuntu
+      701690bf6bdb: ubuntu</code></pre></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><p>Update App</p>
 <ul>
 <li>Update Source code </li>
@@ -323,7 +384,7 @@ f77abbe89ac1        2 days ago    /bin/sh -c #(nop)  CMD [&quot;node&quot;]     
 <li>Separate build-time dependencies from runtime dependencies</li>
 <li>Reduce overall image size by shipping only what your app needs to run</li>
 </ul>
-<h4 id="maventomcat-example¶">Maven/Tomcat Example¶</h4>
+<h4 id="maventomcat-example">Maven/Tomcat Example</h4>
 <p>When building Java-based applications, a JDK is needed to compile the source code to Java bytecode. However, that JDK isn&#39;t needed in production. Also, you might be using tools like Maven or Gradle to help build the app. Those also aren&#39;t needed in our final image. Multi-stage builds help.</p>
 <pre><code>    FROM maven AS build
     WORKDIR /app

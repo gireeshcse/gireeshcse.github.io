@@ -82,6 +82,51 @@ When running a container, it uses an isolated filesystem. This custom filesystem
         docker exec <container-id> cat /data.txt 
         docker run -it ubuntu ls /
         docker logs -f <container-id> # We can watch logs 
+        docker ps # shows running containers by default 
+        docker ps -a #all containers which are running as well as stopped
+        docker image history <image-name>
+        docker inspect <container_id>
+        #  matches containers with the color label regardless of its value.
+        docker ps --filter "label=color" 
+        # matches containers with the color label with the blue value.
+        docker ps --filter "label=color=blue"
+        docker ps --filter "name=nostalgic_stallman"
+        docker ps --filter "name=nostalgic" # filter for a substring in a name 
+        docker ps -a --filter 'exited=0'
+        # exited with status of 137 meaning a SIGKILL(9) killed them.
+        docker ps -a --filter 'exited=137'
+        # created, restarting, running, removing, paused, exited and dead
+        docker ps --filter status=running
+        docker ps --filter publish=80
+        docker run -d --publish=80 busybox top
+        docker run -d --expose=8080 busybox top
+        # all containers that have exposed TCP port in the range of 8000-8080
+        docker ps --filter expose=8000-8080/tcp
+        docker ps --filter publish=80/udp
+        docker images -a | grep "pattern" | awk '{print $3}' | xargs docker rmi
+        docker images -a | grep "^<none>.*" | awk '{print "\"image="$3"\""}'
+
+- docker ps Formatting
+  * Placeholders
+    - .ID
+    - .Image
+    - .Command
+    - .CreatedAt
+    - .RunningFor
+    - .Ports
+    - .Status
+    - .Size
+    - .Names
+    - .Labels
+    - .Label
+    - .Mounts
+    - .Networks
+
+                $ docker ps -a --format "{{.ID}}: {{.Image}}"
+                338b9bea3cb0: node:12-alpine
+                4fcc126a4a30: nicolaka/netshoot
+                f0fd3dd0beb3: ubuntu
+                701690bf6bdb: ubuntu
 
 - Update App
 
@@ -383,7 +428,7 @@ Multi-stage builds are an incredibly powerful tool to help use multiple stages t
 * Separate build-time dependencies from runtime dependencies
 * Reduce overall image size by shipping only what your app needs to run
 
-#### Maven/Tomcat Example¶
+#### Maven/Tomcat Example
 
 When building Java-based applications, a JDK is needed to compile the source code to Java bytecode. However, that JDK isn't needed in production. Also, you might be using tools like Maven or Gradle to help build the app. Those also aren't needed in our final image. Multi-stage builds help.
 
