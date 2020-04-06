@@ -1,0 +1,9 @@
+<h3 id="adding-existing-git-repository-to-present-git-repo">Adding existing git repository to present git repo</h3>
+<pre><code>git submodule add &lt;repo_url&gt;  &lt;path_of_submodule_if_you_want_else_where&gt;
+git submodule add https://github.com/gireeshcse/backend-ms1.git</code></pre><p>Adds <strong>.gitmodules</strong> files </p>
+<pre><code>[submodule &quot;backend-ms1&quot;]
+    path = backend-ms1
+    url = https://github.com/gireeshcse/backend-ms1</code></pre><h3 id="track-these-repos">Track these repos</h3>
+<pre><code>git add backend-ms1</code></pre><h3 id="update-all-modules">Update all modules</h3>
+<pre><code>git submodule update --remote</code></pre><h3 id="update-specific-module">Update specific module</h3>
+<pre><code>git submodule update --remote frontend-ms1</code></pre>

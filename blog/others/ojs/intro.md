@@ -6,7 +6,7 @@
 
 ## Database setup
 
-* login inot mysql using root
+* login into mysql using root
 * Create ojs database
 * Create a new mysql User
 

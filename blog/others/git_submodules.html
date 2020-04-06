@@ -52,49 +52,38 @@
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                            <h2 style="text-align: center;" class="widget_title">Other  Posts</h2>
-                </div>
+                            <h2 style="text-align: center;" class="widget_title">Git Submodule</h2>
+				</div>
 			</div>
 			<div class="row">
-				<div class="col-lg-4">
-					<div class="blog_right_sidebar">
-							<aside class="single_sidebar_widget popular_post_widget">
-								<div class="media post_item">
-									<div class="media-body">
-										<a href="ojs3.html"><h3>OJS3: Open Journal Systems</h3></a>
-										<p>8th Mar 2020</p>
-									</div>
-								</div>
-							</aside>
+				<div class="col-lg-3  col-md-3">
+					<div class="blog_info text-right">
+						<div class="post_tag">
+							<a href="#">Git Submodule </a>
+							<a class="active" href="index.html">Others</a>
+						</div>
+						<ul class="blog_meta list">
+							<li><a href="#">Gireesh<i class="lnr lnr-user"></i></a></li>
+							<li><a href="#">6 Apr, 2020<i class="lnr lnr-calendar-full"></i></a></li>
+							
+						</ul>
+						<h4>Credits</h4>
+						<ul class="blog_meta list">
+							<li><a target="_blank" href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">Git Submodule</a></li>
+							
+						</ul>
 					</div>
 				</div>
-
-				<div class="col-lg-4">
-					<div class="blog_right_sidebar">
-							<aside class="single_sidebar_widget popular_post_widget">
-								<div class="media post_item">
-									<div class="media-body">
-										<a href="casbin.html"><h3>Casbin</h3></a>
-										<p>13th Mar 2020</p>
-									</div>
-								</div>
-							</aside>
-					</div>
+				<div class="col-lg-9 col-md-9 blog_details">
+					<h2>Introduction</h2>
+					<p class="excert">
+						Submodules allow us to keep a Git repository as a subdirectory of another Git repository.
+						This lets us clone another repository into your project and keep our commits separate.
+					</p>
+					<iframe id="iframe" style="width: 100%;border: none;" src = "./markdown/git_submodules.md.html"></iframe>
+					
 				</div>
-
-				<div class="col-lg-4">
-					<div class="blog_right_sidebar">
-							<aside class="single_sidebar_widget popular_post_widget">
-								<div class="media post_item">
-									<div class="media-body">
-										<a href="git_submodules.html"><h3>Git Submodules</h3></a>
-										<p>6th Apr 2020</p>
-									</div>
-								</div>
-							</aside>
-					</div>
-				</div>
-		</div>
+			</div><!--Row-->
         </div>
     </section>
     <!--================Blog Area =================-->
@@ -137,6 +126,17 @@ Copyright &copy;<script>document.write(new Date().getFullYear());</script> All r
 	<script src="../../js/jquery.ajaxchimp.min.js"></script>
 	<script src="../../js/mail-script.js"></script>
 	<script src="../../js/theme.js"></script>
+	<script>
+	
+		
+		var iframe = document.getElementById("iframe");
+    
+		// Adjusting the iframe height onload event
+		iframe.onload = function(){
+			iframe.style.height = iframe.contentWindow.document.body.scrollHeight  + 'px';
+		}
+	
+	</script>
 </body>
 
 </html>
