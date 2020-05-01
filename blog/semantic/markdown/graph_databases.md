@@ -123,3 +123,74 @@ This reciprocal query is still easy to implement, but on the database side it’
     JOIN Person p2
         ON pf2.FriendID = p2.ID
     WHERE p1.Person = 'Alice' AND pf2.FriendID <> p1.ID
+
+
+
+### NOSQL Databases Also Lack Relationships
+
+Most NOSQL databases—whether key-value-, document-, or column-oriented— store sets of disconnected documents/values/columns. This makes it difficult to use them for connected data and graphs.
+
+Aggregate stores are not functionally equivalent to graph databases with respect to connected data.
+Aggregate stores do not maintain consistency of connected data, nor do they support what is known as index-free adjacency, whereby elements contain direct links to their neighbors. As a result, for connected data problems, aggregate stores must employ inherently latent methods
+for creating and querying relationships outside the data model.
+
+
+A small social network encoded in an aggregate store
+
+        User: Ram
+        Friends: [Sita]
+
+        User: Sita
+        Friends: [Hanuman, Rohini]
+
+        User: Hanuman
+        Friends: [Ram]
+
+        User: Bharat
+        Friends: [Rohini, Ram]
+
+Requires numerous index lookups but no brute-force scans of the entire dataset.
+
+Here friendship isn’t always symmetric.**"who is friends with Bob?”** is difficult rather than **“who are Bob’s friends?”** because it requires brute-force scan across the whole dataset looking for friends entries that contain Bob.
+
+For above probelm, a graph database provides constant order lookup for the same query. In this case, we simply find the node in the graph that represents Bob, and then follow any incoming friend relationships; these relationships lead to nodes that represent people who consider Bob to be their friend. This is far cheaper than brute-forcing the result because it considers far fewer members of the network; that is, it considers only those that are connected to Bob. Of course, if everybody is friends with Bob, we’ll still end up considering the entire dataset.
+
+To avoid having to process the entire dataset, we could denormalize the storage model by adding backward links. Adding a second property, called perhaps **friended_by** , to each user, we can list the incoming friendship relations associated with that user. But this doesn’t come for free. For starters, we have to pay the initial and ongoing cost of increased write latency, plus the increased disk utilization cost for storing the additional metadata. On top of that, traversing the links remains expensive, because each hop requires an index lookup. This is because aggregates have no notion of locality, unlike graph databases, which naturally provide index-free adjacency through real—not reified—relationships. By implementing a graph structure atop a nonnative store, we get some of the benefits of partial connectedness, but at substantial cost.
+
+This substantial cost is amplified when it comes to traversing deeper than just one hop. Friends are easy enough, but imagine trying to compute—in real time—friends-of-friends, or friends-of-friends-of-friends.
+
+Many systems try to maintain the appearance of graph-like processing, but inevitably it’s done in batches and doesn’t provide the real-time interaction that users demand.
+
+### Graph Databases Embrace Relationships
+
+Relationships in a graph naturally form paths. Querying—or traversing—the graph involves following paths. Because of the fundamentally path-oriented nature of the data model, the majority of path-based graph database operations are highly aligned with the way in which the data is laid out, making them extremely efficient
+
+Graph databases are the best choice for connected data.
+
+Finding extended friends in a relational database versus efficient finding in Neo4j
+
+`
+Depth   | RDBMS execution time(s)    | Neo4j execution time(s)   |  Records returned
+2       |  0.016                     | 0.01                      | ~2500
+3       | 30.267                     | 0.168                     |  ~110,000
+4       | 1543.505                   | 1.359                     | ~600,000
+5       | Unfinished                 | 2.132                     | ~800,000
+`
+
+Neo4j’s response time remains relatively flat: just a fraction of a second to perform the query—definitely quick enough for an online system.
+
+An R-Tree is a graph-like index that describes bounded boxes around geographies. Using such a structure we can describe overlapping hierarchies of locations.
+
+From the data practitioner’s point of view, it’s clear that the graph database is the best technology for dealing with complex, variably structured, densely connected data— that is, with datasets so sophisticated they are unwieldy when treated in any form other than a graph.
+
+### Data Modeling with Graphs
+
+* A labeled property graph is made up of nodes, relationships, properties, and labels.
+* Nodes contain properties. Think of nodes as documents that store properties in the form of arbitrary key-value pairs. In Neo4j, the keys are strings and the values are the Java string and primitive data types, plus arrays of these types.
+* Nodes can be tagged with one or more labels. Labels group nodes together, and indicate the roles they play within the dataset.
+* Relationships connect nodes and structure the graph. A relationship always has a direction, a single name, and a start node and an end node—there are no dangling relationships. Together, a relationship’s direction and name add semantic clarity to the structuring of nodes.
+* Like nodes, relationships can also have properties. The ability to add properties to relationships is particularly useful for providing additional metadata for graph algorithms, adding additional semantics to relationships (including quality and weight), and for constraining queries at runtime.
+
+### Querying Graphs: An Introduction to Cypher
+
+Cypher is an expressive (yet compact) graph database query language.
