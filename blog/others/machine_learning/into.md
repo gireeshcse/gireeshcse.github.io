@@ -27,7 +27,7 @@ Field of study that gives computers the ability to learn without being explicitl
 
 A computer program is said to learn from experience E with respect to some task T and some performance measure P, if its performance on T, as measured by P, improves with experience E.
 
-Example: CLassifying emails as spam or not.
+Example: Classifying emails as spam or not.
 
 Example: playing checkers.
 
