@@ -169,13 +169,13 @@ Graph databases are the best choice for connected data.
 
 Finding extended friends in a relational database versus efficient finding in Neo4j
 
-`
+```
 Depth   | RDBMS execution time(s)    | Neo4j execution time(s)   |  Records returned
 2       |  0.016                     | 0.01                      | ~2500
 3       | 30.267                     | 0.168                     |  ~110,000
 4       | 1543.505                   | 1.359                     | ~600,000
 5       | Unfinished                 | 2.132                     | ~800,000
-`
+```
 
 Neo4j’s response time remains relatively flat: just a fraction of a second to perform the query—definitely quick enough for an online system.
 

@@ -113,3 +113,71 @@ Example:
 Clustering: Take a collection of 1,000,000 different genes, and find a way to automatically group these genes into groups that are somehow similar or related by different variables, such as lifespan, location, roles, and so on.
 
 Non-clustering: The "Cocktail Party Algorithm", allows you to find structure in a chaotic environment. (i.e. identifying individual voices and music from a mesh of sounds at a cocktail party).
+
+### Model representation
+
+### Linear regression with one variable
+
+* Regression Problem -      Predict real-valued output
+* SUpervised Learning-      Given right answers for each example of data.
+* Classification Problem-   Discrete-valued outputs
+
+Training sets Notations
+
+* m = No. of training examples
+* x's = input variable/features
+* y's = output variable/ target variable
+* (x,y) - One taining example
+* (x<sup>i</sup>, y<sup>i</sup>) - i<sup>th</sup>(row) training example.
+* h(hypothesis) maps froms x's to y's (Learning algorithms)
+* h<sub>&theta;</sub>(x) = &theta;<sub>0</sub> + &theta;<sub>1</sub>x 
+
+<img src="images/basic_ml.png" alt="Machine Learing basic">
+
+#### Cost function
+
+h<sub>&theta;</sub>(x) = &theta;<sub>0</sub> + &theta;<sub>1</sub>x 
+
+&theta;<sub>i</sub>'s : Parameters
+
+Choose &theta;<sub>0</sub>, &theta;<sub>1</sub> so that h<sub>&theta;</sub>(x) is close to y for our training examples (x,y)
+
+Goal : Minimize &theta;<sub>0</sub>, &theta;<sub>1</sub> that is 
+
+J( &theta;<sub>0</sub>, &theta;<sub>1</sub>) = 1/2m * &Sigma; <sup>m</sup><sub>i=1</sub> (h<sub>&theta;</sub>(x) - y)<sup>2</sup>
+
+
+Minimize J( &theta;<sub>0</sub>, &theta;<sub>1</sub>) is called **cost function** or sometimes called **squared error function** or **Mean squared error** which is mostl commonly used for linear regression problems.
+
+<img src="images/cost_function_linear_regression.png" alt="cost_function_linear_regression">
+
+<img src="images/cost_function_linear_regression1.png" alt="cost_function_linear_regression">
+
+<img src="images/cost_function_linear_regression2.png" alt="cost_function_linear_regression">
+
+<img src="images/cost_function_linear_regression3.png" alt="cost_function_linear_regression">
+
+
+Final goal, we should try to minimize the cost function. In this case,  &theta;<sub>1</sub>  =1 is our global minimum
+
+**Contour Plots**
+
+Contour plots (sometimes called Level Plots) are a way to show a three-dimensional surface on a two-dimensional plane. It graphs two predictor variables X Y on the y-axis and a response variable Z as contours. These contours are sometimes called z-slices or iso-response values.
+
+A contour plot is appropriate if you want to see how some value Z changes as a function of two inputs, X and Y:
+z = f(x,y).
+
+A contour plot is a graph that contains many contour lines. A contour line of a two variable function has a constant value at all points of the same line. An example of such a graph is the one to the right below.
+
+<img src="images/contour1.png" alt="cost_function">
+
+Taking any color and going along the 'circle', one would expect to get the same value of the cost function. For example, the three green points found on the green line above have the same value for J( &theta;<sub>0</sub>, &theta;<sub>1</sub>) and as a result, they are found along the same line. The circled x displays the value of the cost function for the graph on the left when  &theta;<sub>0</sub> = 800 and &theta;<sub>1</sub> = -0.15. Taking another h(x) and plotting its contour plot, one gets the following graphs:
+
+<img src="images/contour2.png" alt="cost_function">
+
+
+When &theta;<sub>0</sub> = 360 and &theta;<sub>1</sub> =  0, the value of J( &theta;<sub>0</sub>, &theta;<sub>1</sub>) in the contour plot gets closer to the center thus reducing the cost function error. Now giving our hypothesis function a slightly positive slope results in a better fit of the data.
+
+<img src="images/contour3.png" alt="cost_function">
+
+The graph above minimizes the cost function as much as possible and consequently, the result of &theta;<sub>1</sub> and &theta;<sub>0</sub> tend to be around 0.12 and 250 respectively. Plotting those values on our graph to the right seems to put our point in the center of the inner most 'circle'.
