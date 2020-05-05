@@ -1,0 +1,172 @@
+<h1 id="reactivex">ReactiveX</h1>
+<p>An API for asynchronous programming with observable streams.</p>
+<p>Generally data of application may contain like this</p>
+<p>Array is in-memory datastructure.</p>
+<p>A stream of data with no limit of data.</p>
+<h2 id="rxjs">RxJS</h2>
+<p>Reactive Extensions For JavaScript</p>
+<p>RxJS is a library for composing asynchronous and event-based programs by using observable sequences.</p>
+<p>It provides one core type, the <strong>Observable</strong>, satellite types <strong>(Observer, Schedulers, Subjects)</strong> and <strong>operators</strong> inspired by Array#extras (map, filter, reduce, every, etc) to allow handling asynchronous events as collections.</p>
+<h3 id="the-essential-concepts-in-rxjs-which-solve-async-event-management-are">The essential concepts in RxJS which solve async event management are:</h3>
+<ul>
+<li><strong>Observable:</strong> represents the idea of an invokable collection of future values or events.</li>
+<li><strong>Observer:</strong> is a collection of callbacks that knows how to listen to values delivered by the Observable.</li>
+<li><strong>Subscription:</strong> represents the execution of an Observable, is primarily useful for cancelling the execution.</li>
+<li><strong>Operators:</strong> are pure functions that enable a functional programming style of dealing with collections with operations like map, filter, concat, reduce, etc.</li>
+<li><strong>Subject:</strong> is the equivalent to an EventEmitter, and the only way of multicasting a value or event to multiple Observers.</li>
+<li><strong>Schedulers:</strong> are centralized dispatchers to control concurrency, allowing us to coordinate when computation happens on e.g. setTimeout or requestAnimationFrame or others.</li>
+</ul>
+<p><strong>Creating a project</strong></p>
+<ul>
+<li>npm init</li>
+<li>npm install rxjs --save</li>
+</ul>
+<p>To support backward compartibality Such as ES5, we need compiler/transpiler such as <strong>webpack</strong> since it uses ES6 features and <strong>webpack-dev-server</strong> to serve our files to web browser for testing and <strong>typescript</strong> compiler to compile typescript code</p>
+<ul>
+<li>npm install webpack webpack-dev-server webpack-cli typescript typings ts-loader --save-dev</li>
+</ul>
+<p>To Install typying for ES6 which rxjs uses</p>
+<ul>
+<li>./node_modules/.bin/typings install dt~es6-shim --global --save</li>
+</ul>
+<p>Sample : main.ts</p>
+<pre><code>    import { Observer, from, fromEvent} from &#39;rxjs&#39;;
+    import { scan,throttleTime, count } from &#39;rxjs/operators&#39;;
+
+    let numbers = [1,5,9,10];
+    let source = from(numbers); // creates Observable from exsting array | promsie | iterable(generator)
+
+    class MyObserver implements Observer&lt;Number&gt;{
+
+        next(value)
+        {
+            console.log(value);
+        }
+
+        error(e)
+        {
+            console.log(e);
+        }
+
+        complete()
+        {
+            console.log(&quot;complete&quot;);
+        }
+    }
+
+    source.subscribe(new MyObserver());
+    source.subscribe(new MyObserver());
+
+    // Observable from event
+    fromEvent(document, &#39;click&#39;).subscribe(() =&gt; console.log(&#39;Clicked! on the document&#39;));
+
+    // Pure functions which are less error prone
+    // To Isolate state
+    fromEvent(document.getElementById(&quot;button&quot;),&#39;click&#39;)
+        .pipe(scan(count =&gt; count+1 , 0))
+        .subscribe(count =&gt; console.log(`clicked ${count} times`));
+
+    // Flow
+    // to control the rate of flow of events
+    fromEvent(document.getElementById(&#39;refresh&#39;),&#39;click&#39;)
+        .pipe(
+            throttleTime(1000),
+            scan(count =&gt; count + 1, 0)
+        )
+        .subscribe(count =&gt; console.log(`Clicked ${count} times`));</code></pre><p><strong>Simple Observer</strong></p>
+<pre><code>import { Observable } from &#39;rxjs&#39;;
+
+let numbers = [1,5,9,10];
+let source = Observable.create(observer =&gt; {
+
+    for(let n of numbers)
+    {
+        observer.next(n);
+    }
+
+    observer.complete();
+});
+
+
+source.subscribe(
+    value =&gt; console.log(`value ${value}`),
+    e =&gt; console.log(`error ${e}`),
+    () =&gt; console.log(&quot;complete&quot;)
+);
+
+</code></pre><p>Using <strong>from</strong> api</p>
+<pre><code>
+import { from } from &#39;rxjs&#39;;
+
+let numbers = [1,5,9,10];
+// creates Observable from exsting array | promsie | iterable(generator)
+let source = from(numbers); 
+
+source.subscribe(
+    value =&gt; console.log(`value ${value}`),
+    e =&gt; console.log(`error ${e}`),
+    () =&gt; console.log(&quot;complete&quot;)
+);
+</code></pre><p>To raise error</p>
+<pre><code>observer.error(&quot;something is wrong&quot;)</code></pre><p>To create asynchronous behaviour which obervables handle</p>
+<pre><code>import { Observable } from &#39;rxjs&#39;;
+
+let numbers = [1,5,9,10];
+let source = Observable.create(observer =&gt; {
+
+   let index = 0;
+
+   let produceValue = () =&gt; {
+       observer.next(numbers[index++]);
+
+       if(index &lt; numbers.length)
+       {
+           setTimeout(produceValue,2000);
+       }else{
+           observer.complete();
+       }
+   };
+
+   produceValue();
+});
+
+
+source.subscribe(
+    value =&gt; console.log(`value ${value}`),
+    e =&gt; console.log(`error ${e}`),
+    () =&gt; console.log(&quot;complete&quot;)
+);</code></pre><pre><code>import { Observable } from &#39;rxjs&#39;;
+import { map, filter } from &#39;rxjs/operators&#39;;
+
+let numbers = [1,5,9,10];
+let source = Observable.create(observer =&gt; {
+
+   let index = 0;
+
+   let produceValue = () =&gt; {
+       observer.next(numbers[index++]);
+
+       if(index &lt; numbers.length)
+       {
+           setTimeout(produceValue,2000);
+       }else{
+           observer.complete();
+       }
+   };
+
+   produceValue();
+}).pipe(
+    map((value:number) =&gt; sum(value)),
+    filter(value =&gt; value &gt; 10)
+);
+
+function sum(value:number):number
+{
+    return value * 10;
+}
+
+source.subscribe(
+    value =&gt; console.log(`value ${value}`),
+    e =&gt; console.log(`error ${e}`),
+    () =&gt; console.log(&quot;complete&quot;)
+);</code></pre>
