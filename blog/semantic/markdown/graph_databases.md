@@ -179,7 +179,7 @@ Depth   | RDBMS execution time(s)    | Neo4j execution time(s)   |  Records retu
 
 Neo4j’s response time remains relatively flat: just a fraction of a second to perform the query—definitely quick enough for an online system.
 
-An R-Tree is a graph-like index that describes bounded boxes around geographies. Using such a structure we can describe overlapping hierarchies of locations.
+One of the most popular structures for representing geospatial coordinates is called an R-Tree. A R-Tree is a graph-like index that describes bounded boxes around geographies. Using such a structure we can describe overlapping hierarchies of locations.Using such a structure we can describe overlapping hierarchies of locations. For example,we can represent the fact that Kakinada is in the India, and that the postal code 533002 is in AP, which is a district in East Godavari, which is in southeastern India, which, in turn, is in India. And because Indian postal codes are fine-grained, we can use that boundary to target people with somewhat similar tastes.
 
 From the data practitioner’s point of view, it’s clear that the graph database is the best technology for dealing with complex, variably structured, densely connected data— that is, with datasets so sophisticated they are unwieldy when treated in any form other than a graph.
 
@@ -193,4 +193,50 @@ From the data practitioner’s point of view, it’s clear that the graph databa
 
 ### Querying Graphs: An Introduction to Cypher
 
-Cypher is an expressive (yet compact) graph database query language.
+Cypher is an expressive (yet compact) graph database query language. In Neo4j, it is usedfor programmatically describing graphs.
+
+<img src="../images/mutual_friends.png" />
+
+```
+(hanuman)<-[:KNOWS]-(ram)-[:KNOWS]->(sugreev)-[:KNOWS]->(hanuman)
+```
+
+  Identifiers(ram,hanuman,sugreev)  allow  us  to  refer  to  the  same  node  more  than  once when  describing  a  pattern.
+
+ To bind  the  pattern  to  specific  nodes  and  relationships  in  an  existingdataset we must specify some property values and node labels thathelp locate the relevant elements in the dataset. For example:
+
+```
+  (hanuman:Person {name:'Hanuman'})
+    <-[:KNOWS]-(ram:Person {name:'Ram'})
+      -[:KNOWS]->(sugreev:Person {name:'Sugreev'})
+        -[:KNOWS]->(hanuman)
+  ```
+
+### MATCH Clause
+
+```
+MATCH (a:Person {name:'Ram'})-[:KNOWS]->(b)-[:KNOWS]->(c),
+      (a)-[:KNOWS]->(c)RETURN b, c
+
+MATCH (a:Person)-[:KNOWS]->(b)-[:KNOWS]->(c), (a)-[:KNOWS]->(c)
+WHERE a.name = 'Ram'
+RETURN b, c
+```
+
+<img src="../images/datacenter.png" />
+
+E-R  diagrams  allow  only  single,  undirected,  named  relationshipsbetween  entities.
+The  relational  model  is  a  poor  fitfor  real-world  domains  where  relationships  between  entities  are both numerous and semantically rich and diverse.
+
+<img src="../images/datacenter_er.png" />
+
+<img src="../images/datacenter_schema.png" />
+
+For  each  entity  in  our  domain,  we  ensure  that  we’ve captured its relevant roles as labels, its attributes as properties, and its connections to neighboring entities as relationships.
+
+<img src="../images/datacenter_graph.png" />
+
+No tables, no normalization, no denormalization.  Once  we  have  an  accurate  representation  of  our  domain  model,  moving  it  into the database is trivial.
+
+
+
