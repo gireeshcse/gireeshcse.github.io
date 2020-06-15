@@ -186,3 +186,122 @@ ReactDOM.render(
 );
 
 ```
+
+### React Component
+
+* **render()** - required
+* **props** - input parameters
+* **context** - global variable for our components.
+* **state** - a way to hold data that is local to a component
+
+#### Creation
+
+```
+import React from 'react';
+import createReactClass from 'create-react-class';
+
+// React.createClass
+const CreateClassApp = createReactClass({
+  render: function() {} // required method
+});
+
+export default CreateClassApp;
+
+```
+
+```
+import React from 'react';
+
+// ES6 class-style
+class ComponentApp extends React.Component {
+  render() {} // required
+}
+
+export default ComponentApp;
+
+```
+
+**PropTypes**
+
+PropTypes are a way to validate the values that are passed in through our props
+
+    import PropTypes from 'prop-types';
+
+    class MapComponent extends React.Component {
+      static propTypes = {
+        lat: PropTypes.number,
+        lng: PropTypes.number,
+        zoom: PropTypes.number,
+        place: PropTypes.object,
+        markers: PropTypes.array
+      };
+
+    }
+
+    const MapComponent = createReactClass({
+      propTypes: {
+      lat: PropTypes.number,
+      lng: PropTypes.number
+      // ...
+      },
+    }
+
+Now our component will validate that lat , lng , and zoom are all numbers, while place is an object and marker is an array
+
+**context**
+
+```
+import React from 'react';
+
+export const themes = {
+  light: {
+    foreground: '#222222',
+    background: '#e9e9e9'
+  },
+  dark: {
+    foreground: '#fff',
+    background: '#222222'
+  }
+};
+
+export const ThemeContext = React.createContext(themes.dark);
+
+```
+
+### Unit Testing
+
+* Jest - Behavior driven style
+* Enzyme - React Component
+
+    const a = { espresso: '60ml' };
+    expect(a).toBe({ espresso: '60ml' }) // fail
+    expect(1).toBe(1); // pass
+    const a = 5;
+    expect(a).toBe(5); // pass
+    const a = { espresso: '60ml' };
+    const b = a;
+    expect(a).toBe(b); // pass
+
+    const a = { espresso: '60ml' };
+    expect(a).toEqual({ espresso: '60ml' }) // pass
+
+    describe('My test suite', () => {
+      it('`true` should be `true`', () => {
+        expect(true).toBe(true);
+      });
+      it('`false` should be `false`', () => {
+        expect(false).toBe(false);
+      });
+    })
+
+npm i --save-dev enzyme react-test-renderer enzyme-adapter-react-16
+
+import Enzyme from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+Enzyme.configure({ adapter: new Adapter() });
+
+
+### React Router
+
+* Link, Redirect
+* Route, Switch

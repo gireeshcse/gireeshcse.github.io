@@ -1,13 +1,89 @@
 <h1 id="reactivex">ReactiveX</h1>
 <p>An API for asynchronous programming with observable streams.</p>
 <p>Generally data of application may contain like this</p>
-<p>Array is in-memory datastructure.</p>
-<p>A stream of data with no limit of data.</p>
+<ul>
+<li><p>Array (in-memory datastructure.)</p>
+</li>
+<li><p>A stream of data with no limit of data.(Keep on generating)</p>
+</li>
+</ul>
 <h2 id="rxjs">RxJS</h2>
 <p>Reactive Extensions For JavaScript</p>
 <p>RxJS is a library for composing asynchronous and event-based programs by using observable sequences.</p>
 <p>It provides one core type, the <strong>Observable</strong>, satellite types <strong>(Observer, Schedulers, Subjects)</strong> and <strong>operators</strong> inspired by Array#extras (map, filter, reduce, every, etc) to allow handling asynchronous events as collections.</p>
-<h3 id="the-essential-concepts-in-rxjs-which-solve-async-event-management-are">The essential concepts in RxJS which solve async event management are:</h3>
+<h3 id="javascript-map-reduce-and-filter">JavaScript Map, Reduce, and Filter</h3>
+<p>The <strong>map()</strong> method is used for creating a new array from an existing one, applying a function to each one of the elements of the first array.</p>
+<p>Syntax</p>
+<pre><code>var new_array = arr.map(function callback(element, index, array) {
+    // Return value for new_array
+}[, thisArg])
+</code></pre><p>In the callback, only the array element is required. Usually some action is performed on the value and then a new value is returned.</p>
+<p>Example</p>
+<pre><code>const numbers = [1, 2, 3, 4];
+const doubled = numbers.map(item =&gt; item * 2);
+console.log(doubled); // [2, 4, 6, 8]
+</code></pre><p>The <strong>filter()</strong> method takes each element in an array and it applies a conditional statement against it. If this conditional returns true, the element gets pushed to the output array. If the condition returns false, the element does not get pushed to the output array.</p>
+<p>Syntax</p>
+<pre><code>var new_array = arr.filter(function callback(element, index, array) {
+    // Return true or false
+}[, thisArg])</code></pre><p>In the callback, only the element is required.</p>
+<p>Example</p>
+<pre><code>const numbers = [1, 2, 3, 4];
+const evens = numbers.filter(item =&gt; item % 2 === 0);
+console.log(evens); // [2, 4]
+
+const students = [
+  { name: &#39;Quincy&#39;, grade: 96 },
+  { name: &#39;Jason&#39;, grade: 84 },
+  { name: &#39;Alexis&#39;, grade: 100 },
+  { name: &#39;Sam&#39;, grade: 65 },
+  { name: &#39;Katie&#39;, grade: 90 }
+];
+
+const studentGrades = students.filter(student =&gt; student.grade &gt;= 90);
+return studentGrades; 
+// [ { name: &#39;Quincy&#39;, grade: 96 }, { name: &#39;Alexis&#39;, grade: 100 }, 
+// { name: &#39;Katie&#39;, grade: 90 } ]
+</code></pre><p>The <strong>reduce()</strong> method reduces an array of values down to just one value. To get the output value, it runs a reducer function on each element of the array.</p>
+<p>Syntax</p>
+<pre><code>arr.reduce(callback[, initialValue])</code></pre><p>The callback argument is a function that will be called once for every item in the array. This function takes four arguments, but often only the first two are used.</p>
+<ul>
+<li><strong>accumulator</strong> - the returned value of the previous iteration</li>
+<li><strong>currentValue</strong> - the current item in the array</li>
+<li><strong>index</strong> - the index of the current item</li>
+<li><strong>array</strong> - the original array on which reduce was called</li>
+<li>The <strong>initialValue</strong> argument is optional. If provided, it will be used as the initial accumulator value in the first call to the callback function.</li>
+</ul>
+<p>Examples</p>
+<pre><code>const numbers = [1, 2, 3, 4];
+const sum = numbers.reduce(function (result, item) {
+  return result + item;
+}, 0);
+console.log(sum); // 10
+
+var pets = [&#39;dog&#39;, &#39;chicken&#39;, &#39;cat&#39;, &#39;dog&#39;, &#39;chicken&#39;, &#39;chicken&#39;, &#39;rabbit&#39;];
+
+var petCounts = pets.reduce(function(obj, pet){
+    if (!obj[pet]) {
+        obj[pet] = 1;
+    } else {
+        obj[pet]++;
+    }
+    return obj;
+}, {});
+
+console.log(petCounts); 
+
+/*
+Output:
+ { 
+    dog: 2, 
+    chicken: 3, 
+    cat: 1, 
+    rabbit: 1 
+ }
+ */
+</code></pre><h3 id="the-essential-concepts-in-rxjs-which-solve-async-event-management-are">The essential concepts in RxJS which solve async event management are:</h3>
 <ul>
 <li><strong>Observable:</strong> represents the idea of an invokable collection of future values or events.</li>
 <li><strong>Observer:</strong> is a collection of callbacks that knows how to listen to values delivered by the Observable.</li>
@@ -34,7 +110,9 @@
     import { scan,throttleTime, count } from &#39;rxjs/operators&#39;;
 
     let numbers = [1,5,9,10];
-    let source = from(numbers); // creates Observable from exsting array | promsie | iterable(generator)
+
+    // creates Observable from exsting array | promsie | iterable(generator)
+    let source = from(numbers); 
 
     class MyObserver implements Observer&lt;Number&gt;{
 
