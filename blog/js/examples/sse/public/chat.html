@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Chat App</title>
+<body>
+<div id="messages">
+<h4>Chat Messages</h4>
+</div>
+
+<form id="form">
+    <input id="input" type="text" placeholder="Your message...">
+    <input type="submit" value="Send Message" />
+</form>
+
+<script type="text/javascript">
+var eventSource = new window.EventSource('/sse');
+
+eventSource.onmessage = function(event){
+    document.getElementById('messages').innerHTML += `<p>${event.data}</p>`;
+}
+
+document.getElementById('form').addEventListener('submit',function(evt){
+    evt.preventDefault();
+    window.fetch(`/chat?message=${document.getElementById('input').value}`);
+    document.getElementById('input').value = '';
+});
+
+
+</script>
+</body>
+</html>
