@@ -123,7 +123,7 @@ for creating and querying relationships outside the data model.</p>
 3       | 30.267                     | 0.168                     |  ~110,000
 4       | 1543.505                   | 1.359                     | ~600,000
 5       | Unfinished                 | 2.132                     | ~800,000</code></pre><p>Neo4j’s response time remains relatively flat: just a fraction of a second to perform the query—definitely quick enough for an online system.</p>
-<p>An R-Tree is a graph-like index that describes bounded boxes around geographies. Using such a structure we can describe overlapping hierarchies of locations.</p>
+<p>One of the most popular structures for representing geospatial coordinates is called an R-Tree. A R-Tree is a graph-like index that describes bounded boxes around geographies. Using such a structure we can describe overlapping hierarchies of locations.Using such a structure we can describe overlapping hierarchies of locations. For example,we can represent the fact that Kakinada is in the India, and that the postal code 533002 is in AP, which is a district in East Godavari, which is in southeastern India, which, in turn, is in India. And because Indian postal codes are fine-grained, we can use that boundary to target people with somewhat similar tastes.</p>
 <p>From the data practitioner’s point of view, it’s clear that the graph database is the best technology for dealing with complex, variably structured, densely connected data— that is, with datasets so sophisticated they are unwieldy when treated in any form other than a graph.</p>
 <h3 id="data-modeling-with-graphs">Data Modeling with Graphs</h3>
 <ul>
@@ -134,4 +134,29 @@ for creating and querying relationships outside the data model.</p>
 <li>Like nodes, relationships can also have properties. The ability to add properties to relationships is particularly useful for providing additional metadata for graph algorithms, adding additional semantics to relationships (including quality and weight), and for constraining queries at runtime.</li>
 </ul>
 <h3 id="querying-graphs-an-introduction-to-cypher">Querying Graphs: An Introduction to Cypher</h3>
-<p>Cypher is an expressive (yet compact) graph database query language.</p>
+<p>Cypher is an expressive (yet compact) graph database query language. In Neo4j, it is usedfor programmatically describing graphs.</p>
+<img src="../images/mutual_friends.png" />
+
+<pre><code>(hanuman)&lt;-[:KNOWS]-(ram)-[:KNOWS]-&gt;(sugreev)-[:KNOWS]-&gt;(hanuman)</code></pre><p>  Identifiers(ram,hanuman,sugreev)  allow  us  to  refer  to  the  same  node  more  than  once when  describing  a  pattern.</p>
+<p> To bind  the  pattern  to  specific  nodes  and  relationships  in  an  existingdataset we must specify some property values and node labels thathelp locate the relevant elements in the dataset. For example:</p>
+<pre><code>  (hanuman:Person {name:&#39;Hanuman&#39;})
+    &lt;-[:KNOWS]-(ram:Person {name:&#39;Ram&#39;})
+      -[:KNOWS]-&gt;(sugreev:Person {name:&#39;Sugreev&#39;})
+        -[:KNOWS]-&gt;(hanuman)</code></pre><h3 id="match-clause">MATCH Clause</h3>
+<pre><code>MATCH (a:Person {name:&#39;Ram&#39;})-[:KNOWS]-&gt;(b)-[:KNOWS]-&gt;(c),
+      (a)-[:KNOWS]-&gt;(c)RETURN b, c
+
+MATCH (a:Person)-[:KNOWS]-&gt;(b)-[:KNOWS]-&gt;(c), (a)-[:KNOWS]-&gt;(c)
+WHERE a.name = &#39;Ram&#39;
+RETURN b, c</code></pre><img src="../images/datacenter.png" />
+
+<p>E-R  diagrams  allow  only  single,  undirected,  named  relationshipsbetween  entities.
+The  relational  model  is  a  poor  fitfor  real-world  domains  where  relationships  between  entities  are both numerous and semantically rich and diverse.</p>
+<img src="../images/datacenter_er.png" />
+
+<img src="../images/datacenter_schema.png" />
+
+<p>For  each  entity  in  our  domain,  we  ensure  that  we’ve captured its relevant roles as labels, its attributes as properties, and its connections to neighboring entities as relationships.</p>
+<img src="../images/datacenter_graph.png" />
+
+<p>No tables, no normalization, no denormalization.  Once  we  have  an  accurate  representation  of  our  domain  model,  moving  it  into the database is trivial.</p>
