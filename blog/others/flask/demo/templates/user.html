@@ -1,0 +1,18 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}User Home Page{% endblock %}
+
+{%block scripts %}
+{{ super() }}
+{{moment.include_moment() }}
+{%endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h3>User Page</h3>
+        <h1>Hello, {{ name | capitalize  }}!</h1>
+    </div>
+    <p>The local date and time is {{ moment(current_time).format('LLL') }}.</p>
+    <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
+</div>
+{% endblock %}
