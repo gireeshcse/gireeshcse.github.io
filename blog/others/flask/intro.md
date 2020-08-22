@@ -27,6 +27,8 @@
 
     pip freeze > requirements.txt
 
+    pip install -r requirements.txt
+
 Decorators are a standard feature of the Python language. A common use of decorators is to register functions as handler functions to be invoked when certain events occur.
 
     @app.route('/')
@@ -39,28 +41,29 @@ Decorators are a standard feature of the Python language. A common use of decora
 * the endpoint name, 
 * and the view function
 
+```
+def sample():
+    return '<h1>Hello World! Sample</h1>'
 
-    def sample():
-        return '<h1>Hello World! Sample</h1>'
+app.add_url_rule('/sample', 'sample', sample)
 
-    app.add_url_rule('/sample', 'sample', sample)
-
-    @app.route('/user/<name>')
-    def user(name):
-        return '<h1>Hello, {}!</h1>'.format(name)
+@app.route('/user/<name>')
+def user(name):
+    return '<h1>Hello, {}!</h1>'.format(name)
+```
 
 **Running the app**
 
-`      
+```      
 export FLASK_APP=app.py
 flask run
-`
+```
 the below is mostlty used in unit testing
 
-`
+```
 if __name__ == '__main__':
     app.run()
-`
+```
 
 ### Debug Mode
 
@@ -92,19 +95,23 @@ Contexts enable Flask to make certain variables globally accessible to a thread 
 * application context
 
     - current_app
+
         The application instance for the active application.
 
             from flask import current_app
             current_app.name
     - g
+
         An object that the application can use for temporary storage during the handling of a request. This variable is reset with each request.
 
 * request context
 
     - request
+
         The request object, which encapsulates the contents of an HTTP request sent by the client.
         contains all the information that the client included in the HTTP request
     - session
+
         The user session, a dictionary that the application can use to store values that are “remembered” between requests.
 
 Flask activates (or pushes) the application and request contexts before dispatching a request to the application, and removes them after the request is handled
@@ -157,15 +164,20 @@ Flask activates (or pushes) the application and request contexts before dispatch
 #### Request Hooks
 
 * before_request
+
     Registers a function to run before each request.
 * before_first_request
+
     Registers a function to run only before the first request is handled. This can be a convenient way to add server initialization tasks.
+
 * after_request
+
     Registers a function to run after each request, but only if no unhandled exceptions occurred.
 * teardown_request
+
     Registers a function to run after each request, even if unhandled exceptions occurred.
 
-A common pattern to share data between request hook functions and view functions is to use the g context global as storage.
+A common pattern to share data between request hook functions and view functions is to use the **g** context global as storage.
 
 
 #### Responses
@@ -188,20 +200,28 @@ def index():
 ```
 
 * status_code 
+
     The numeric HTTP status code
 * headers 
+
     A dictionary-like object with all the headers that will be sent with the response
 * set_cookie() 
+
     Adds a cookie to the response
 * delete_cookie() 
+
     Removes a cookie
 * content_length 
+
     The length of the response body
 * content_type 
+
     The media type of the response body
 * set_data() 
+
     Sets the response body as a string or bytes value
 * get_data() 
+
     Gets the response body
 
 ```
@@ -218,7 +238,7 @@ def get_user(id):
     user = load_user(id)
     if not user:
         abort(404)
-        return '<h1>Hello, {}</h1>'.format(user.name)
+    return '<h1>Hello, {}</h1>'.format(user.name)
 ```
 
 ### Templates
@@ -231,7 +251,7 @@ A template is a file that contains the text of a response, with placeholder vari
 <h1>Hello, {{ name }}!</h1>
 ```
 
-By default Flask looks for templates in a **templates subdirectory** located inside the main application directory.
+By default Flask looks for templates in a **templates** subdirectory located inside the main application directory.
 
 ```
 from flask import Flask, render_template
@@ -388,8 +408,11 @@ def internal_server_error(e):
 This function takes the view function name (or endpoint name for routes defined with app.**add_url_route()** ) as its single argument and returns its URL.
 
 url_for('index') => /
+
 url_for('index',_external=True) => http://localhost:5000/ 
+
 url_for('user',name='john',_external=True) would return http://localhost:5000/user/john
+
 url_for('user', name='john', page=2, version=1) would return /user/john?page=2&version=1
 
 #### Static Files
@@ -435,3 +458,200 @@ def index():
 <p>That was {{ moment(current_time).fromNow(refresh=True) }}</p>
 ```
 
+### Web Forms
+
+```
+pip install flask-wtf
+
+app = Flask(__name__)
+app.config['SECRET_KEY']='hard to guess string which is used as an encryption or signing key to improve the security of application';
+
+```
+
+**app.config** dictionary is a general purpose place to store configuration variables used by Flask.
+**Flask-WTF** requires secret key to be configures to protect all forms against CSRF attacks
+
+```
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitFeild
+from wtforms.validators import DataRequired
+
+class NameForm(FlaskForm):
+    name = StringField('Name',validators=[DataRequired()])
+    submit = SubmitField('Submit')
+```
+
+* BooleanField 
+
+    Checkbox with True and False values
+* DateField
+    
+     Text field that accepts a datetime.date value in a given format
+* DateTimeField
+    
+     Text field that accepts a datetime.datetime value in a given format
+* DecimalField 
+    
+    Text field that accepts a decimal.Decimal value
+* FileField 
+    
+    File upload field
+* HiddenField
+
+     Hidden text field
+* MultipleFileField
+    
+     Multiple file upload field
+* FieldList
+
+     List of fields of a given type
+
+* FloatField
+    
+    Text field that accepts a floating-point value
+* FormField
+
+     Form embedded as a field in a container form
+* IntegerField
+
+     Text field that accepts an integer value
+* PasswordField
+
+     Password text field
+* RadioField
+    
+     List of radio buttons
+* SelectField
+    
+     Drop-down list of choices
+* SelectMultipleField 
+    
+    Drop-down list of choices with multiple selection
+* SubmitField
+    
+    Form submission button
+* StringField 
+    
+    Text field
+* TextAreaField
+
+     Multiple-line text field
+
+#### WTForms validators
+
+DataRequired 
+
+    Validates that the field contains data after type conversion
+Email
+
+     Validates an email address
+EqualTo 
+    
+    Compares the values of two fields; useful when requesting a password to be entered twice for confirmation
+InputRequired
+    
+     Validates that the field contains data before type conversion
+IPAddress
+    
+     Validates an IPv4 network address
+Length
+
+     Validates the length of the string entered
+MacAddress
+
+     Validates a MAC address
+NumberRange
+
+     Validates that the value entered is within a numeric range
+Optional
+    
+     Allows empty input in the field, skipping additional validators
+Regexp
+    
+     Validates the input against a regular expression
+URL
+    
+     Validates a URL
+UUID
+    
+     Validates a UUID
+AnyOf
+    
+     Validates that the input is one of a list of possible values
+NoneOf
+
+     Validates that the input is none of a list of possible values
+
+```
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{%block scripts %}
+{{ super() }}
+{%endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Hello, {% if name %}{{ name }}{% else %}Stranger{% endif %}!</h1>
+</div>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    {{ form.name.label }} {{ form.name(id='my-text-field') }}
+    {{ form.submit() }}
+</form>
+{{ wtf.quick_form(form) }}
+{%endblock %}
+```
+
+```
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'for csrf string'
+
+@app.route('/register',methods=['GET','POST'])
+def register():
+    name = None
+    form = NameForm()
+    if form.validate_on_submit():
+        name = form.name.data 
+        form.name.data = ''
+    return render_template('register.html',form=form,name=name)
+```
+
+```
+
+from flask import Flask, render_template, session, redirect, url_for
+
+@app.route('/register',methods=['GET','POST'])
+def register():
+    form = NameForm()
+    if form.validate_on_submit():
+        session['name'] = form.name.data 
+        return redirect(url_for('index'))
+    return render_template('register.html',form=form,name=session.get('name'))
+
+@app.route('/')
+def index():
+    name = session.get('name') if session.get('name') else 'Stranger'
+    return '<h1>Hello {}! {}</h1>'.format(name)
+```
+
+#### Flash Messages
+
+```
+flash('Looks like you have changed your name!')
+
+{% block content %}
+<div class="container">
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+        </div>
+    {% endfor %}
+    
+    {% block page_content %}{% endblock %}
+</div>
+{% endblock %}
+```
