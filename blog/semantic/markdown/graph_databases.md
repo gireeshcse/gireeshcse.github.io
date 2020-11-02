@@ -856,3 +856,163 @@ PROFILE MATCH (js:Person)-[:KNOWS]-()-[:KNOWS]-(surfer)
 WHERE js.name = "Hanuman" AND surfer.hobby = "surfing"
 RETURN DISTINCT surfer
 ```
+#### Other Cypher Clauses
+
+* WHERE
+
+  Provides criteria for filtering pattern matching results.
+
+* CREATE and CREATE UNIQUE
+
+  Create nodes and relationships.
+
+* MERGE
+
+  Ensures that the supplied pattern exists in the graph, either by reusing existing nodes and relationships that match the supplied predicates, or by creating new nodes and relationships.
+
+* DELETE
+
+  Removes nodes, relationships, and properties.
+
+* SET
+  
+  Sets property values.
+
+* FOREACH
+
+  Performs an updating action for each element in a list.
+
+* UNION
+
+  Merges results from two or more queries.
+
+* WITH
+
+  Chains subsequent query parts and forwards results from one to the next. Similar to piping commands in Unix.
+
+* START
+
+  Specifies one or more explicit starting points—nodes or relationships—in the graph. ( START is deprecated in favor of specifying anchor points in a MATCH clause.)
+
+
+Faulty Asset
+
+```
+MATCH (user:User)-[*1..5]-(asset:Asset)
+WHERE user.name = 'User 3' AND asset.status = 'down'
+RETURN DISTINCT asset
+```
+
+The MATCH clause here describes a variable length path between one and five relationships long. The relationships are unnamed and undirected.This allows us to match paths such as:
+
+```
+(user)-[:USER_OF]->(app)
+(user)-[:USER_OF]->(app)-[:USES]->(database)
+(user)-[:USER_OF]->(app)-[:USES]->(database)-[:SLAVE_OF]->(another-database)
+(user)-[:USER_OF]->(app)-[:RUNS_ON]->(vm)
+(user)-[:USER_OF]->(app)-[:RUNS_ON]->(vm)-[:HOSTED_BY]->(server)
+(user)-[:USER_OF]->(app)-[:RUNS_ON]->(vm)-[:HOSTED_BY]->(server)-[:IN]->(rack)
+(user)-[:USER_OF]->(app)-[:RUNS_ON]->(vm)-[:HOSTED_BY]->(server)-[:IN]->(rack)<-[:IN]-(load-balancer)
+```
+
+```
+CREATE (shakespeare:Author {firstname:'William', lastname:'Shakespeare'}),
+(juliusCaesar:Play {title:'Julius Caesar'}),
+(shakespeare)-[:WROTE_PLAY {year:1599}]->(juliusCaesar),
+(theTempest:Play {title:'The Tempest'}),
+(shakespeare)-[:WROTE_PLAY {year:1610}]->(theTempest),
+(rsc:Company {name:'RSC'}),
+(production1:Production {name:'Julius Caesar'}),
+(rsc)-[:PRODUCED]->(production1),
+(production1)-[:PRODUCTION_OF]->(juliusCaesar),
+(performance1:Performance {date:20120729}),
+(performance1)-[:PERFORMANCE_OF]->(production1),
+(production2:Production {name:'The Tempest'}),
+(rsc)-[:PRODUCED]->(production2),
+(production2)-[:PRODUCTION_OF]->(theTempest),
+(performance2:Performance {date:20061121}),
+(performance2)-[:PERFORMANCE_OF]->(production2),
+(performance3:Performance {date:20120730}),
+(performance3)-[:PERFORMANCE_OF]->(production1),
+(billy:User {name:'Billy'}),
+(review:Review {rating:5, review:'This was awesome!'}),
+(billy)-[:WROTE_REVIEW]->(review),
+(review)-[:RATED]->(performance1),
+(theatreRoyal:Venue {name:'Theatre Royal'}),
+(performance1)-[:VENUE]->(theatreRoyal),
+(performance2)-[:VENUE]->(theatreRoyal),
+(performance3)-[:VENUE]->(theatreRoyal),
+(greyStreet:Street {name:'Grey Street'}),
+(theatreRoyal)-[:STREET]->(greyStreet),
+(newcastle:City {name:'Newcastle'}),
+(greyStreet)-[:CITY]->(newcastle),
+(tyneAndWear:County {name:'Tyne and Wear'}),
+(newcastle)-[:COUNTY]->(tyneAndWear),
+(england:Country {name:'England'}),
+(tyneAndWear)-[:COUNTRY]->(england),
+(stratford:City {name:'Stratford upon Avon'}),
+(stratford)-[:COUNTRY]->(england),
+(rsc)-[:BASED_IN]->(stratford),
+(shakespeare)-[:BORN_IN]->(stratford)
+```
+
+Identifiers remain available for the duration of the current query scope, but no longer.
+
+Note: *use **CREATE** when adding to the graph and if we don’t mind duplication, and **MERGE** when duplication is not permitted by the domain.*
+
+To support efficient node lookup, Cypher allows us to create indexes per label and property combinations. For unique property values we can also specify constraints that assure uniqueness.
+
+```
+CREATE INDEX ON :Venue(name)
+CREATE CONSTRAINT ON (c:Country) ASSERT c.name IS UNIQUE
+```
+
+On an existing database, indexes are populated in the background and become available once they are built.
+Lookups don’t require indexes, but their performance can be improved by adding an index.
+
+```
+MATCH (theater:Venue {name:'Theatre Royal'}),
+(newcastle:City {name:'Newcastle'}),
+(bard:Author {lastname:'Shakespeare'}),
+(newcastle)<-[:STREET|CITY*1..2]-(theater)
+<-[:VENUE]-()-[:PERFORMANCE_OF]->()
+-[:PRODUCTION_OF]->(play)<-[:WROTE_PLAY]-(bard)
+RETURN DISTINCT play.title AS play
+```
+
+* The identifiers newcastle , theater , and bard are anchored to real nodes in the graph based on the specified label and property values.
+* If there are several Theatre Royals in our database (the British cities of Plymouth,Bath, Winchester, and Norwich all have a Theatre Royal, for example), then theater will be bound to all these nodes. To restrict our pattern to the Theatre Royal
+in Newcastle, we use the syntax <-[:STREET|CITY*1..2]- , which means the theater node can be no more than two outgoing STREET and/or CITY relationships away from the node representing the city of Newcastle-upon-Tyne. By providing a variable depth path, we allow for relatively fine-grained address hierarchies (comprising, for example, street, district or borough, and city).
+* The syntax (theater)<-[:VENUE]-() uses the anonymous node, hence the empty parentheses. Knowing the data as we do, we expect the anonymous node to match performances, but because we’re not interested in using the details of individual performances elsewhere in the query or in the results, we don’t name the node or bind it to an identifier.
+* We use the anonymous node again to link the performance to the production ( ()-[:PERFORMANCE_OF]->() ). If we were interested in returning details of performances and productions, we would replace these occurrences of the anonymous node with identifiers: (performance)-[:PERFORMANCE_OF]->(production) .
+* The remainder of the MATCH is a straightforward (play)<-[:WROTE_PLAY]-(bard) node-to-relationship-to-node pattern match. This pattern ensures that we only return plays written by Shakespeare. Because (play) is joined to the anonymous production node, and by way of that to the performance node, we can safely infer that it has been performed in Newcastle’s Theatre Royal. In naming the play node we bring it into scope so that we can use it later in the query.
+
+```
+MATCH (theater:Venue {name:'Theatre Royal'}),
+(newcastle:City {name:'Newcastle'}),
+(bard:Author {lastname:'Shakespeare'}),
+(newcastle)<-[:STREET|CITY*1..2]-(theater)
+<-[:VENUE]-()-[:PERFORMANCE_OF]->()
+-[:PRODUCTION_OF]->(play)<-[w:WROTE_PLAY]-(bard)
+WHERE w.year > 1608
+RETURN DISTINCT play.title AS play
+```
+
+```
+MATCH (theater:Venue {name:'Theatre Royal'}),
+(newcastle:City {name:'Newcastle'}),
+(bard:Author {lastname:'Shakespeare'}),
+(newcastle)<-[:STREET|CITY*1..2]-(theater)
+<-[:VENUE]-()-[p:PERFORMANCE_OF]->()
+-[:PRODUCTION_OF]->(play)<-[:WROTE_PLAY]-(bard)
+RETURN
+play.title AS play, count(p) AS performance_count
+ORDER BY performance_count DESC
+```
+Query Chaining
+```
+MATCH (bard:Author {lastname:'Shakespeare'})-[w:WROTE_PLAY]->(play)
+WITH play
+ORDER BY w.year DESC
+RETURN collect(play.title) AS plays
+```
