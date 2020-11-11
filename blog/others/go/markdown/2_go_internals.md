@@ -124,3 +124,161 @@ func main(){
 ```
 
 Many low-level packages, such as runtime , syscall , and os , constantly use the unsafe package.
+
+### Calling C code from Go program
+
+File:cgo.go 
+
+```
+package main
+
+// #include<stdio.h>
+// void callC(){
+// 	printf("Hello World!From C Programming\n");
+// }
+import "C"
+import "fmt"
+func main(){
+	fmt.Println("Go statement")
+	C.callC()
+	fmt.Println("From Go program!")
+}
+```
+To Execute 
+```
+go run cgo.go
+```
+
+File: callC.h
+
+```
+#ifndef CALLC_H
+#define CALLC_H
+
+void cHello();
+void printMessage(char* message);
+
+#endif
+```
+
+File: callC.c
+
+```
+#include<stdio.h>
+#include "callC.h"
+
+void cHello(){
+    printf("Hello from C!");
+}
+
+void printMessage(char* message){
+    printf("Message from Go : %s\n",message);
+}
+```
+
+File: callGo.go
+
+```
+package main
+
+import "fmt"
+import "unsafe"
+
+//#cgo CFLAGS: -I:${SRCDIR}/calClib
+//#cgo LDFLAGS: ${SRCDIR}/callC.a
+//#include <stdlib.h>
+//#include<stdio.h>
+//#include<callC.h>
+import "C"
+
+func main(){
+
+	fmt.Println("Going to call a C function!")
+	C.cHello()
+	myMessage := C.CString("Message: I am from GO!")
+	defer C.free(unsafe.Pointer(myMessage))
+	C.printMessage(myMessage)
+	fmt.Println("All systems are OK!")
+}
+```
+To Execute
+```
+gcc -c *.c
+ar as callC.a *.o
+go run callC.go
+```
+
+### Calling go functions from C
+
+Each Go function that will be called by the C code needs to be exported first. This means that you should put a comment line starting with //export before its implementation.
+
+Note: no spaces after //
+
+File: usedbyC.go
+
+```
+package main
+
+import "C"
+import "fmt"
+
+//export HelloGo
+func HelloGo(){
+	fmt.Println("Hello from GO!")
+}
+
+//export Multiply
+func Multiply(a,b int) int{
+	return a*b
+}
+
+func main(){
+
+}
+```
+
+Generate a C shared library from the Go code by executing the following command:
+
+```
+go build -o usedbyC.o -buildmode=c-shared usedbyC.go
+```
+
+
+Generates the following files
+
+```
+usedbyC.h  
+usedbyC.o
+```
+
+File: willusego.c
+
+```
+#include<stdio.h>
+#include "usedbyC.h"
+
+int main(int argc, char **argv){
+    GoInt x = 12;
+    GoInt y = 14;
+
+    printf("About to call go function !");
+    HelloGo();
+
+    GoInt result = Multiply(x,y);
+
+    printf("result : %d\n",(int)result);
+    printf("It worked\n");
+    return 0;
+}
+```
+
+
+```
+ gcc -o willusego willusego.c ./usedbyC.o
+ ./willusego
+
+ //output
+Hello from GO!
+About to call go function !result : 168
+It worked
+```
