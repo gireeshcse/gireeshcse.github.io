@@ -447,3 +447,108 @@ The -W parameter tells the go tool compile command to print the debug parse tree
 ```
 go build -x defer.go
 ```
+
+### Web Assembly
+
+WebAssembly (Wasm) is a machine model and executable format targeting a virtual machine. It is designed for efficiency, both in speed and file size. This means that you can use a WebAssembly binary on any platform you want without a single change.
+
+WebAssembly comes in two formats: **plain text format** and **binary format**. Plain text format WebAssembly files have the **.wat** extension, whereas binary files have the **.wasm file**
+extension. Notice that once you have a WebAssembly binary file, **we have to load and use it using the JavaScript API.**
+
+Apart from Go, WebAssembly can also be generated from other programming languages that have support for static typing, including Rust, C, and C++.
+
+WebAssembly is important for the following reasons:
+
+* WebAssembly code runs at a speed that is pretty close to the native speed, which means that WebAssembly is fast.
+* We can create WebAssembly code from many programming languages, which might include programming languages that we already know.
+* Most modern web browsers natively support WebAssembly without the need for a plugin or any other software installation.
+* WebAssembly code is much faster than JavaScript code.
+
+For Go, WebAssembly is just another architecture. Therefore, you can use the cross-compilation capabilities of Go in order to create WebAssembly code.
+
+File : toWasm.go
+
+```
+package main
+
+import "fmt"
+
+func main(){
+	fmt.Println("Welcome to GO Assembly output!")
+}
+```
+
+```
+GOOS=js GOARCH=wasm go build -o main.wasm toWasm.go
+```
+
+So, the values of GOOS and GOARCH found in the first command tell Go to create WebAssembly code. If you do not put the right GOOS and GOARCH values, the compilation will not generate WebAssembly code or it might fail.
+
+```
+cp main.wasm <webserver_directory>
+cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" <webserver_directory>
+```
+<webserver_directory>/index.html
+
+```
+<HTML>
+
+<head>
+    <meta charset="utf-8">
+    <title>Go and WebAssembly</title>
+</head>
+
+<body>
+    <script src="wasm_exec.js"></script>
+    <script>
+        if (!WebAssembly.instantiateStreaming) { // polyfill
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer();
+                return await WebAssembly.instantiate(source, importObject);
+            };
+        }
+        const go = new Go();
+        let mod, inst;
+        WebAssembly.instantiateStreaming(fetch("main.wasm"),
+            go.importObject).then((result) => {
+                mod = result.module;
+                inst = result.instance;
+                document.getElementById("runButton").disabled = false;
+            }).catch((err) => {
+                console.error(err);
+            });
+        async function run() {
+            console.clear();
+            await go.run(inst);
+            inst = await WebAssembly.instantiate(mod, go.importObject);
+        }
+    </script>
+    <button onClick="run();" id="runButton" disabled>Run</button>
+</body>
+
+</HTML>
+```
+
+URL: [Web Assembly](https://gireeshcse.github.io/webassembly/)
+
+Note: Check web console
+
+To Execute if nodejs is installed
+
+```
+export PATH="$PATH:$(go env GOROOT)/misc/wasm"
+GOOS=js GOARCH=wasm go run toWasm.go
+
+Welcome to GO Assembly output!
+```
+
+### Important Points
+
+* If you have an error in a Go function, either log it or return it; do not do both unless you have a really good reason for doing so.
+* Go interfaces define behaviors not data and data structures.
+* Use the io.Reader and io.Writer interfaces when possible because they make your code more extensible.
+* Make sure that you pass a pointer to a variable to a function only when needed. The rest of the time, just pass the value of the variable.
+* Error variables are not string variables; they are error variables!
+* Do not test your Go code on production machines unless you have a really good reason to do so.
+* If you do not really know a Go feature, test it before using it for the first time, especially if you are developing an application or a utility that will be used by a large number of users.
+* If you are afraid of making mistakes, you will most likely end up doing nothing really interesting. Experiment as much as you can!
