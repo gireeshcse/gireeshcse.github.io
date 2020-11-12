@@ -282,3 +282,168 @@ Hello from GO!
 About to call go function !result : 168
 It worked
 ```
+
+### defer
+
+The defer keyword postpones the execution of a function until the surrounding function returns, which is widely used in file input and output operations because it saves you from having to remember when to close an opened file
+
+It is very important to remember that deferred functions are executed in last in, first out (LIFO) order after the return of the surrounding function.
+
+```
+package main
+import "fmt"
+
+func func1(){
+	for i := 3; i > 0; i--{
+		defer fmt.Print(i) // 1 2 3
+	}
+	fmt.Println()
+}
+
+func func2(){
+	for i := 3; i > 0; i--{
+		defer func() {
+			fmt.Print(i) // 0 0 0
+		}()
+	}
+	fmt.Println()
+}
+
+func func3(){
+	for i := 3; i > 0; i--{
+		defer func(n int) {
+			fmt.Print(n) // 1 2 3
+		}(i)
+	}
+	fmt.Println()
+}
+
+func main(){
+	fmt.Println("Defer program")
+	func1()
+	func2()
+	func3()
+}
+```
+
+### Panic and Recover
+
+**panic()** is a built-in Go function that terminates the current flow of a Go program and starts panicking. On the other hand, the recover() function, which is also a built-in Go function, allows you to take back control of a goroutine that just panicked using panic().
+
+```
+package main
+
+import "fmt"
+
+func a(){
+	fmt.Println("Inside func a");
+	defer func (){
+		if c := recover(); c != nil{
+			fmt.Println("a: recovering from panic",c)
+		}
+	}()
+	fmt.Println("calling b")
+	b()
+	fmt.Println("Exiting from a") // not executed
+}
+
+func b(){
+	fmt.Println("Inside func b")
+	panic("b: I am in Panic")
+	fmt.Println("Exiting from b")// not executed
+}
+
+func main(){
+	a();
+	fmt.Println("Program terminated!")
+}
+```
+
+Note: function b() knows nothing about function a() ; however,function a() contains Go code that handles the panic condition of function b().
+
+### Unix utilities
+
+#### strace tool
+
+* Command line utility tool which allows to trace system calls and signals.
+```
+strace ls
+```
+* can print count time, calls, and errors for each system call when used with the -c command-line option
+
+```
+strace -c find /usr/ 1> /dev/null
+strace -c go run sample.go
+```
+As the normal program output is printed in standard output and the output of strace(1) is printed in standard error, the previous command discards the output of the command that is examined and shows the output of strace.
+
+#### dtrace tool
+
+DTrace, allows us to see what happens behind the scenes on a system-wide basis without the need to modify or recompile anything. It also allows us to work on production systems and watch running programs or server processes dynamically without introducing a big overhead.
+
+
+### Go Environment
+
+```
+package main
+
+import (
+	"fmt"
+	"runtime"
+	"strings"
+	"strconv"
+)
+
+func main(){
+	fmt.Print("You are using ", runtime.Compiler, " ")
+	fmt.Println("on a", runtime.GOARCH, "machine")
+	fmt.Println("Using Go version", runtime.Version())
+	fmt.Println("Number of CPUs:", runtime.NumCPU())
+	fmt.Println("Number of Goroutines:", runtime.NumGoroutine())
+
+	version := runtime.Version()
+	major := strings.Split(version,".")[0][2]
+	m1, _ := strconv.Atoi(string(major))
+	fmt.Println("Major version :",m1)
+}
+```
+
+Output
+
+```
+You are using gc on a amd64 machine
+Using Go version go1.15.3
+Number of CPUs: 4
+Number of Goroutines: 1
+Major version : 1
+```
+
+To Get list of Go environmental variables
+
+```
+go env
+```
+
+### Go Assembler
+
+Go assembler, which is a Go tool that allows us to see the assembly language used by the Go compiler.
+
+```
+go tool compile -S goEnv.go
+```
+
+### Node Trees
+
+Everything in a Go program is parsed and analyzed by the modules of the Go compiler according to the grammar of the Go programming language. The final product of this analysis is a tree that is specific to the provided Go code and represents the program in a different way that is suited to the compiler rather than to the developer.
+
+```
+go tool compile -W goEnv.go
+```
+
+The -W parameter tells the go tool compile command to print the debug parse tree after the type checking.
+
+**More info**
+
+```
+go build -x defer.go
+```
