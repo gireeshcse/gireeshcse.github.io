@@ -137,3 +137,148 @@ t := append(s, ref...) // creating new slice
 s = append(s, ref...) // existing slice
 s = append(s, s...) // s+s
 ```
+
+**Go map**
+
+* Go map is a reference to a hash table
+
+```
+iMap = make(map[string]int)
+iMap["k1"] = 12
+iMap["k2"] = 13
+anotherMap := map[string]int {
+    "k1": 12
+    "k2": 13
+}
+delete(anotherMap, "k1")
+for key, value := range iMap {
+    fmt.Println(key, value) // order is random.
+}
+_, ok := iMap["doesItExist"]
+if ok {
+    fmt.Println("Exists!")
+} else {
+    fmt.Println("Does NOT exist")
+}
+
+aMap := map[string]int{}
+aMap["test"] = 1
+```
+
+Note: If we try to get the value of a map key that does not exist in the map, we will get zero
+
+Calling the same **delete()** statement multiple times does not make any difference and does not generate any warning messages.
+
+
+**constants**
+
+```
+const HEIGHT = 200
+const (
+    C1 = "C1C1C1"
+    C2 = "C2C2C2"
+    C3 = "C3C3C3"
+)
+
+const s1 = 123
+const s2 float64 = 123
+
+var v1 float32 = s1 * 12 // no problem
+var v2 float32 = s2 * 12 // fails because s2 and v2 are of different types
+
+```
+A Go **type** is a way of defining a new named type that uses the same underlying type as an existing type. This is mainly used for differentiating between different types that might use the same kind of data.
+
+```
+type Digit int
+type Power2 int
+
+const (
+    Zero Digit = iota 
+    One
+    Two
+    Three
+    Four
+)
+
+const (
+    p2_0 Power2 = 1 << iota
+    _
+    p2_2
+    _
+    p2_4
+    _
+    p2_6
+)
+```
+
+**Pointers**
+
+```
+func getPointer(n *int) {
+}
+
+func returnPointer(n int) *int {
+}
+
+func getPointer(n *int) {
+    *n = *n * *n
+}
+
+func returnPointer(n int) *int {
+    v := n * n
+    return &v
+}
+
+```
+
+* Pointers allow you to share data, especially between Go functions.
+* Pointers can be extremely useful when we want to differentiate between a zero value and a value that is not set.
+
+**Date and Times**
+
+```
+fmt.Println("Epoch time:", time.Now().Unix())
+t := time.Now()
+fmt.Println(t, t.Format(time.RFC3339))
+fmt.Println(t.Weekday(), t.Day(), t.Month(), t.Year())
+time.Sleep(time.Second)
+t1 := time.Now()
+fmt.Println("Time difference:", t1.Sub(t))
+formatT := t.Format("01 January 2006")
+fmt.Println(formatT)
+loc, _ := time.LoadLocation("Europe/Paris")
+londonTime := t.In(loc)
+fmt.Println("Paris:", londonTime)
+```
+
+time.Nanosecond , time.Microsecond , time.Millisecond , time.Minute , and time.Hour
+
+The Go constants for parsing the time are
+15 => for hour
+04 => for minute
+05 => for second
+PM => for PM
+pm => for pm
+11 => for month
+Jan => for parsing the three-letter abbreviation used for describing a month, 
+2006 => for parsing the year
+02 => for parsing the day of the month. 
+Monday => for parsing strings that contain a long weekday string
+Mon => for the abbreviated version of the weekday
+
+If you use January instead of Jan , you will get the long name of the month instead of its three-letter abbreviation, which makes perfect sense.
+
+```
+d, err := time.Parse("15:04", myTime)
+if err == nil {
+    fmt.Println("Full:", d)
+    fmt.Println("Time:", d.Hour(), d.Minute())
+} else {
+    fmt.Println(err)
+}
+
+start := time.Now()
+time.Sleep(time.Second)
+duration := time.Since(start)
+```
