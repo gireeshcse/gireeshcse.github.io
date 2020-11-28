@@ -40,5 +40,9 @@ func main(){
 	fmt.Println(*myMap[1])
 	fmt.Println(myMapPlain[2])
 	fmt.Println(splitMap[199][0],splitMap[199][199])
+	for i := 0; i < 200; i++ {
+		fmt.Println(i,"\t",len(splitMap[i])) // 20000 * 200
+	}
+	
 
 }

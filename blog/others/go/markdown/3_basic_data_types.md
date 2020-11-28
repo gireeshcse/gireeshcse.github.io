@@ -75,7 +75,7 @@ integer[1:3] // 2nd and 3rd element of slice
 * Go initializes the elements of every slice created with make .
 * The original slice will be kept in memory for as long as the smaller re-slice exists because the original slice is being referenced by the smaller re-slice.
 * Slices have two main properties: **capacity** and **length**
-* The capacity of a slice is the current room that has been allocated for this particular slice and can be found with the cap() function. As slices are dynamic in size, if a slice runs out of room, Go automatically doubles its current length to make room for more elements.
+* The capacity of a slice is the current room that has been allocated for this particular slice and can be found with the **cap()** function. As slices are dynamic in size, if a slice runs out of room, Go automatically doubles its current length to make room for more elements.
 * if the length and the capacity of a slice have the same values and you try to add another element to the slice, the capacity of the slice will be doubled whereas its length will be increased by one.
 * You should be very careful when using the copy() function on slices because the built-in copy(dst, src) copies the minimum number of len(dst) and len(src) elements.
 
