@@ -255,3 +255,47 @@ var precision uint = 0
 pi := new(big.Float).SetPrec(precision).SetFloat64(0)
 
 ```
+
+### JSON
+
+```
+import (
+    "encoding/json"
+)
+
+// Encode()
+/ /Decode()
+// Marshal()
+// Unmarshal()
+func loadFromJSON(filename string, key interface{}) error {
+    in, err := os.Open(filename)
+    decodeJSON := json.NewDecoder(in)
+    err = decodeJSON.Decode(key)
+
+}
+
+err := loadFromJSON(filename, &myRecord)
+
+func saveToJSON(filename *os.File, key interface{}) {
+    encodeJSON := json.NewEncoder(filename)
+    err := encodeJSON.Encode(key)
+}
+
+saveToJSON(os.Stdout, myRecord)
+
+rec, err := json.Marshal(&myRecord)
+err1 := json.Unmarshal(rec, &unRec) // converts it into Go Structure
+
+fileData, err := ioutil.ReadFile(filename)
+if err != nil {
+    fmt.Println(err)
+    return
+}
+var parsedData map[string]interface{}
+json.Unmarshal([]byte(fileData), &parsedData)
+
+for key, value := range parsedData {
+    fmt.Println("key:", key, "value:", value)
+}
+
+```
