@@ -273,8 +273,8 @@ func loadFromJSON(filename string, key interface{}) error {
     err = decodeJSON.Decode(key)
 
 }
-
-err := loadFromJSON(filename, &myRecord)
+var obj = make([]map[string] interface{} ,100)
+err := loadFromJSON(filename, &obj)
 
 func saveToJSON(filename *os.File, key interface{}) {
     encodeJSON := json.NewEncoder(filename)

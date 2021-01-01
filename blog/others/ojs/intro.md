@@ -71,14 +71,14 @@ git push
 ## Update the pkp-lib submodule
 cd lib/pkp
 git checkout master
-git pull upstream master
-git push
+git pull upstream master or git pull
+git push // not required
 
 ## Update the ui-library submodule
 cd ../ui-library
 git checkout master
 git pull upstream master
-git push
+git push // not required
 
 cd ../..
 
@@ -97,3 +97,40 @@ You may need to update dependencies and rebuild the JavaScript package.
 Sometimes a code change will modify the database structure and you will need to run the upgrade script.
 
     php tools/upgrade.php upgrade
+
+### XXL format to import users
+
+```
+<?xml version="1.0"?>
+<PKPUsers  xmlns="http://pkp.sfu.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="http://localhost:8080/ojs/pkp-users.xsd">
+    <user_groups xsi:schemaLocation="http://pkp.sfu.ca pkp-users.xsd">
+        <user_group>
+            <role_id>65536</role_id>
+            <context_id>3</context_id>
+            <is_default>true</is_default>
+            <show_title>false</show_title>
+            <permit_self_registration>true</permit_self_registration>
+            <permit_metadata_edit>false</permit_metadata_edit>
+            <name locale="en_US">Author</name>
+            <abbrev locale="en_US">AU</abbrev>
+            <stage_assignments>1:3:4:5</stage_assignments>
+        </user_group>
+    </user_groups>
+    <users>
+        <user>
+            <givenname locale="en_US">Ram</givenname>
+            <country>IN</country>
+            <email>ram@example.in</email>
+            <username>ram</username>
+            <password is_disabled="false" must_change="false">
+                <value>
+                SomePassword
+                </value>
+            </password>
+            <inline_help>true</inline_help>
+            <auth_id>1</auth_id>
+            <user_group_ref>Author</user_group_ref>
+        </user>
+    </users>
+</PKPUsers>
+```
