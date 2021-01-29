@@ -134,3 +134,144 @@ Sometimes a code change will modify the database structure and you will need to 
     </users>
 </PKPUsers>
 ```
+
+# OJS Pre-Installation
+
+```
+sudo chmod -R 777 cache/
+sudo chmod -R 777 public/
+sudo chmod -R 777 config.inc.php
+sudo mkdir /opt/lampstack-7.3.26-0/apache2/files
+sudo chmod 777 /opt/lampstack-7.3.26-0/apache2/files
+sudo chmod -Rv  777 plugins/
+```
+* Create a journal and upload apiLoginPlugin and run the following database query
+
+```
+INSERT INTO `auth_sources` (`auth_id`, `title`, `plugin`, `auth_default`, `settings`) VALUES
+(1, 'API Login', 'apiLogin', 0, NULL);
+```
+To customize the basic information in adding the author such as making contact info optional when adding collaborator(modified according to our requirement and fork and create according to our requirement)
+```
+https://github.com/ewhanson/authorRequirements
+```
+To update the locale and messages. After enabling this locale tab is present in the website settings
+```
+https://github.com/pkp/customLocale
+```
+
+Important files and options present are
+
+```
+lib/pkp/locale/en_US/common.po - about.contact,   
+user.username,
+author.submit.metadata
+author.submit.journalSectionDescription
+submission.submit.coverNote
+
+lib/pkp/locale/en_US/locale.po -  section.section, section.policy
+```
+
+Import users
+config.inc.php - cdn : off , smtp settings
+create sections in journal settings 
+workflow- checklists modification 
+
+#### Upgrade 
+
+* Download new version and extract the files
+* Copy the config.inc.php, public, and files_dir(if inside ojs directory) to newly extracted verison
+* Also copy any plugins installed from previous verision to new version
+* diff config.inc.php config.TEMPLATE.inc.php and check the config info and modify according if any changes are required
+* Run the following commands
+
+```
+sudo chmod -R 777 cache/
+sudo chmod -R 777 public/
+sudo chmod -R 777 config.inc.php
+sudo chmod -Rv  777 plugins/
+```
+
+##### 1. Command-line
+
+- Edit config.inc.php and change "installed = On" to "installed = Off"
+- Run the following command from the OJS directory (not including the $):
+	`$ php tools/upgrade.php upgrade`
+- Re-edit config.inc.php and change "installed = Off" back to
+	 "installed = On"
+
+##### 2. Web
+
+If you do not have the PHP CLI installed, you can also upgrade by running a
+web-based script. To do so:
+
+- Edit config.inc.php and change "installed = On" to "installed = Off"
+- Open a web browser to your OJS site; you should be redirected to the
+	installation and upgrade page
+- Select the "Upgrade" link and follow the on-screen instructions
+- Re-edit config.inc.php and change "installed = Off" back to
+	 "installed = On"
+
+## Help
+
+Help Manual
+
+1. Change section policy at
+
+Settings->Journal Settings->Section
+
+
+If co-authors exists please submit the co-authors consent as well
+
+2. To change the label names or fields information
+
+Settings->Website Settings->Locale
+
+common.po 
+
+about.contact   = ORG Contact
+
+user.po
+
+user.username = PC No
+
+author.po
+
+author.submit.metadata = Report Information
+author.submit.journalSectionDescription =  Please select the type of Report
+submission.submit.coverNote = Write any comments to Editor(Optional)
+
+locale/en_US/locale.po
+section.section = Type of Report
+section.policy = Report Policy
+reviewer.article.decision.resubmitElsewhere 
+reviewer.article.decision.decline
+reviewer.article.decision.seeComments
+reviewer.article.decision.resubmitHere
+reviewer.article.decision.pendingRevisions
+reviewer.article.decision.accept
+
+lib/pkp/locale/en_US/submission.po
+submission.queries.submission = Pre-Review Discussions
+submission.queries.review = Review Discussions
+
+lib/pkp/locale/en_US/grid.po 
+grid.action.addQuery = Add discussion
+
+
+3. Workflow settings
+
+Settings-> Workflow Settings
+
+We can update type of files to be submitted (Author Consent, Article Text etc..)
+Add Submission Checklist
+Add Author Guidelines
+Also update the following
+Metadata settings
+Reviewer Guidelines
+Review Forms,
+Review Mode
+Single Click Review Access from email 
+Default Response dealines
+Email Templates
+
