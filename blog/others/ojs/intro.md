@@ -227,9 +227,12 @@ If co-authors exists please submit the co-authors consent as well
 
 Settings->Website Settings->Locale
 
-common.po 
+lib/pkp/locale/en_US/common.po
 
 about.contact   = ORG Contact
+common.prefix = Prefix(Optional)
+common.prefixAndTitle.tip = 
+common.subtitle = 
 
 user.po
 
@@ -274,4 +277,14 @@ Review Mode
 Single Click Review Access from email 
 Default Response dealines
 Email Templates
+
+### Important Links
+
+* [Submission Acknowledgement email is not being sent](https://forum.pkp.sfu.ca/t/ojs-3-1-2-the-submission-acknowledgement-email-is-not-being-sent-to-author/54864/9)
+
+Solution:
+
+```
+I switched force_dmarc_compliant_from, force_default_envelope_sender and allow_envelope_sender to “On” and uncomment.
+```
 
