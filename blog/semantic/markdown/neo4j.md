@@ -78,3 +78,153 @@ Example:
 We can use meta nodes to connect to the top level nodes. We also limit number of relationships for meta node for effective traversal.
 
 
+#### Cypher
+
+##### CREATE
+
+```
+CREATE (ram:Person{name:"Sri Ram"}) - [:LOVES]-> (sita:Person{name:"Sita Devi"})
+CREATE (sita)-[:LOVES]-> ram
+```
+
+The above creates 2 nodes but below one creates 4 nodes since there is no way to identify the nodes.
+
+```
+CREATE (:Person{name:"Sri Ram"}) - [:LOVES]-> (:Person{name:"Sita Devi"})
+CREATE (:Person{name:"Sita Devi"}) - [:LOVES]-> (:Person{name:"Sri Ram"})
+```
+
+```
+CREATE(ram:Royal:Person{name:"Sri Ram Chandra"})-[:LOVES{since:"a long time ago", till:"forever",where:"India"}]->(sita:Royal:Person{name:"Sita Devi"})
+CREATE (ram) <-[:LOVES]-(sita)
+```
+Above Added 4 labels, created 2 nodes, set 5 properties, created 2 relationships,
+
+
+##### READ
+```
+MATCH(n)
+RETURN n;
+```
+Returns all the nodes.
+
+```
+MATCH(n:Person)
+WHERE n.name="Sri Ram" or n.firstName="Sri Ram"
+RETURN n;
+```
+firstName may exits for some nodes or not at all.
+
+```
+MATCH (n:Person)-[:LOVES]-()
+WHERE toLower(n.name) = "sita devi"
+RETURN n ORDER BY n.name ASC
+SKIP 2 LIMIT 5;
+
+MATCH (n:Person)-[:LOVES]->()
+RETURN n;
+
+MATCH (n:Person)<-[:LOVES]-()
+RETURN n;
+```
+
+##### UPDATE
+
+```
+MATCH (n:Person{name:"Sita Devi"})
+SET n.gender = "Male"
+RETURN n;
+
+MATCH (n:Person{name:"Sita Devi"})
+WHERE n.gender = "Male"
+SET n.gender = "Female"
+SET n.age = 1000
+RETURN n;
+
+MATCH (n:Person{name:"Sita Devi"})
+WHERE n.gender = "Male"
+SET n.gender = "Female", n.age = 1000
+RETURN n;
+
+MATCH (n:Person)
+SET n.age = n.age + 1
+RETURN n;
+
+MATCH (n:Person)
+WHERE n.age >= 12 and n.age < 18
+SET n.Teen
+RETURN n;
+
+MATCH (n:Person)
+WHERE n.age > 18
+REMOVE n.Teen
+RETURN n;
+
+MATCH (n:Person)
+WHERE n.age IS NULL
+SET n.age = 0
+RETURN n;
+
+MATCH (n:Person{name:"Sita Devi"})
+REMOVE n.firstName
+RETURN n;
+
+```
+
+##### DELETE
+
+```
+MATCH (r:Person{name:"Sri Ram"})
+DELETE r;
+```
+Cannot delete node<0>, because it still has relationships. To delete this node, you must first delete its relationships.
+```
+MATCH (r:Person{name:"Sri Ram"})
+DETACH DELETE r;
+```
+
+```
+MATCH(me)
+OPTIONAL MATCH (me)-[r]-()
+DELETE me, r
+```
+Delete all nodes and relationships
+
+##### Others
+
+```
+MERGE (me:Person{name:"Finch"})
+ON MATCH SET me.accessed = timestamp()
+ON CREATE SET me.age = 65
+RETURN me.name,me.accessed, me.age;
+
+MERGE (keanu:Person {name: 'Keanu Reeves'})
+ON CREATE SET keanu.created = timestamp();
+
+CREATE CONSTRAINT ON (p:Person) ASSERT p.identifier is UNIQUE;
+DROP CONSTRAINT ON (p:Person) ASSERT p.identifier is UNIQUE;
+
+MERGE (p:Person{name: "Keanu Reeves"})
+ON MATCH SET p.identifier = "email@example.com"
+RETURN p;
+
+// Node(5) already exists with label `Person` and property `identifier` = 'email@example.com'
+MERGE (p:Person{name: "Sita Devi"})
+ON MATCH SET p.identifier = "email@example.com"
+RETURN p;
+
+// list friends of the friends of Ram
+MATCH (ram:Person{email:"ram@example.com"})<-[:FRIEND_OF]-(immediateFriend:Person)<-[:FRIEND_OF]-(connectionFriend:Person)
+RETURN connectionFriend
+
+MATCH (ram:Person{email:"ram@example.com"})<-[:FRIEND_OF*2]-(connectionFriend:Person)
+RETURN DISTINCT connectionFriend
+
+```
+
+##### Syntax best to use
+
+* Node aliases, Property names - lower camel case.
+* Labels - upper camel case.
+* Relationships - Upper snake case
+* Keyboards - Uppercase.
