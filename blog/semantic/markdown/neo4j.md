@@ -217,6 +217,7 @@ RETURN p;
 MATCH (ram:Person{email:"ram@example.com"})<-[:FRIEND_OF]-(immediateFriend:Person)<-[:FRIEND_OF]-(connectionFriend:Person)
 RETURN connectionFriend
 
+// equivalent to above but distinct as well
 MATCH (ram:Person{email:"ram@example.com"})<-[:FRIEND_OF*2]-(connectionFriend:Person)
 RETURN DISTINCT connectionFriend
 
@@ -227,4 +228,202 @@ RETURN DISTINCT connectionFriend
 * Node aliases, Property names - lower camel case.
 * Labels - upper camel case.
 * Relationships - Upper snake case
-* Keyboards - Uppercase.
+* Keywords - Uppercase.
+
+##### APOC
+
+* A Package of Components
+* Awesome Procedures On Cypher
+
+Collection of functions and procedures that are available for use in Cypher.
+
+APOC Core can be installed by moving the APOC jar file from the $NEO4J_HOME/labs directory to the $NEO4J_HOME/plugins directory and restarting Neo4j.
+
+Note: Latest release can be downloaded from the [Github](https://github.com/neo4j-contrib/neo4j-apoc-procedures/releases)
+
+
+```
+// count of functions and procedures of apoc. 252, 276(APOC 4.2.0.5)
+CALL dbms.functions() YIELD name
+WHERE name STARTS WITH 'apoc.'
+RETURN count(name)
+UNION
+CALL dbms.procedures() YIELD name 
+WHERE name STARTS WITH 'apoc.'
+RETURN count(name)
+
+// List functions
+CALL dbms.functions()
+
+// List procedures
+CALL dbms.procedures()
+```
+
+* **Functions** are designed to return a single value after a computation that only reads the database.
+* **Procedures**  can make changes to the database and return several results.
+
+```
+CREATE (p:Person{GUID: apoc.create.uuid()})
+```
+
+* For help
+
+```
+CALL apoc.help('sum') // finds all the procedures and function that contain sum in name or description
+// "procedure", "apoc.trigger.resume", ... 
+// "function",	"apoc.coll.sum", ..
+// "function"	"apoc.coll.sumLongs", ..
+```
+
+Procedures are restricted by default, we need the set the following setting in  $NEO4J_HOME/conf/neo4j.conf
+
+```
+dbms.security.procedures.unrestricted=apoc.*
+```
+
+```
+CALL apoc.meta.graph; // gives meta info about db.
+```
+
+* Random graph generator.
+
+apoc.generate.ba(noNodes, edgesPerNode, label, type) - generates a random graph according to the Barabasi-Albert model"
+
+```
+CALL apoc.generate.ba(100,2,'Person','FRIEND_OF'); 
+
+// To view all created nodes
+MATCH(n)
+RETURN n;
+
+// person who is friend of him/her self
+MATCH (p:Person)-[FRIEND_OF]-(p)
+RETURN p
+```
+
+##### Datascience library 
+
+* Latest can be downloaded from [Neo4J](https://neo4j.com/graph-data-science-software/) or [Github](https://github.com/neo4j/graph-data-science/releases)
+* Copy the jar to  the $NEO4J_HOME/plugins directory and restart Neo4j.
+* set the following setting in  $NEO4J_HOME/conf/neo4j.conf 
+```
+dbms.security.procedures.unrestricted=apoc.*,gds.*
+```
+
+* **Graph Catalog**
+
+        - Graph algorithms run on a graph data model which is a projection of the Neo4j property graph data model. A graph projection can be seen as a view over the stored graph, containing only analytically relevant, potentially aggregated, topological and property information. Graph projections are stored entirely in-memory using compressed data structures optimized for topology and property lookup operations.
+
+        - The graph catalog is a concept within the GDS library that allows managing multiple graph projections by name. Using its name, a created graph can be used many times in the analytical workflow. Named graphs can be created using either a Native projection or a Cypher projection. After usage, named graphs can be removed from the catalog to free up main memory.
+
+* PageRank ([Ref](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/))
+
+   - It counts both number and quality of a relation and deduces an importance for the node.
+   - Rules are
+     - The more relations, the more important node
+     * The more relations with important nodes, the more important the node.
+   - Now present in Neo4J Data science library.
+
+
+```
+// creating thousand nodes
+FOREACH (id IN range(0,1000) | CREATE (n:Page{id:id}) )
+
+// create at most, a 100 thousand relations
+MATCH(n1:Page), (n2:Page)
+WITH n1,n2 LIMIT 1000000 
+WHERE rand() <  0.1
+CREATE (n1)-[:LINKS{weight:rand()}]-> (n2)
+// Set 99673 properties, created 99673 relationships, completed after 641 ms.
+
+// Creates a graph in the catalog using a Native projection.
+CALL gds.graph.create(
+  'myGraph',
+  'Page',
+  'LINKS',
+  {
+    relationshipProperties: 'weight'
+  }
+)
+// Returns nodeProjection	relationshipProjection	graphName	nodeCount	relationshipCount	createMillis
+
+// memory estimation for running the pagerank
+
+CALL gds.pageRank.write.estimate('myGraph', {
+  writeProperty: 'pageRank',
+  maxIterations: 20,
+  dampingFactor: 0.85
+})
+YIELD nodeCount, relationshipCount, bytesMin, bytesMax, requiredMemory
+╒═══════════╤═══════════════════╤══════════╤══════════╤════════════════╕
+│"nodeCount"│"relationshipCount"│"bytesMin"│"bytesMax"│"requiredMemory"│
+╞═══════════╪═══════════════════╪══════════╪══════════╪════════════════╡
+│1001       │99673              │24936     │24936     │"24 KiB"        │
+└───────────┴───────────────────┴──────────┴──────────┴────────────────┘
+
+// In the stream execution mode, the algorithm returns the score for each node.
+CALL gds.pageRank.stream('myGraph')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).id AS name, score
+ORDER BY score DESC, name ASC
+╒══════╤══════════════════╕
+│"name"│"score"           │
+╞══════╪══════════════════╡
+│609   │1.205301932941157 │
+├──────┼──────────────────┤
+│399   │1.1966946890971681│
+├──────┼──────────────────┤
+│202   │1.1890399693567406│
+├──────┼──────────────────┤
+│960   │1.1743968396459592│
+├──────┼──────────────────┤
+
+// Once we have finished using the named graph we can remove it from the catalog to free up memory.
+CALL gds.graph.drop('myGraph') YIELD graphName;
+
+// cartesian product
+MATCH(n1:Node), (n2:Node)
+return n1,n2
+```
+
+* Timeboxed execution of Cypher Statements
+
+```
+CALL apoc.cypher.runTimeBoxed(CypherStatement, params, timeoutInMs)
+CALL apoc.cypher.runTimeBoxed('MATCH (n) return n', NULL, 2)
+// Neo.TransientError.Transaction.Terminated
+call apoc.cypher.runTimeboxed("MATCH (n:Page) RETURN n", {}, 1)
+YIELD value
+RETURN value.n.id; // RETURN value.n creating Neo.DatabaseError.Statement.ExecutionFailed
+```
+
+* Linking of a collection of nodes
+
+Calling a single procedure will make it possible to create ONE(same) relation between all the nodes of a collection.
+```
+MATCH (p:Person)
+WITH collect(p) AS persons
+CALL apoc.nodes.link(persons,'BRO')
+RETURN persons
+
+MATCH (p:Person)-[r:BRO]->(m:Person)
+RETURN p, count(r)
+╒═══════════════════════╤══════════╕
+│"p"                    │"count(r)"│
+╞═══════════════════════╪══════════╡
+│{"name":"User0","id":0}│1         │
+├───────────────────────┼──────────┤
+│{"name":"User1","id":1}│1         │
+├───────────────────────┼──────────┤
+│{"name":"User2","id":2}│1         │
+├───────────────────────┼──────────┤
+│{"name":"User3","id":3}│1         │
+├───────────────────────┼──────────┤
+```
+
+[For More Info](https://neo4j.com/docs/labs/apoc/current/)
+  - Math Functions
+  - NLP
+  - Graph Algorithms
+  - Temporal (Date Time)
+  - etc...
