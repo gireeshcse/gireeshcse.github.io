@@ -221,6 +221,33 @@ RETURN connectionFriend
 MATCH (ram:Person{email:"ram@example.com"})<-[:FRIEND_OF*2]-(connectionFriend:Person)
 RETURN DISTINCT connectionFriend
 
+// without any particular node name
+MATCH (tom {name: "Tom Hanks"}) RETURN tom
+MATCH (people:Person) RETURN people.name LIMIT 10
+MATCH (nineties:Movie) WHERE nineties.released >= 1990 AND nineties.released < 2000 RETURN nineties.title
+// co-actors of Tom Hanks
+MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors) RETURN coActors.name
+// people related to a movie "Cloud Atlas"
+MATCH (people:Person)-[relatedTo]-(:Movie {title: "Cloud Atlas"}) RETURN people.name, Type(relatedTo), relatedTo
+// Movies and actors up to 4 "hops" away from Kevin Bacon
+MATCH (bacon:Person {name:"Kevin Bacon"})-[*1..4]-(hollywood)
+RETURN DISTINCT hollywood
+// Bacon path, the shortest path of any relationships to Meg Ryan
+MATCH p=shortestPath(
+   (bacon:Person {name:"Kevin Bacon"})-[*]-(meg:Person {name:"Meg Ryan"})
+)
+RETURN p
+
+// find Tom Hanks co-co-actors who haven't worked with Tom Hanks...
+MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors),
+  (coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cocoActors)
+WHERE NOT (tom)-[:ACTED_IN]->()<-[:ACTED_IN]-(cocoActors) AND tom <> cocoActors
+RETURN cocoActors.name AS Recommended, count(*) AS Strength ORDER BY Strength DESC
+
+// Find someone to introduce Tom Hanks to Tom Cruise
+MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors),
+  (coActors)-[:ACTED_IN]->(m2)<-[:ACTED_IN]-(cruise:Person {name:"Tom Cruise"})
+RETURN tom, m, coActors, m2, cruise
 ```
 
 ##### Syntax best to use
@@ -312,9 +339,9 @@ dbms.security.procedures.unrestricted=apoc.*,gds.*
 
 * **Graph Catalog**
 
-        - Graph algorithms run on a graph data model which is a projection of the Neo4j property graph data model. A graph projection can be seen as a view over the stored graph, containing only analytically relevant, potentially aggregated, topological and property information. Graph projections are stored entirely in-memory using compressed data structures optimized for topology and property lookup operations.
+   - Graph algorithms run on a graph data model which is a projection of the Neo4j property graph data model. A graph projection can be seen as a view over the stored graph, containing only analytically relevant, potentially aggregated, topological and property information. Graph projections are stored entirely in-memory using compressed data structures optimized for topology and property lookup operations.
 
-        - The graph catalog is a concept within the GDS library that allows managing multiple graph projections by name. Using its name, a created graph can be used many times in the analytical workflow. Named graphs can be created using either a Native projection or a Cypher projection. After usage, named graphs can be removed from the catalog to free up main memory.
+   - The graph catalog is a concept within the GDS library that allows managing multiple graph projections by name. Using its name, a created graph can be used many times in the analytical workflow. Named graphs can be created using either a Native projection or a Cypher projection. After usage, named graphs can be removed from the catalog to free up main memory.
 
 * PageRank ([Ref](https://neo4j.com/docs/graph-data-science/current/algorithms/page-rank/))
 
@@ -427,3 +454,58 @@ RETURN p, count(r)
   - Graph Algorithms
   - Temporal (Date Time)
   - etc...
+
+  ##### Query Profiling and Optimization
+
+  ```
+PROFILE MATCH (p)-[DIRECTED]->(m)<-[WROTE]-(p),(p)-[ACTED_IN]->(m) RETURN p.name,m.title
+
+PROFILE MATCH (p:Person)-[DIRECTED]->(m:Movie)<-[WROTE]-(p),(p)-[ACTED_IN]->(m) RETURN p.name,m.title
+  ```
+
+Query plans are cached, it would be better to use parameters instead of literals so that query does not have to be parsed again and again.
+
+```
+:param obj => ({props:{ name:"Andy", position:"Developer"}})
+:param actorName => "Tom Hanks"
+    
+MATCH (tom:Person {name: $actorName})-[:ACTED_IN]->(tomHanksMovies) RETURN tom,tomHanksMovies
+MATCH (tom:Person {name: {actorName} })-[:ACTED_IN]->(tomHanksMovies) RETURN tom,tomHanksMovies
+
+// List of params
+:params 
+```
+
+Note: Each param is executed separately
+
+**Indexes**
+
+* Automatically created on properties that have a constraint
+* Used to find the starting points of the queries
+
+```
+// Create index
+CREATE INDEX ON :LabelName(propertyName)
+
+// List of indexes
+CALL db.indexes
+
+//Force index usage
+MATCH (t:Tower{name:""})
+USING INDEX t:Tower(name)
+RETURN ...
+
+//Force Label usage : Instead of looking all the billions of locations
+// in japan look for the nodes having Tower
+MATCH (t:Location:Tower)
+USING SCAN t:Tower
+WHERE t.Country='JPN'
+RETURN t
+```
+
+**Rules of thumb**
+
+* In our query plans, the rows count should decrease rapidly from top to bottom.
+  - Use enough labels, indexes 
+* Do not get the full nodes if we want to use a few properties.
+* Cautiously use Cartesian 

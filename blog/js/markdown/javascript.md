@@ -1,3 +1,9 @@
+# Quick Guide
+
+**References**
+
+[JavaScript: The Definitive Guide, 7th Edition By David Flanagan](https://www.oreilly.com/library/view/javascript-the-definitive/9781491952016/)
+
 * Any value that is not a number, a string, a boolean , a symbol, null or undefined is an object
 * Objects are mutable and its primitive types are immutable.
 * Object values are references.
@@ -100,7 +106,7 @@
 
 * false values : undefined, null, 0, -0, NaN, ""
 
-### Symbols
+**Symbols**
 
 * Introduced in ES6 
 * To serve as non-string property names. Generally, object property names are typically strings.
@@ -206,5 +212,218 @@ Javascript defines a global Symbol registry.The **Symbol.for()** function takes 
         let a = [1,2,3]
         delete a[2] // array length does not change
 
+        for(let i = 0; i < a.length; a[i++] = 0) /* empty */;
+
+        switch(n){
+           case 1:  // n === 1
+             // execute code block #1
+             break;
+           case 2:  // n === 2
+             // execute code block #2
+             break;
+           case 3:  // n === 3
+             // execute code block #3
+             break;
+           default:  
+             // execute code block #4
+             break;
+        }
+
+        while(expression)
+          statement
+
+        do
+          statement
+        while(expression);
+
+        // obj are not iterable 
+        // use Object.keys(obj) or Object.values(obj) 
+        // or Object.entries(obj) - Returns array of arrays, inner array represents a key/value pair
+        // let letter of "some_string"
+        // ES6 Set and map classes are iterable
+        // word of wordSet
+        // [key, value] of mapObj
+        for(let element of data){
+
+        }
+
+        // ES2018 - asynchronous iterator
+        for wait (let chunk of stream){
+
+        }
+
+        for(let property in obj){
+                // obj[property]
+        }
+
+        mainloop: while(token != null){
+                // code omitted ..
+                continue mainloop;// Jump to the next iteration of the named loop.
+                // More code omitted;
+        }
+
+        computeSomething: if(condition){
+                for(){
+                        for(){
+                                if(some_condition) break computeSomething
+                        }
+                }
+        }
+
+        import Circle from './geometry/circle.js';
+        import {PI, DA} from './constants.js';
+        import { SI as simple_interest } from 'utils.js';
+
+        // constants.js
+        const PI = Math.PI;
+        const DA = 20.0;
+        export { PI, DA}
+
+        export default class Circle{}
 
 
+* **continue** can be used only within the body of a loop.
+
+        // A generator function that yields a range of integers
+        function* range(from, to){
+                for(let i= from; i <= to; i++){
+                        yield i;
+                }
+        }
+
+        if (x < 0) throw new Error("x must not be negative");
+
+        try{
+
+        }catch(e){
+
+        }
+        finally{
+                // this block is always executed, regardless of what happens in the try block.
+        }
+
+* **with**
+
+Creates a temporary scope with the properties of object as variables and then excutes statements within that scope.
+
+        with(documents.forms[0]){
+                name.value = ""
+                address.value = ""
+                email.value = ""
+        }
+
+Forbidden in strict mode.
+Should be considered deprecated in non-strict mode and avoid using it.
+
+* **class** (ES6 and later)
+
+        class ClassName{
+                constructor(arguments){
+                        <!-- this.arg1  -->
+                }
+                method(){
+
+                }
+        }
+
+**Objects**
+
+```
+let book = {
+        "main title": "Javascript",
+        "sub-title" : "The Definitive Guide",
+        for: "for all", // for is reserved word but valid object property
+        author:{
+                firstname: "David",
+                surname: "Flanagan"
+        }
+}
+
+let o = new Object(); // = {}
+let a = new Array(); // = []
+let d = new Date();
+let r = new Map();
+
+let obj1 = Object.create(null);// has no props or methods
+let obj2 = Object.create(Object.prototype)//  equivalent to {} or new Object()
+```
+
+* **Object.create()** is when we want to guard against unintended modification of an object by a library funtion that we don't have control over.Instead of passing the object directly to the function, we can pass an object that inherites values. If it sets properties, however, those writes will not affect our original object.
+
+```
+let obj = {
+        x: 20
+}
+function modify(obj){
+        obj.x = 30;
+}
+modify(Object.create(obj)); // does not affect the original 
+modify(obj); // effects original object
+```
+
+* Inheritience
+
+```
+let obj1 = {}; // obj1 inherits object methods from Object.prototype
+obj1.x = 1; // has own property
+let obj2 = Object.create(obj1) // inherits from obj1 and Object.prototype
+obj2.y = 2; 
+let obj3 = Object.create(obj2) // inherits from obj1, Obj2 and Object.prototype
+obj3.z = obj3.x + obj3.y; // 3
+let str = obj3.toString(); // inherited from Object.prototype
+obj3.x = 4; // overides inherited property
+obj1.x // 1 
+```
+
+
+```
+book.subtitle // undefined: propery doesn't exist
+let len = book.subtitle.length; // TypeError : undefined doesn't have length
+
+// a concise and idiomatic alternative to get surname or null or undefined
+let surname = book && book.author && book.author.surname
+let surname = book?.author?.surname; // ES2020
+```
+
+* Deleting properties
+
+```
+delete book.author;
+delete book["main title"]
+```
+
+The delete operator only deletes own is properties, not inherited ones.
+To delete an inherited property, we must delete it from the prototype object in which it is defined.This affects every object that inherits from that prototype.
+
+```
+let obj = {x:1};
+delete o.x; // true : deletes property
+delete o.x; // true : does nothing non existent property
+delete o.toString; // true : does nothing (isn't an own property)
+
+// In strict mode, all these deletions throw TypeError instead of returning false.
+delete Object.prototype // non-configurable property
+var x = 1; // global variable
+delete globalThis.x // can't delete this property
+
+globalThis.x = 1; // create a configurable global property(no let or var)
+delete x // true: in strict mode raises SyntaxError use delete globalThis.x
+```
+
+* Testing properties
+
+```
+let obj = {x: 1};
+"x" in obj; // true : 
+"y" in obj; // false
+"toString" in obj; // true: inherits this property
+
+obj.hasOwnProperty("toString") // false
+```
+propertyIsEnumerable() returns true only if the named property is an own property and its enumerable attribute is true.
+
+```
+obj.propertyIsEnumerable("x") // true
+Object.prototype.propertyIsEnumerable("toString") // false
+obj.y !== undefined // false
+```
