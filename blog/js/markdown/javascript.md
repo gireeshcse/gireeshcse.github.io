@@ -427,3 +427,112 @@ obj.propertyIsEnumerable("x") // true
 Object.prototype.propertyIsEnumerable("toString") // false
 obj.y !== undefined // false
 ```
+
+Enumerable properties are those properties whose internal enumerable flag is set to true, which is the default for properties created via simple assignment or via a property initializer. Properties defined via Object.defineProperty and such default enumerable to false.
+
+Enumerable properties show up in for...in loops unless the property's key is a Symbol. 
+
+* **Object.keys()** returns an array of names of the enumerable **own** properties of an object
+* **Object.getOwnPropertyNames()** same as Object.keys() as also returns non-enumerable own properties as well if their names are strings.
+* **Object.getOwnPropertySymbols()**
+* **Reflect.ownKeys()** returns all own property names, both enumerable and non-enumerable, and both string and Symbol.
+
+* Extending Objects
+```
+let target = {x:1}, source = {y:2, x:3};
+for(let key of Object.keys(source)){
+        target[key] = source[key];
+}
+```
+// From ES 6 
+```
+Object.assign(target,source); // modifies and returns the first argument.
+Object.assign(obj,defaults); // overwrites everything in obj with defaults.
+Object.assign({},defaults,overwritesObj)
+obj = {...defaults,...overwritesObj}
+```
+The above copies/overwrites own enumerable properties(including symbols) of source to the target.
+
+* Serializing Objects
+
+```
+let obj = {name:"Ram", address: {city:"Ayodhya"},skills:["Archery","Sword Fighting"]};
+let s = JSON.stringify(obj); // NaN, Infinity and -Infinity are serialized to null.
+let p = JSON.parse(s);
+```
+Dates object serialized to the ISO-formatted date strings.(parse leaves this as a string)
+
+Note: Function, RegExp, Error Objects and undefined values cannot be serialized or restored.
+
+* JSON.stringify() serializes only the enumerable own properties of an object.
+
+* **Object Methods**
+
+  - toString
+  - toJSON
+  - valueOf
+
+```
+let s = {x: 1, y: 2}.toString(); // "[object object]"
+let s = {
+        x: 1, y: 2,
+        toString: function() { return `(${this.x}, ${this.y})`; }
+}
+String(s); // "(1,2)" : toString used for string convertions.
+```
+
+Computed propery names
+
+```
+// ES6
+const NAME = "p1";
+function computeProperyName(){ return "p"+2; }
+let obj = {
+        [NAME]: 1,
+        [computeProperyName()]
+}
+obj.p1 + obj.p2 // 3
+
+const METHOD_NAME = "m";
+const symbol = Symbol();
+let weirdMethods = {
+        "method with spaces"(x){ return x + 1;},
+        [METHOD_NAME](x){ return x + 2;},
+        [symbol](x){return x+3}
+}
+```
+
+* **Getter and Setter methods**
+
+```
+let p = {
+        x: 1.0,
+        y: 2.0,
+        
+        // r is a read-write accessor with getter and setter
+        get r(){
+                return this.x * this.y;
+        },
+        set r(newValue){        
+                this.x = this.y / 2;
+                this.y = newValue;
+        },
+        // pi is only read-only accessor 
+        get pi(){
+                return 3.14;
+        }
+}
+p.r // 3
+p.pi // 3.14
+let obj = Object.create(p);// a new object that inherits getters and setters.
+
+let serialNum = {
+        _n : 0, //_ in the name hints that it is for internal use only.
+        get next(){ return this._n++; },
+        set next(n){
+                if (n > this._n) this._n = n;
+                else throw new Error("Serial number can only be set to a larger value.")
+        }
+}
+
+```
