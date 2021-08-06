@@ -536,3 +536,199 @@ let serialNum = {
 }
 
 ```
+
+* Arrays are untyped,dynamic,zero based(32-bit indexes),sparse(need not have contiguous indexes and there may be gaps).
+
+```
+let misc = [17,true,"Hello",{x:4,y:2}];
+let count = [1,,3]; // elements at indexes 0 and 2. No element at index 1 and length 3
+let letters = [..."hello world"];
+let unique_letters = [...new Set(letters)]; // ["h","e", ...]
+let arr = new Array();
+let arr = new Array(10); // specifies length but now no values are stored
+let arr = new Array(5,4,"example");
+
+// ES6
+Array.of(); // []
+Array.of(10); // [10]
+Array.of(1,2,3); // [1,2,3]
+let copy = Array.from(original); // same as [...original]
+
+// Sparse Array : do not have contiguous indexes 
+let  a = new Array(5); // No elements, but a.length is 5.
+a = []; // no elements , a.length is 0.
+a[1000] = 0; // adds one element but sets length to 1001
+0 in a; // false
+1000 in a; // true
+
+let a= [1,2,3,4,5];
+a.length = 3; // a is now [1,2,3]
+a.length = 0; // delete all elements
+a.length = 5; // length is 5, but no elements, like new Array(5)
+
+let a = [];
+a.push("zero");
+a.push("one","two");
+
+let uppercase = []
+a.forEach(ele => {
+        uppercase.push(ele.toUpperCase()) 
+})
+
+a.pop(); // a = ["zero","one"] returns "two"
+
+for(let i = 0;i < a.length; i++){
+        if (a[i] === undefined ) continue; // skip undefined + nonexistent elements
+        // loop body here
+}
+
+a.forEach(function(value,index,arr){
+        arr[i] = ""; // this assign empty string to the original array
+})
+
+let a = [1,2,3];
+let b = a.map(e => e*e); // [1,4,9] return statement is required
+let c = a.filter(x=> x %2 === 0); // [2]
+let dense = sparse.filter(()=> true);
+
+let a = [1,2,3,4,5];
+a.findIndex(x => x === 3) // 2
+a.findIndex(x => x < 0) // -1: no -ve number
+a.find(x => x % 5 === 0) // 5
+a.find(x => x % 7 === 0) // undefined; no multiple of 7 in the array
+
+a.every(x => x < 10) // true; all values are < 10
+a.every(x => x % 2 === 0)// false; not all values are even.
+a.some(x => x % 2 === 0)// true
+a.some(isNaN); // false: a has no non-numbers
+
+a.reduce((x,y)=> x + y , 0) // 15: sum of the value
+a.reduce((x,y)=> x * y , 0) // 120: product of the values.
+a.reduce((x,y)=> (x > y) ? x : y) // 5 : the largest of the values
+
+//ES2019
+[1, [2,3]].flat() // [1,2,3]
+// flattens one level of nesting by default
+[1,[2,[3]]].flat() // [1,2,[3]]
+[1,[2,[3]]].flat(2) // [1,2,3]
+a.flatMap(f) // is same as a.map(f).flat()
+
+let a = [1,2,3];
+let b = a.concat(4,5); // [1,2,3,4,5] makes new copy
+let c = a.concat([4,5],[6,7]); // [1,2,3,4,5,6,7] arrays are flattened
+let d = a.concat(4,[5,[6,7]]); // [1,2,3,4,5,[6,7]] not nested arrays
+
+// unshift() and shift() behave much like 
+// push() and pop() except, they insert and remove elements
+// from the beginning of an array rather than end
+let q = [];
+q.push(1,2);
+q.shift(); // q = [2]; returns 1
+q.push(3) // [2,3]
+q.shift() // returns 2
+q.shiftS() // returns 3 : q = []
+
+q.unshift(1) // [1]
+q.unshift(2) // [2,1]
+q.unshift(3,4) // [3,4,2,1]
+
+let a = [1,2,3,4,5];
+a.slice(0,3); // [1,2,3]
+a.slice(1,-1);//[2,3,4]
+
+let a = [1,2,3,4,5,6,7,8];
+a.splice(4); // [5,6,7,8]; a is now [1,2,3,4]
+a.splice(1,2); // [2,3]; a is now [1,4]
+
+a.splice(1,1) // [4]; a is now [1]
+
+let a = [1,2,3,4,5];
+a.splice(2,0,"a","b"); => []; a is now [1,2,"a","b",3,4,5]
+a.splice(2,2,[1,2],3) => ["a","b"]; a is now [1,2,[1,2],3,3,4,5]
+
+// fill mutates array
+let a = Array(5); // start with no elements and length 5
+a.fill(0) // [0,0,0,0,0]
+a.fill(9,1) // [0,9,9,9,9]
+a.fill(8,2,-1) // [0,9,8,8,9]
+
+// copyWithin mutates
+let a = [1,2,3,4,5];
+a.copyWithin(1); // [1,1,2,3,4]: copy array elements upto one
+a.copyWithin(2,3,5); // [1,1,3,4,4]: copy last 2 elements
+a.copyWithin(0,-2); // [4,4,3,4,4]
+
+let a = [0,1,2,1,0];
+a.indexOf(1) // 1
+a.lastIndexOf(1) // 3
+a.indexOf(3) // -1
+a.indexOf(0,1); // 4
+
+// ES2016
+let a = [1,true,3,NaN];
+a.includes(true) // true
+a.includes(2) // false
+a.includes(NaN) // true
+a.indexOf(NaN) // -1; indexOf can't find NaN
+
+let a = ["banana", "cherry", "apple"];
+a.sort(); // a == ["apple", "banana", "cherry"]
+// If an array contains undefined elements, they are sorted to the end of the array.
+
+
+let a = [33, 4, 1111, 222];
+a.sort(); // a == [1111, 222, 33, 4]; alphabetical order
+
+a.sort(function(a,b) { // Pass a comparator function
+        return a-b; // Returns < 0, 0, or > 0, depending on order
+});// a == [4, 33, 222, 1111]; numerical order
+
+
+a.sort((a,b) => b-a); // a == [1111, 222, 33, 4]; reverse numerical order
+
+let a = ["ant", "Bug", "cat", "Dog"];
+a.sort(); // a == ["Bug","Dog","ant","cat"]; case-sensitive sort
+
+a.sort(function(s,t) {
+        let a = s.toLowerCase();
+        let b = t.toLowerCase();
+        if (a < b) return -1;
+        if (a > b) return 1;
+        return 0;
+}); // a == ["ant","Bug","cat","Dog"]; case-insensitive sort
+
+
+let a = [1,2,3];
+a.reverse(); // a == [3,2,1]
+
+let a = [1, 2, 3];
+a.join(); // "1,2,3"
+
+a.join(" ") // "1 2 3"
+a.join("") // "123"
+let b = new Array(10); // array of length 10 with no elements
+b.join("-") // "---------": a string of 9 hyphens
+
+[1,2,3].toString() // => "1,2,3"
+["a", "b", "c"].toString() // => "a,b,c"
+[1, [2,"c"]].toString() // => "1,2,c"
+
+Array.isArray([]) // => true
+Array.isArray({}) // => false
+
+a.length = 1 // a => [1]
+
+// array like objects
+let a = {"0": "a", "1": "b", "2": "c", length: 3}; // An array-like object
+Array.prototype.join.call(a, "+")  // => "a+b+c"
+Array.prototype.map.call(a, x => x.toUpperCase()) // => ["A","B","C"]
+Array.prototype.slice.call(a, 0) // => ["a","b","c"]: true array copy
+Array.from(a) // => ["a","b","c"]: easier array copy
+
+
+let s = "test";
+s.charAt(0) // => "t"
+s[1] // => "e"
+Array.prototype.join.call("JavaScript", " ") // => "J a v a S c r i p t"
+
+```
