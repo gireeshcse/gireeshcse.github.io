@@ -732,3 +732,19 @@ s[1] // => "e"
 Array.prototype.join.call("JavaScript", " ") // => "J a v a S c r i p t"
 
 ```
+
+### Functions
+
+* Are objects
+* have invocation context
+* Closures : function definitions nested in other functions have scope from where they are defined.
+* Fuction declartions are hoisted to the top of the enclosing script, function, or block.
+* function with no return value always returns undefined at the end.
+* functions defined with expressions cannot be invoked before they are defined
+
+```
+const square = function(x){ return x*x; };
+const f = function fact(x){ if(x <= 1) return 1; else return x*fact(x-1); };
+[3,2,1].sort(function(a,b { return a-b; }));
+let tensquared = (function(x){ return x*x}(10)); // IIF 
+```
