@@ -754,6 +754,40 @@ Below are the steps that are being followed:
 * If the response data is cacheable then browsers cache the same.
 * Browser decodes the response and renders the content.
 
+#### In Layers of OSI or TCP/IP
+
+We don't use OSI in real work networks. We use TCP/IP Network Model.
+
+* We type a web address in web browser. Web browser uses HTTP which is an **Application Layer Protocol**
+* Behind the scenes the web browser gets the IP address of the URL using Domain Name System which is also an **Application Layer Protocol**
+* Now the browser creates a HTTP packet and gives this packet to Transport Layer Protocol.Now this layer establishes a session creating a TCP connection. Now TCP some info required to maintain session/pipe to HTTP packet.
+* Now TCP handovers the TCP packet to an Internet Protocol Layer. Its main job is addressing and routing. Now IP puts its own info on top of TCP packet which is required for routing in the internet
+* Now IP handovers packet to Network interface Layer, which defines the protocols and hardware required to deliver data across some physical network. Most of the PC uses Ethernet.Here the IP packet is encapsulated with Ethernet header and Ethernet Trailer, creating Ethernet Frame. IT contains some thing called MAC address which is used to send frame locally(LAN). It transmits data i.e data leaves the PC and eventually reaches the Server.
+* The web server physically receives the electrical signal over a cable, and recreates the same bits by interpreting the meaning of electrical signals.
+* Web server now de-encapsulates the IP packet from the Ethernet frame by removing and discarding the Ethernet header and trailer. Similarly it reads the TCP information and finally hands it over to HTTP process which understands the HTTP request.
+* Now webserver now sends back to us the web page in similar steps.
+
+### Ethernet
+
+* Traditional technology for connecting devices in a wired LAN or WAN. It enables devices to communicate with each other via a protocol, which is set of rules.
+
+* Describes how network devices format and transmit data so other devices on the same LAN or network can recognize, receive and process the information. 
+
+#### Working
+
+* IEEE specifies in the family of standards called IEEE 802.3 that the Ethernet Protocol touches both Layer 1 (physical layer) and Layer 2(Data link layer) on OSI
+
+* Units of transimission
+    - Packet
+
+        * Frame is wrapped in a packet that contains several bytes of information to establish the connection and mark where the frame starts.
+        
+    - Frame
+
+        * Includes Payload of data being transmitted
+        * MAC address of both sender and receiver
+        * Error Correction information to detect transmission problems
+
 
 ### NAT
 
