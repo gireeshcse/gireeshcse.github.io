@@ -826,6 +826,173 @@ Is overloading the system server so it cannot process legitimate traffic and wil
 
 Bits transferred serially one after other.Serial communication gives less bandwidth but cheaper, suitable for transmission over long distances.
 
+### QUIC
+
+* Quick UDP Internet Connections.
+* General-purpose transport layer network protocol 
+* New generation Internet Protocol that speeds online web applications that are susceptible to delay, such as searching, video streaming etc., by reducing the RTT needed to connect to a server.
+
+### TCP - 1981
+
+TCP is reliable. One of them to ensure this SYN numbers. 
+TCP is all about the data(regarding connection). It does not care about the payload.
+TCP options are communicated only in SYN-ACK in 3 way handshake. To capture the options we need to capture the initial 3 way handshake packets.
+TCP header Length: 44 bytes.
+
+#### Important TCP Flags
+
+#### Ephemeral Port
+
+Communication endpoint(port) of a transport layer protocol of the Internet protocol suite that is used for only a short period of time for the duration of a communication session.
+
+#### TTL - Time To Live
+
+TTL is a value for the period of time that a packet, or data, should exist on a computer or network before being discarded.
+
+Most common values: 64, 128, 255.Increases with increase in no. of hops between them
+
+#### RTT - Round Trip Time
+
+#### NAT - Network Address Translation
+
+Process that enables one, unique IP address to represent an entire group of computers. 
+In NAT, a network device, often a router or NAT firewall, assigns a computer or computers inside a private network a public address.
+
+####  Three way handshake (SYN, SYN-ACK,ACK)
+
+* SYN (Client) - TCP
+
+    - Sequence Number: 0 (Initial Sequence Number) Randomly generated
+    - Source Port: 54846 (Ephemeral Port)
+    - Destination Port: 80
+    - Acknowledgement Number: 0
+
+* SYN ACK (Server) Accepting Connection -TCP
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 0 (Initial Sequence Number) Randomly generated
+    - Acknowledgement Number: 1
+
+* ACK - TCP (Client)
+
+    - Source Port: 54846
+    - Destination Port: 80
+    - Sequence Number: 1
+    - Acknowledgement Number: 1
+
+* HTTP (Client) Sends Get Data (/online)
+
+    - Source Port: 54846
+    - Destination Port: 80
+    - Sequence Number: 1
+    - Acknowledgement Number: 1
+    - TCP payload (501 bytes)
+
+* ACK (Server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 1
+    - Acknowledgement Number: 502 (1 + 501 (client tcp payload))
+
+* PSH,ACK (Server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 1
+    - Acknowledgement Number: 502 
+    - TCP payload (534 bytes)
+
+* ACK (Client)
+
+    - Source Port: 54846
+    - Destination Port: 80
+    - Sequence Number: 502
+    - Acknowledgement Number: 535
+
+* PSH,ACK (Server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 535
+    - Acknowledgement Number: 502 
+    - TCP payload (1186 bytes)
+
+* HTTP/1.1 200 OK (server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 1721(535 + 1186)
+    - Acknowledgement Number: 502 
+    - TCP Payload (5 bytes)
+
+* ACK (Client)
+
+    - Source Port: 54846
+    - Destination Port: 80
+    - Sequence Number: 502
+    - Acknowledgement Number: 1726
+
+* GET /favicon.ico HTTP/1.1
+
+    - Source Port: 54846
+    - Destination Port: 80
+    - Sequence Number: 502
+    - Acknowledgement Number: 1726
+    - TCP Payload (439 bytes)
+
+* ACK (server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 1726
+    - Acknowledgement Number: 941(502+439) 
+
+* ACK (server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 1726
+    - Acknowledgement Number: 941
+    - TCP Payload (500 bytes)
+
+* ACK (server)
+
+    - Source Port: 80
+    - Destination Port: 54846
+    - Sequence Number: 2226(1726 + 500)
+    - Acknowledgement Number: 941
+    - TCP Payload (124 bytes)
+
+* ACK (Client)
+
+    - Source Port: 54846
+    - Destination Port: 80
+    - Sequence Number: 941
+    - Acknowledgement Number: 2350(2226 + 124)
+
+#### Important TCP Flags
+
+```
+000.            = Reserved
+...0            = Nonce
+.... 0          = Congestion Window Reduced (CWR)
+.... .0         = ECn_Echo
+.... ..0        = Urgent
+.... ...0       = Acknowledgement
+.... .... 0     = Push
+.... .... .0    = Reset
+.... .... ..1   = Syn (Set it is syn packet)
+.... .... ...0  = Fin
+```
+
+#### Window : 65535 (2 Bytes initially)
+
+How much data we can send/receive at once.
+Latency can destroy the network throughout.
+
+Now TCP header options, has window scale . If it is 9 multiple by 2^9(512) * 65535 
 
 
 
