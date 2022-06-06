@@ -994,6 +994,15 @@ Latency can destroy the network throughout.
 
 Now TCP header options, has window scale . If it is 9 multiple by 2^9(512) * 65535 
 
+### Throughput 
+
+Amount of data traveling successfully across a network.
+
+### Bandwidth
+
+Maximum data volume capacity of a network.
+
+
 
 
 ### Credits

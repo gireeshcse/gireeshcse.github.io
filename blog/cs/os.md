@@ -2,6 +2,25 @@
 
 * Controls the execution of applications.
 * Acts as interface b/w the Hardware and Applications.
+* Provides services to users and a platform for programs to run on.
+
+## Types of OS
+
+* Batched OS (Ex: Payroll System, Transactions Process, etc.)
+
+    The batch processing is used where the more set up time was reduced by processing jobs in batches where similar jobs were run together.
+
+* Multi-Programmed OS (Ex: Windows, UNIX)
+
+* Timesharing OS (Ex: Multics)
+
+* Distributed OS (Ex: LOCUS, etc.)
+
+    System software over a collection of independent, networked, communication, and physically separate computational nodes. They handle jobs which are serviced by multiple CPUs.
+
+* Real-Time OS (Ex: PSOS, VRTX etc.)
+
+    These are event-driven and preemptive, meaning the OS is capable of monitoring the relevant priority of competing tasks and make changes to the task priority.
 
 OS is visualised as Resource manager
 
@@ -37,6 +56,8 @@ OS is visualised as Resource manager
 * Memory Management
 * Process Management
 * File Management
+* Error Detection
+* Security
 
 
 User interacts with os through command interpreter. It translates the user inputs/request into System Call Interface(SCI)/Application Program Interface(API)
@@ -157,3 +178,61 @@ In Main memory, multiple programs will be stored at any given point of time, whi
 
             Hello - 0
             ```
+
+## Multiprocessor system
+
+* It involves the processing of different computer programs at the same time mostly by a computer system with two or more CPUs that are sharing single memory.
+
+* Increases throughput and is cost-effective also as all processors share the same resources.
+
+## RAID (Redundant Arrays of Independent Disks)
+
+* Data storage virtualization technology that combines multiple hard disks.
+* Used to improve overall performance and reliability of data storage.
+* Main purpose is to achieve data redundancy to reduce data loss.
+
+### Levels
+
+#### Level 6 (P+Q Redundancy)
+
+* 
+
+#### Level 5 (Block interleaved distributed Parity or Block-Level stripping with Distributed Parity)
+
+* Parity rotates among the drives.
+* RAID 5 requires at least three disks.
+
+#### Level 4 (Block interleaved parity or Block-Level stripping with Dedicated Parity)
+
+* Instead of duplicating data, this adopts a parity-based approach.
+* One disk is dedicated to parity.
+* Parity is caliculated using XOR function. XOR(0,0,0,1) = 1 XOR(0,1,1,0) = 0. Even number 1's ones results in parity 0 and an odd number of 1's results in parity 1.
+* Reliability: 1 (1 Disk failure)
+* Capacity: (N-1) * B
+
+#### Level 3 (Bit interleaved parity)
+
+#### Level 2 (Memory style error correcting code)
+
+#### Level 1 (Mirroring and Duplexing)
+
+* More than one copy of each block is stored in a separate disk. Thus, every block has two (or more ) copies, lying on different disks.
+
+* For Mirroring Level - 2 
+    
+    - Reliability: 1 to N/2
+    - Capacity: N * B / 2 (Only half the space is being used to store data.) 
+
+
+#### Level 0 (Non-Redundant Striping)
+
+* Blocks are stripped(spread) across disks.
+* The entire space is being used to store data. Since there is no duplication, N disks each having B blocks are fully utilized.
+
+
+
+### Credits 
+
+[geekforgeeks](https://www.geeksforgeeks.org/raid-redundant-arrays-of-independent-disks/)
+[interviewbit](https://www.interviewbit.com/operating-system-interview-questions/)
+[wikipedia](https://en.wikipedia.org/wiki/Standard_RAID_levels)
