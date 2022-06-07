@@ -314,6 +314,217 @@ The algorithms IPSec produces a unique identifier for each packet.This identifie
 5. Then the data is exchanged across the newly created IPSec encrypted tunnel. These packets are encrypted and decrypted by the hosts using IPSec SAs.
 6. When the communication between the hosts is completed or the session times out then the IPSec tunnel is terminated by discarding the keys by both the hosts.
 
+### TLS Handshake.
+
+#### Cryptography
+
+* Method of using advanced mathematical principles in storing and transmitting data in a particular form so that only whom it is intended can read and process it.
+
+#### Encryption
+
+* Process whereby a message is encoded in a format that cannot be read or understood by an eavesdropper.
+
+#### Data Integrity
+
+* Hashing is used to provide Integrity.
+    * General Assumptions.
+        - Sender calculates Digest from the Message.
+        - Sender sends Message and Digest.
+        - Receiver calculates Digest from received Message.
+        - Receiver compates both digests
+            - If digests are identical, the message was not modified in transit.
+
+        - This may result in Man in the middle attackers, here the hacker/attacker changes both digest and message.
+
+    * Actual
+        - Both parties establish a mutual Secret Key.
+        - Sender combines Message + Secret Key to create Digest.
+        - Sender sends the message and digest but not the key.
+        - Receiver verifies by calculating hash of Message + Secret Key
+            - Message was not modified in transit
+            - Sender had the identical Secret Key.
+
+#### Symmetric Encryption
+
+* Same Key on both sides.
+* Technique where same key is used to both encrypt and decrypt the data.
+* Blowfish, AES, DES are examples 
+* AES-128, AES-198 and AES-256 widely used.
+
+* Disdavantage: All parties involved have to exchange the key used to encrypt the data before they can decrypt it.
+
+* Example 1
+
+    * Value: 5
+    * Secret Key: 3
+    * Encrypted value: 15 (5*3)
+
+* Example 2
+
+    * Value - hello
+    * Secret Key - 3 (which shifts the original value 3 times)
+    * Encrypted Value- khoor
+
+#### Asymmetric Encryption
+
+* Asymmetric encryption uses a mathematically related pair of keys for encryption and decryption: Public Key and Private Key.
+* A message that is encrypted using a public key can only be decrypted using a private key while a message encrypted using a private key can be decrypted using a public key(For integrity).
+* Keys are mathimatically linked 
+
+* RSA, DSA, PKCS
+
+
+* Simple Example
+
+    - Encrytion
+        - Value - hello
+        - Encryption Key = 5
+        - Encrypted Value - mjqqt
+    - Decrytion
+        - Value - mjqqt
+        - Decryption key = 21
+        - Decrypted Value = Hello
+
+
+
+#### Message Authentication Code.
+
+* Concept combining Message + Secret Key when calculating Digest.
+* Provides Integrity and Authentication for Bulk Data transfer.
+* Message + Secret Key must be combined in the same way
+* Industry Standard: HMAC
+    - Hash based Message Authentication Code (RFC 2104)
+
+
+#### SSL/TLS have 3 goals 
+
+    * Confidentiality  - Provided by Symmetric Encryption
+    * Integrity (Not to tamper) - Provided by M.A.C (Hashing) - Message Authentication Code
+    * Authentication - Provided by Certificates/PKI
+
+* Symmetric Encryption / M.A.C Require Secret Keys
+
+    * Provided by Key Exchange (Asymmetric Encryption)
+
+* Cipher Suite picks four protocols.
+
+    - Key Exchange
+    - Authentication
+    - Encryption
+    - Hashing
+
+#### Handshake
+
+* Client Hello
+
+    - Version
+
+        - Highest version of TLS/SSL client supports.
+
+    - Random Number - 32 bytes / 256 bits
+
+        - Timetamp encoded in first four bytes
+
+    - Session ID - 8 bytes / 64 bits
+
+        - 0000... All 0's in initial Client Hello
+
+    - Cipher Suites
+
+        - List of Cipher Suites Client supports.
+
+    - Extensions 
+
+        - Optional additional features added to TLS/SSL. 
+
+* Server Hello
+
+    * Same info as client that server supports.
+
+* Server sends the Certificate Chanin to the Client (Public Key)
+* Server sends Hello done.
+* Client Key Exchange.
+
+    - Establish Mutual Keying Material (ie SEED Value)
+    - Proves Server is true owner of Certificate.
+
+    - Client Generates Pre-Master-Secret
+        - 2 Bytes - TLS/SSL version
+        - 46 bytes - Random 
+
+        - Encrypted with Server's Public Key
+            - Server can only decrypt if it has server Private Key.
+        - Pre-Master-Secret is used to generate derive Master Secret.
+            - PreMasterSecret
+            - "master secret"
+            - Client Random
+            - Server Random
+        - Master Secret is used to generate Session Keys.
+            - Master Secret
+            - "key expansion"
+            - Client Random
+            - Server Random
+
+        - Session Keys (Symmetric Keys)
+
+            - Client Encryption Key
+            - Client HMAC Key
+
+            - Server Encryption Key
+            - Server HMAC Key
+
+    - SSL generates 2 secure tunnels which are unidirectional. If client wants to send data to server it uses client keys for confidentiality and integrity.
+
+    - Caliculations involve a PRF - Pseudo Random Function
+        - Hashing algorithm that generates the digests at any desired length.
+
+
+Note: At his point, both parties have identical session keys. But client/server don't know whether the other has the same keys.
+
+- Client sends Change Cipher Spec
+    - Indicates Client has everything necessary to speak securely.
+
+- Client sends Handshake: Finished.
+
+    - Proves to the Server that client has correct Session Keys.
+    - Client calulates Hash of all handshake Records seen so far.Uses the below to generate Handshake Hash
+        - Client Hello
+        - Server Hello
+        - Certificate
+        - Server Hello Done
+        - Client Key Exchange
+    - Using all the info such as Client Hello to generate Handshake Hash prevents the man-in-the-middle attack.
+    - Combined with other values client creates Verification Data using PRF
+        - Master Secret
+        - "client finished"
+        - Handshake Hash
+    - Verification Data is encrypted with Client Session Keys.
+    - Encrypted Verification data is sent to the server.
+
+- After verifying server sends the Change Cipher Spec
+
+    - Indicates Server has everything necessary to speak securely.
+
+- Handshake: Finished
+
+    - Proves to the Client that Server has correct Session Keys.
+    - Client calulates Hash of all handshake Records seen so far.Uses the below to generate Handshake Hash
+        - Client Hello
+        - Server Hello
+        - Certificate
+        - Server Hello Done
+        - Client Key Exchange
+        - CLient Finished
+    - Combined with other values server creates Verification Data using PRF
+        - Master Secret
+        - "server finished"
+        - Handshake Hash
+    - Verification Data is encrypted with Server Session Keys.
+    - Encrypted Verification data is sent to the Client.
+
+- Now application data is sent using the session keys.
+
+
 ### Secure Socket Layer (SSL)
 
 Provides security to the data that is transferred between web browser and server. SSL encrypts the link between a web server and a browser which ensures that all data passed between them remain private and free from attack.
@@ -832,6 +1043,14 @@ Bits transferred serially one after other.Serial communication gives less bandwi
 * General-purpose transport layer network protocol 
 * New generation Internet Protocol that speeds online web applications that are susceptible to delay, such as searching, video streaming etc., by reducing the RTT needed to connect to a server.
 
+Effectively QUIC provides a TCP-like connection using UDP, where all packet handling is performed by the application, and not the network stack of an OS/router/etc.
+
+### HTTP/1.x vs HTTP/2
+
+* HTTP2 is much faster and more reliable than HTTP1. 
+* HTTP1 loads a single request for every TCP connection, while HTTP2 avoids network delay by using multiplexing.
+* HTTP2 Uses multiplexing, where over a single TCP connection resources to be delivered are interleaved and arrive at the client almost at the same time. It is done using streams which can be prioritized, can have dependencies and individual flow control. It also provides a feature called server push that allows the server to send data that the client will need but has not yet requested
+
 ### TCP - 1981
 
 TCP is reliable. One of them to ensure this SYN numbers. 
@@ -839,7 +1058,6 @@ TCP is all about the data(regarding connection). It does not care about the payl
 TCP options are communicated only in SYN-ACK in 3 way handshake. To capture the options we need to capture the initial 3 way handshake packets.
 TCP header Length: 44 bytes.
 
-#### Important TCP Flags
 
 #### Ephemeral Port
 
@@ -1002,6 +1220,18 @@ Amount of data traveling successfully across a network.
 
 Maximum data volume capacity of a network.
 
+#### MSS
+
+* Maximum Segment Size
+* TCP (Segments)
+*  Payload - 1460 (Does not include TCP and IP Headers)
+
+#### MTU
+
+* Maximum Transmission Unit
+* Ethernet (Frames)
+* Payload - 1500 (Includes TCP and IP headers)
+* MTU is per hop, while MSS, since it is on TCP, it's end-to-end.
 
 
 
@@ -1016,3 +1246,5 @@ Maximum data volume capacity of a network.
 [Gateway vs Router](https://www.router-switch.com/faq/gateway-router-difference.html)
 
 [Routers vs. Switches vs. Access Points](https://www.baeldung.com/cs/routers-vs-switches-vs-access-points)
+
+[Symmetric Vs Asymmetric Encryption](https://www.ssl2buy.com/wiki/symmetric-vs-asymmetric-encryption-what-are-differences)
