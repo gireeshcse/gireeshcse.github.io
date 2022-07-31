@@ -6,7 +6,7 @@
 #### Extraction
 
 * Extracted data sets come from a source into a staging area
-* Staging area acts as a buffer b/w the data warehouse and he source data.
+* Staging area acts as a buffer b/w the data warehouse and the source data.
 * Staging area is used for data cleansing and organisation.
 
 #### Transformation
@@ -199,7 +199,7 @@ animals.loc[:,["Cows","Goats"]]
 ```
 
 * **iloc** uses stdlib indexing scheme (0:10 => 0,1...,9 )
-* **iloc** uses indexes inclusively (0:10 => 0,1...,9,10 )
+* **loc** uses indexes inclusively (0:10 => 0,1...,9,10 )
 
 ```
 reviews.set_index("title") # manipulating the index
@@ -271,4 +271,202 @@ def add_points_price_ratio(row):
 bargain_wine = reviews.apply(add_points_price_ratio,axis="columns")
 max_value = bargain_wine.points_price_ratio.max()
 bargain_wine = bargain_wine.loc[bargain_wine.points_price_ratio == max_value]
+bargain_wine = bargain_wine.iloc[0].title # to get title
+
+# above answer can be 
+bargain_idx = (reviews.points / reviews.price).idxmax()
+bargain_wine = reviews.loc[bargain_idx, 'title'] # to get only title
+
+
+# creating a series with "tropical" or "fruity" in description
+def add_counts_ratio(row):
+    data = {
+        "tropical":False,
+        "fruity": False
+    }
+    for key in data:
+        if row["description"].find(key) != -1:
+            data[key] = True
+        row[key] = data[key]
+    return row
+
+reviews_new = reviews.apply(add_counts_ratio,axis="columns")
+fr_df = reviews_new.fruity.value_counts()
+tr_df = reviews_new.tropical.value_counts()
+descriptor_counts = pd.Series([tr_df.get(key=True),fr_df.get(key=True)],index=["tropical","fruity"])
+
+# above problem can be solved simply by
+n_trop = reviews.description.map(lambda desc: "tropical" in desc).sum()
+n_fruity = reviews.description.map(lambda desc: "fruity" in desc).sum()
+descriptor_counts = pd.Series([n_trop, n_fruity], index=['tropical', 'fruity'])
+
+# rating problem
+def add_ratings(row):
+    rating = 1
+    if row.points > 94:
+        rating = 3
+    elif row.points > 84:
+        rating = 2
+    
+    if row.country == "Canada":
+        rating = 3
+    
+    row["rating"] = rating
+    return row
+
+reviews_rat = reviews.apply(add_ratings,axis="columns")
+star_ratings = reviews_rat.rating
 ```
+
+**value_counts()** replication
+
+```
+reviews.groupby('points').points.count()
+```
+To get cheapest wine in each point value category
+
+```
+reviews.groupby('points').price.min()
+```
+To get the first restraurant review in that country
+
+```
+reviews.groupby('country').apply(lambda df: df.title.iloc[0]) 
+# here apply gets df for each group
+```
+
+To get best wine by country and province
+```
+reviews.groupby(['country','province']).apply(lambda df: df.loc[df.points.idxmax()])
+```
+
+**agg()** lets us run a bunch of different functions on our DataFrame simulaneously.
+
+```
+reviews.groupby(['country']).price.agg([len,min,max])
+```
+
+Multi-Indexes
+
+```
+countries_reviewed = reviews.groupby(['country','province']).description.agg([len])
+
+		                        len
+country	    province	
+Argentina	Mendoza Province	3264
+            Other	            536
+...	        ...	                ...
+Uruguay	    San Jose	        3
+            Uruguay	            24
+
+countries_reviewed.reset_index()
+
+	country	    province	        len
+0	Argentina	Mendoza Province	3264
+1	Argentina	Other	            536
+...	...	...	...
+423	Uruguay	    San Jose	        3
+424	Uruguay	    Uruguay	            24
+
+countries_reviewed.sort_values(by='len')
+countries_reviewed.sort_values(by='len', ascending=False)
+countries_reviewed.sort_index() # to sort by index values.
+countries_reviewed.sort_values(by=['country','len'])
+```
+
+Who are the most common wine reviewers in the dataset? Create a Series whose index is the taster_twitter_handle category from the dataset, and whose values count how many reviews each person wrote.
+
+```
+
+# below codes both return same values
+count = reviews.groupby('taster_name').apply(lambda df: df.taster_name.count()) 
+count = reviews.groupby('taster_name').taster_name.count()
+
+# solutions
+reviews_written = reviews.groupby(['taster_twitter_handle']).taster_name.count()
+reviews_written = reviews.groupby('taster_twitter_handle').size()
+reviews_written = reviews.groupby('taster_twitter_handle').taster_twitter_handle.count()
+
+```
+What is the best wine I can buy for a given amount of money? Create a Series whose index is wine prices and whose values is the maximum number of points a wine costing that much was given in a review. Sort the values by price, ascending (so that 4.0 dollars is at the top and 3300.0 dollars is at the bottom).
+
+```
+best_rating_per_price = reviews.groupby(['price']).points.max().sort_index()
+
+best_rating_per_price = reviews.groupby('price')['points'].max().sort_index()
+```
+
+
+```
+price_extremes = reviews.groupby('variety')['price'].agg([min,max])
+sorted_varieties = price_extremes.sort_values(['min','max'],ascending=False)
+reviewer_mean_ratings = reviews.groupby('taster_name').points.mean()
+
+# below both are same
+country_variety_counts = reviews.groupby(['country','variety']).variety.count().sort_values(ascending=False)
+country_variety_counts = reviews.groupby(['country', 'variety']).size().sort_values(ascending=False)
+```
+
+Data Type: How pandas is storing data internally. columns consisting entirely of strings do not get their own type they are of object type.
+```
+review.price.dtype
+review.dtypes
+reviews.points.astype('float64') # convert data type.
+reviews.index.dtype
+
+# missing data = NaN 
+# get reviews which does not have country information
+reviews[pd.isnull(reviews.country)]
+reviews.region_2.fillna("unknown") # filling NaN with unknown
+reviews.taster_twitter_handle.replace("@kerinokeefe","@kerino")
+```
+Sometimes the price column is null. How many reviews in the dataset are missing a price?
+
+```
+missing_price_reviews = reviews[reviews.price.isnull()]
+n_missing_prices = len(missing_price_reviews)
+# Cute alternative solution: if we sum a boolean series, True is treated as 1 and False as 0
+n_missing_prices = reviews.price.isnull().sum() # false is 0 and true is 1 
+# or equivalently:
+n_missing_prices = pd.isnull(reviews.price).sum()
+```
+
+```
+reviews_per_region = reviews.region_1.fillna("Unknown").value_counts().sort_values(ascending=False)
+
+reviews.rename(columns={'points':'score'})
+reviews.rename(index={0:'firstEntry',1:'secondEntry'})
+
+reviews.set_index("wines")
+reviews.rename_axis("wines",axis='rows').rename_axis("fields",axis='columns')
+```
+Combining two data frames having same data fields
+
+```
+df1 = pd.read_csv("1.csv")
+df2 = pd.read_csv("2.csv")
+
+df = pd.concat([df1,df2])
+```
+
+Combine data frame objects which are having an index in common
+
+```
+left.join(right,lsuffix="_left",rsuffix="_right")
+```
+
+```
+renamed = reviews.rename(columns={"region_1":"region",'region_2':"locale"})
+reindexed = reviews.rename_axis('wines',axis='rows')
+combined_products = pd.concat([gaming_products,movie_products])
+
+```
+
+Both DFs include references to a MeetID, a unique key for each meet (competition) included in the database. Using this, generate a dataset combining the two tables into one.
+```
+powerlifting_combined = powerlifting_meets.set_index('MeetID').join(powerlifting_competitors.set_index("MeetID"))
+```
+
+### Credits
+
+[Pandas](https://www.kaggle.com/learn/pandas)
