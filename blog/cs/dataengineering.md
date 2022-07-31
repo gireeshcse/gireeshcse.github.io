@@ -114,6 +114,127 @@ INTERSECT
 SELECT * FROM log WHERE log.user_id is NULL;
 ```
 
+#### SQL and  BigQuery
+
+```
+from google.cloud import bigquery
+client = bigquery.Client()
+```
+
+In BigQuery, each dataset is contained in a corresponding project. 
+
+```
+# hacker_news dataset.
+dataset_ref = client.dataset("hacker_news",project="bigquery-public-data")
+
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
+```
+
+Every dataset is just a collection of tables. 
+
+```
+tables = list(client.list_tables(dataset))
+for table in tables:
+    print(table.table_id)
+
+# contruct a reference to the "full" table
+table_ref = dataset_ref.table('full')
+
+# API request- fetch the table
+table = client.get_table(table_ref)
+```
+
+* **Client** Object hold projects and a connection to the BigQuery service
+* **project** is a collection of datasets
+* **Dataset** is a collection of tables.
+
+```
+# print information on all the columns in the "full" table 
+table.schema 
+
+[
+    SchemaField('title', "STRING", 'NULLABLE', 'Story Title', (),None),
+
+
+    SchemaField('deleted', 'BOOLEAN', 'NULLABLE', 'Is deleted?', (), None)
+
+]
+```
+
+```
+SchemaField(name,field_type,mode,description)
+
+# To prieview first five rows
+client.list_rows(table,max_results=5).to_dataframe()
+client.list_rows(table,selected_rows=table.schema[:1],max_results=5).to_dataframe()
+```
+
+```
+from google.cloud import bigquery
+
+# create client object
+client = bigquery.Client()
+
+# contruct a reference to the "chicago_crime" dataset
+dataset_ref = client.dataset("chicage_crime", project="bigquery-public-data")
+
+# API request - fetch the dataset
+dataset = client.get_dataset(dataset_ref)
+
+# get the tables in the dataset
+tables = list(client.list_tables(dataset))
+num_tables = len(tables) # to get the number of tables
+
+# get columns in 'crime' table have "TIMESTAMP" data
+
+## get the table ref 
+table_ref = dataset_ref.table('crime')
+
+## get table 
+table = client.get_table(table_ref)
+
+count = 0
+for field in table.schema:
+    if field.field_type == "TIMESTAMP":
+        count += 1
+
+df = client.list_rows(table,max_results=5).to_dataframe()
+```
+
+Queries
+
+```
+query ="""
+SELECT city FROM `bigquery-public-data.openaq.global_air_quality` 
+WHERE country = 'US'
+"""
+
+client = bigquery.Client()
+query_job = client.query(query)
+us_cities = query_job.to_dataframe()
+us_cities.city.value_counts().head()
+
+query_popular = """
+SELECT parent, COUNT(id) AS NumPosts
+FROM `bigquery-public-data.hacker_news.comments`
+GROUP BY parent
+HAVING count(id) > 10
+"""
+```
+Note: If we have any GROUP BY clause, then all variables must be passed to rither a GROUP_BY or an aggregation function.
+
+
+```
+SELECT ID, Name,Animal FROM table
+ORDER BY Animal DESC
+
+SELECT Name, EXTRACT(DAY from Date) AS Day
+FROM table
+
+SELECT Name, EXTRACT(WEEK from Date) AS Day
+FROM table
+```
 ### pandas
 
 * Data analysis(Use)
@@ -470,3 +591,4 @@ powerlifting_combined = powerlifting_meets.set_index('MeetID').join(powerlifting
 ### Credits
 
 [Pandas](https://www.kaggle.com/learn/pandas)
+[SQL](https://www.kaggle.com/learn/intro-to-sql)
