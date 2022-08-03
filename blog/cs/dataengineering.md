@@ -3,6 +3,18 @@
 * ETL(Extract, Transform, Load) is a process of data integration that encompasses three steps - Extraction, Transformation, and Loading.
 * ETL systems take large volumes of raw data from multiple sources converts it for analysis, and loads that data into our warehouse.
 
+#### Uses
+
+* To optimize our data for analytics in an optimized environment.
+* Cross-domain analysis: Joining data from disparate data sources
+
+#### Tools
+
+* Amazon Redshift
+    - Provides access to a variety of data analytics tools, compliance features and even artificial intelligence and machine learning applications.
+
+* Google BigQuery
+
 #### Extraction
 
 * Extracted data sets come from a source into a staging area
@@ -235,6 +247,158 @@ FROM table
 SELECT Name, EXTRACT(WEEK from Date) AS Day
 FROM table
 ```
+
+Aggregate functions
+
+* COUNT
+* SUM
+* AVG
+* MIN
+* MAX
+
+
+```
+SELECT Animal, COUNT(ID) AS Number FROM
+`bigquery-public-data.pet_records.pets`
+GROUP BY Animal
+HAVING COUNT(ID) > 1
+
+# CTE - Common table expression is a temporary table that we return within our query.
+query = """
+    WITH Seniors AS
+    (
+        SELECT ID, Name FROM `bigquery-public-data.pet_records.pets`
+        WHERE Years_old > 5
+    )
+    SELCT ID FROM Seniors
+"""
+
+WITH time AS
+(
+    SELECT DATE(block_timestamp) AS trans_date
+    FROM `transactions`
+)
+SELECT COUNT(1) AS transactions, trans_date 
+FROM time
+GROUP BY trans_date
+ORDER BY trans_date
+
+# List all the tables in the dataset
+tables = list(client.list_tables(dataset))
+
+# Print names of all tables in the dataset (there is only one!)
+for table in tables:  
+    print(table.table_id)
+
+table_name = 'taxi_trips'
+table_ref = dataset_ref.table(table_name)
+table = client.get_table(table_ref)
+df = client.list_rows(table,max_results=5).to_dataframe()
+```
+Write a query that counts the number of trips in each year. 
+```
+# Your code goes here
+rides_per_year_query = """
+SELECT EXTRACT(YEAR FROM trip_start_timestamp) AS year, 
+        COUNT(1) AS num_trips
+FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+GROUP BY year
+ORDER BY year
+"""
+rides_per_year_query = """
+WITH trips as (
+ SELECT EXTRACT(YEAR FROM trip_start_timestamp) year from `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+)
+SELECT year, COUNT(1) as num_trips from `trips`
+GROUP BY year
+ORDER BY year
+"""
+
+# Set up the query (cancel the query if it would use too much of 
+# your quota)
+safe_config = bigquery.QueryJobConfig(maximum_bytes_billed=10**10)
+rides_per_year_query_job = client.query(rides_per_year_query) # Your code goes here
+
+# API request - run the query, and return a pandas DataFrame
+rides_per_year_result = rides_per_year_query_job.to_dataframe() # Your code goes here
+
+# View results
+print(rides_per_year_result)
+```
+
+Rides per month in 2017
+
+```
+rides_per_month_query = """
+WITH trips as (
+ SELECT EXTRACT(MONTH FROM trip_start_timestamp) AS month
+ from `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+ WHERE EXTRACT(YEAR FROM trip_start_timestamp) = 2017
+)
+SELECT month, COUNT(1) as num_trips from `trips`
+GROUP BY month
+ORDER BY month
+""" 
+
+rides_per_month_query = """
+    SELECT EXTRACT(MONTH FROM trip_start_timestamp) AS month, 
+            COUNT(1) AS num_trips
+    FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+    WHERE EXTRACT(YEAR FROM trip_start_timestamp) = 2017
+    GROUP BY month
+    ORDER BY month
+"""
+```
+
+ Write a query that shows, for each hour of the day in the dataset, the corresponding number of trips and average speed.
+
+ ```
+WITH RelevantRides AS
+(
+    SELECT EXTRACT(HOUR FROM trip_start_timestamp) AS hour_of_day, 
+            trip_miles, 
+            trip_seconds
+    FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+    WHERE trip_start_timestamp > '2017-01-01' AND 
+            trip_start_timestamp < '2017-07-01' AND 
+            trip_seconds > 0 AND 
+            trip_miles > 0
+)
+SELECT hour_of_day, 
+        COUNT(1) AS num_trips, 
+        3600 * SUM(trip_miles) / SUM(trip_seconds) AS avg_mph
+FROM RelevantRides
+GROUP BY hour_of_day
+ORDER BY hour_of_day
+ ```
+
+JOIN
+
+```
+# Data is retrieved if values are present in both tables.
+SELECT p.Name as pet_name, o.Name as owner_name
+FROM `pets` AS p
+INNER JOIN `owners` as o on p.ID = o.Pet_ID
+
+# to get list of tables
+temp = list(client.list_tables(dataset))
+list_of_tables = [table.table_id for table in temp ] 
+
+# select answer for a topic related to bigquery
+SELECT a.id, a.body, a.owner_user_id from 
+`bigquery-public-data.stackoverflow.posts_answers` AS a
+INNER JOIN `bigquery-public-data.stackoverflow.posts_questions` AS q on q.id = a.parent_id
+WHERE q.tags LIKE '%bigquery%'
+
+# Write a new query that has a single row for each user who answered at least one question with a tag that includes the string "bigquery"
+SELECT a.owner_user_id AS user_id, COUNT(1) as number_of_answers from 
+`bigquery-public-data.stackoverflow.posts_answers` AS a
+INNER JOIN `bigquery-public-data.stackoverflow.posts_questions` AS q on q.id = a.parent_id
+WHERE q.tags LIKE '%bigquery%'
+GROUP BY user_id
+HAVING number_of_answers > 0
+```
+
 ### pandas
 
 * Data analysis(Use)
@@ -592,3 +756,5 @@ powerlifting_combined = powerlifting_meets.set_index('MeetID').join(powerlifting
 
 [Pandas](https://www.kaggle.com/learn/pandas)
 [SQL](https://www.kaggle.com/learn/intro-to-sql)
+[ETL Database](https://www.stitchdata.com/etldatabase/)
+[Datawarehousing and ETL tools](https://www.integrate.io/blog/etl-data-warehousing-explained-etl-tool-basics/)
