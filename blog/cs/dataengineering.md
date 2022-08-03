@@ -752,9 +752,68 @@ Both DFs include references to a MeetID, a unique key for each meet (competition
 powerlifting_combined = powerlifting_meets.set_index('MeetID').join(powerlifting_competitors.set_index("MeetID"))
 ```
 
+### APACHE KAFKA 
+
+* Is an event streaming platform to collect, store and process real time data streams at scale.
+* Collection of immutable append-only logs.
+
+
+#### Uses
+
+* Distributed logging
+* Stream processing
+* Pub-Sub messaging
+
+#### Events
+
+* Internet of Things
+* Business process change
+* User interaction
+* Microservice output
+
+An event is Notification + State
+Key - Value Pair
+Key is an some identity in system.
+
+
+#### Topics 
+
+* The primary component of storage in Kafka is called a topic which typically represents a particular data entity.
+* Topics are broken into even smaller components called **partitions**
+* When we write a message to a Kafka topic that message is actually stored in one of the topics partitions. To partition to which message is routed is based on the key of that message.
+
+* Producing to and consuming from a topic is done through console, producer API from our application or even Kafka Connect.
+
+##### CMD Line interface
+
+* Install Confluent CLI 
+
+```
+confluent login --save
+
+confluent environment list
+Confluent environment use env-qd252
+confluent kafka cluster list
+confluent kafka cluster user lkc-dokxq7
+confluent api-key create --resource lkc-dokxq7
+confluent api-key use <API KEY> --resource lkc-dokxq7
+confluent kafka topic list
+confluent kafka topic consume --from-beginning poems
+
+# new terminal 
+confluent kafka topic produce poems --parse-key
+5:"From the ashes a fire shall awaken"
+6:"A light from the shadows shall spring"
+```
+
 ### Credits
 
 [Pandas](https://www.kaggle.com/learn/pandas)
+
 [SQL](https://www.kaggle.com/learn/intro-to-sql)
+
 [ETL Database](https://www.stitchdata.com/etldatabase/)
+
 [Datawarehousing and ETL tools](https://www.integrate.io/blog/etl-data-warehousing-explained-etl-tool-basics/)
+
+[Apache Kafka](https://developer.confluent.io/learn-kafka/apache-kafka/events/)
