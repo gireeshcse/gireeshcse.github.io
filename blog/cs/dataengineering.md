@@ -14,6 +14,9 @@
     - Provides access to a variety of data analytics tools, compliance features and even artificial intelligence and machine learning applications.
 
 * Google BigQuery
+    - Fully-managed, serverless data warehouse that enables scalable analysis over petabytes of data
+    - Platform as a service that supports querying using ANSI SQL.
+    - It has built-in machine learning capabilities.
 
 #### Extraction
 
@@ -1021,6 +1024,109 @@ CREATE TABLE rated_movies AS
 * Kafka connect integration.
 * Standalone SQL powered stream processing cluster
 
+
+### Apache Airflow
+
+* Platform to programmatically author, schedule and monitor workflows.
+* Author workflows as Directed Acyclic Graphs (DAGs) of tasks
+
+#### Principles
+
+* Dynamic : We can instantiate pipelines dynamically (Dynamic pipeline generation)
+* Extensible
+* Elegant: Pipelines are lean and elegant.
+* Scalable
+
+### Apache Beam
+
+Open source unified programming model to define and execute data processing pipelines, including ETL,batch and stream processing.
+
+* Compose highly expressive batch or streaming pipelines with the language of choice and run those pipelines on a number of different runners (Cloud Dataflow, Apache Flink, Apache Spark, Apache Samza)
+
+#### Use Cases
+
+* Ingestion and Replication (Batch and Streaming) 
+    - Ingest data into Data Warehouse / Data Lake for analytics and DB from OLTP
+* Unified ETL (Batch and Streaming)
+    - Aggregate, process and enrich/transform data for machine learning and analytics.
+* Continuous Intelligence (Real-time Decision Automation and Insights)
+    - Agregate events, join with other data and make operational decisions quickly.
+
+#### Pipelines 
+
+Pipelines are essentially made up of one or more data sources, collection of transformations and one or more places for the data to end up.
+
+#### Core Primitives
+
+* A **PCollection** is an immutable collection of values. Beam transforms use PCollection objects as inputs and outputs.
+* A **PTranform** is an operation in pipeline. Developers provide processing logic as a function object applied to each element of one or more input PCollection(s)
+* A **Pipeline** is a Directed Acyclic Graph of data transformations. It might include multiple input sources and output sinks and its operations(PTransforms) can both read and output PCollections.
+
+#### Windows 
+
+Ability to group data
+
+* Group elements by timestamp
+* Types
+    - Fixed windows
+    - Sliding windows
+    - Session windows
+
+### Google Dataflow
+
+* Unified stream and batch data processing thats serverless, fast and cost effective.
+
+* Performing ETL from a relational database into BigQuery using Dataflow.
+
+* Uses Apache Beam
+
+#### Workingng
+
+* Read Data
+* Tranform
+* Write Data
+
+P = Parallel
+PCollections are immutable
+
+Datasource {Files,BigQuery, BigTable, custom etc} -> PCollection 1 --Transform--> PCollection 2 --Transform--> PCollection 3 --> Data Sink
+
+Pipelines are created using Apache Beam SDK(Java,Python) we can use Dataflow to deploy and execute those pipelines called dataflow job which create worker instances.
+
+Pre-built templates are present for the Dataflow.
+
+Uses 
+
+* Analyzing
+* Prediction
+* Datawarehousing
+
+### Apache Spark
+
+* Open-source unified analytics engine for large scale data processing
+* Distributed processing system used for big data workloads. 
+* It utilizes in-memory caching, and optimized query execution for fast analytic queries against data of any size.
+
+### Apache Hadoop
+
+* Collection of open-source software utilities that facilitates using a network of many computers to solve problems involving massive amounts of data and computation.
+* Provides software framework for distributed storae and processing of big data using MapReduce programming model.
+
+### MapReduce
+
+* Programming framework that allows us to perform distributed and parallel processing on large data sets in a distributed environment.
+* Concurrent processing by splitting petabytes of data into smaller chunks and processing them in parallel. In the end, it aggregates all the data from multiple servers to return a consolidated output back to the application.
+
+### Dataproc
+
+* Managed Spark and Hadoop service that lets us take advantages of open source data tools for batch processing, querying,streaming, and maching learning. 
+* Dataproc automation helps us create clusters quickly, manage them easily and save money by turning cluster off when we don't need them.
+
+### Publish/Subscribe
+
+* Form of asynchronous service-to-service communication used in serverless and microservices architecture.
+* Any message is published to a topic is immediately received by all the subscribers to the topic.
+
 ### Credits
 
 [Pandas](https://www.kaggle.com/learn/pandas)
@@ -1032,3 +1138,9 @@ CREATE TABLE rated_movies AS
 [Datawarehousing and ETL tools](https://www.integrate.io/blog/etl-data-warehousing-explained-etl-tool-basics/)
 
 [Apache Kafka](https://developer.confluent.io/learn-kafka/apache-kafka/events/)
+
+[Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/index.html)
+
+[Google Dataflow](https://cloud.google.com/dataflow)
+
+[Brief Introduction to Apache Beam](https://www.youtube.com/watch?v=65lmwL7rSy4)
