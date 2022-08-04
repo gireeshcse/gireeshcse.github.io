@@ -408,7 +408,7 @@ HAVING number_of_answers > 0
 
 * Table
 * Contains an array of individual entries.
-* Each entry correspons to a row and a column
+* Each entry corresponds to a row and a column
 
 
 ```
@@ -757,6 +757,27 @@ powerlifting_combined = powerlifting_meets.set_index('MeetID').join(powerlifting
 * Is an event streaming platform to collect, store and process real time data streams at scale.
 * Collection of immutable append-only logs.
 
+##### CMD Line interface
+
+* Install Confluent CLI 
+
+```
+confluent login --save
+
+confluent environment list
+Confluent environment use env-qd252
+confluent kafka cluster list
+confluent kafka cluster use lkc-dokxq7
+confluent api-key create --resource lkc-dokxq7
+confluent api-key use <API KEY> --resource lkc-dokxq7
+confluent kafka topic list
+confluent kafka topic consume --from-beginning poems
+
+# new terminal 
+confluent kafka topic produce poems --parse-key
+5:"From the ashes a fire shall awaken"
+6:"A light from the shadows shall spring"
+```
 
 #### Uses
 
@@ -772,7 +793,9 @@ powerlifting_combined = powerlifting_meets.set_index('MeetID').join(powerlifting
 * Microservice output
 
 An event is Notification + State
+
 Key - Value Pair
+
 Key is an some identity in system.
 
 
@@ -784,27 +807,219 @@ Key is an some identity in system.
 
 * Producing to and consuming from a topic is done through console, producer API from our application or even Kafka Connect.
 
-##### CMD Line interface
+* Name container for events.
+    - Systems contain lots of topics
+    - Can duplicate data b/w topics
+* Durable logs of events.
+    * Append only 
+    * Can only seek by offset, not indexed
+* Events are immutable.
+* Retention period is configurable (Can be configured to expire the message)
 
-* Install Confluent CLI 
+##### Partitioning
+
+* Takes single topic log and breaks it into multiple logs each of which is stored in different paritions and each partition can reside in separate node in cluster.
+* If message has no key, the messages are distributed using round robin equally distributed across the partitions.
+* If message has a key, we run the hash on the key and mod it with the number of partitions. Same key message always lands in the same partition.
+* Default paritions for a topic - **6**
+* Partions are useful in allowing us to break up our topic into more managable chunks which can stored in multiple nodes in the cluster.
 
 ```
-confluent login --save
-
-confluent environment list
-Confluent environment use env-qd252
-confluent kafka cluster list
-confluent kafka cluster user lkc-dokxq7
-confluent api-key create --resource lkc-dokxq7
-confluent api-key use <API KEY> --resource lkc-dokxq7
 confluent kafka topic list
-confluent kafka topic consume --from-beginning poems
-
-# new terminal 
-confluent kafka topic produce poems --parse-key
-5:"From the ashes a fire shall awaken"
-6:"A light from the shadows shall spring"
+confluent kafka topic describe poems
+confluent kafka topic create --partitions 1 poems_1
+confluent kafka topic create --partitions 4 poems_4
 ```
+To write messages
+
+```
+confluent kafka topic produce poems_1 --parse-key
+5:"A light from the shadows shall spring"
+8:"The crownless again shall be king"
+
+^c
+
+confluent kafka topic produce poems_4 --parse-key
+1:"All that is gold does not glitter"
+2:"Not all who wander are lost"
+```
+
+#### Brokers
+
+* An computer, instance or container running the Kafka process (Broker process)
+* Manage partitions (Each brokers has some partitions)
+* Handles write and read requests
+* Manage replication of partions.
+* Intenstionally simeple 
+
+#### Replication
+
+* Copying of partitioning data to several other brokers to keep it safe. Those are called follower replicas. Main partition is Leader.
+* Copies of data for fault tolerance.
+* One lead partition and N-1 followers.
+* In general, writes and reads happen to the leader.
+
+#### Producers
+
+* Kafka producer is connected to the cluster.
+* In Java,
+    - KafkaProducer - used to connect to the cluster
+    - ProducerRecord - To hold key value which we want to send.
+* Produces that takes the decision in which message has to go in which partition.
+
+#### Consumers
+
+* KafkaConsumer - used to connect to the cluster
+* We will subscribe to the topic
+* ConsumerRecords - contains individual instance of message.
+* Reads messages from topics
+* Reading message does not destroy the message.
+* Scaling consumer groups is more or less automatic. A single instance of consuming application will always receive the all the messages from all those partitions.If there exists another consuming instance with same configuation the cluster will distribute the partitions within these instance(Rebalancing) with ordering message guarantee 
+
+```
+# python3
+# pip install confluent-kafka
+# in Terminal run -> confluent kafka cluster describe 
+# Get Endpoint, API Key and Secret
+# confluent api-key create --resource {ID}
+# confluent api-key use {API Key} --resource {ID}
+```
+create config.ini with following content.
+```
+[default]
+bootstrap.servers=< Endpoint >
+security.protocol=SASL_SSL
+sasl.mechanisms=PLAIN
+sasl.username=< API Key >
+sasl.password=< API Secret >
+
+[consumer]
+group.id=python_kafka101_group_1
+# 'auto.offset.reset=earliest' to start reading from the beginning of
+# the topic if no committed offsets exist.
+auto.offset.reset=earliest
+```
+Create another file name **consumer.py** 
+```
+#!/usr/bin/env python
+from argparse import ArgumentParser, FileType
+from configparser import ConfigParser
+from confluent_kafka import Consumer
+if __name__ == '__main__':
+    # Parse the command line.
+    parser = ArgumentParser()
+    parser.add_argument('config_file', type=FileType('r'))
+    args = parser.parse_args()
+
+    # Parse the configuration.
+    config_parser = ConfigParser()
+    config_parser.read_file(args.config_file)
+    config = dict(config_parser['default'])
+    config.update(config_parser['consumer'])
+
+    # Create Consumer instance
+    consumer = Consumer(config)
+
+    # Subscribe to topic
+    topic = "poems"
+    consumer.subscribe([topic])
+
+    # Poll for new messages from Kafka and print them.
+    try:
+        while True:
+            msg = consumer.poll(1.0)
+            if msg is None:
+                print("Waiting...")
+            elif msg.error():
+                print("ERROR: %s".format(msg.error()))
+            Else:
+                # Extract the (optional) key and value, and print.
+                print("Consumed event from topic {topic}: key = {key:12} value = {value:12}".format(topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        # Leave group and commit final offsets
+        consumer.close()
+```
+Run the script
+
+```
+chmod u+x consumer.py
+./consumer.py config.ini
+```
+
+#### Kafka Connect
+
+* Data integration system and ecosystem
+* Because some other systems are not Kafka
+* External client process; does not run on Brokers.
+* Horizontally scalable
+* Fault tolerant
+* Declarative
+
+We can configure to stream data from Kafka to Elastic Search
+
+##### Connectors
+
+* Pluggable software component
+* Interfaces to external system and to Kafka
+* Also exist as runtime entities.
+* Source connectors act as Producers.
+* Sink connectors act as Consumers.
+* Available on Confluent Hub.
+
+##### Datagen source connector
+
+* Can generate sample data by defining the schemas.
+
+#### Schema Registry
+
+* Schemas of messages of topic may evolves over a period of time.
+* Standalone server process external to Kafka brokers.
+* maintains a database of schemas
+* HA(High Availability) deployment option available
+* Consumer/Producer API component
+* Defines the schema compatibility for the topic message.
+* Producer API prevents the incompatible messages from being produced.
+* Consumer API prevents the incompatible messages from being consumed.
+* JSON, Avro and Protocol Buffers are supported seriazable formats.
+* Schema IDs with schema are cached for performance in both producer and consumer side.
+
+* With Avro, we have explicitly defined Schemas.
+
+```
+confluent kafka topic consume --value-format avro --sr-api-key <API_KEY> --sr-api-secret <API SECRET> orders
+```
+
+#### Kafka Streams
+
+* Functional Java API
+* Filtering, grouping, aggregating, joining and more (Computational API-Stream processing computations)
+* Scalable, fault-tolerant state management (Persist state to local disk and to internal cluster topics)
+* Scalable computation based on Consumer Groups.
+* Exposes REST API
+* Integrates within our services as a library.
+* Runs in the context of our application
+* Does not require special infrastructure
+
+#### ksqlDB
+
+* A database optimized for stream processing
+* Runs on its own scalable, falut tolerant cluster adjacent to the Kafka Cluster.(REST API is exposed)
+* Stream processing programs written SQL
+
+```
+CREATE TABLE rated_movies AS
+    SELECT title, SUM(rating)/COUNT(rating) as avg_rating from ratings
+    INNER JOIN movies
+        ON ratings.movie_id = movies.movie_id
+    GROUP BY title EMIT CHANGES;
+```
+* Command line interface
+* REST API for application integration
+* Java library
+* Kafka connect integration.
+* Standalone SQL powered stream processing cluster
 
 ### Credits
 
