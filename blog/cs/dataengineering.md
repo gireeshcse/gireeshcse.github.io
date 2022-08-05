@@ -1127,6 +1127,10 @@ Uses
 * Form of asynchronous service-to-service communication used in serverless and microservices architecture.
 * Any message is published to a topic is immediately received by all the subscribers to the topic.
 
+### Cloud Compose
+
+Fully managed workflow orchestration service built on Apache Airflow that helps us author, schedule and monitor pipelines spanning hybrid and multi-cloud environments.
+
 ### Credits
 
 [Pandas](https://www.kaggle.com/learn/pandas)
