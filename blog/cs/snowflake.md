@@ -169,3 +169,25 @@ To close connection
 * Faster data ingestion and transformation.
 * Snowflake delivers the Data Cloud - a global network where thousands of organizations mobilze data with near-unlimited scale, concurrency, and performance. Inside the Data Cloud, organizations unite their siloed data, easily discover and securely share governed data nad execute diverse analytic workloads.
 * Multi-cluster shared data architecture with per-second pricing.
+
+### Snowpark
+
+* Developer framework for snowflake.
+* Allows data engineers, data scientists and data developers to code in their language of choice and execute pipeline, ML workflow and data apps faster and more securely, in a single platform
+* Designed to make building complex data pipelines much easier and to allow developers to interact with Snowflake directly without having to move data.
+* Moving data outside of Snowflake introduces its own challenges; data security and privacy risks, data ingress egress charges , failed processing due to non-scalable resources and the outcomes are still inaccurate because they are based upon a sample of data. Processing the data inside snowflake using Snowpark UDF's is highly accurate, because outcomes are based upon the entire dataset not just sample.
+
+#### Data Augmentation
+
+* Techniques used to increase the amount of data by adding slightly modified copies of already existing data.
+* Generating new data points from existing data. Includes minor alterations to data or using ML models to generate new points 
+* Acts as a regularizer and helps reduce overfitting when training a machine learning model.
+#### Possible usecases
+
+- Using machine learning to augment data by hosting trained models
+- Scanning for anomalies in our data
+- Developing a routine to identify PII(personal identifiable information)
+
+#### Usecase: Optimizing DataOps with StreamSets Engine for SNOWPARK
+
+The StreamSets engine for Snowpark includes the benefits of the StreamSets DataOps Platform— built-in monitoring and orchestration of complex data pipelines at scale—all in the cloud and with no additional hardware required.
