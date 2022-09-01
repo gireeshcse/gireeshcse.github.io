@@ -191,3 +191,148 @@ To close connection
 #### Usecase: Optimizing DataOps with StreamSets Engine for SNOWPARK
 
 The StreamSets engine for Snowpark includes the benefits of the StreamSets DataOps Platform— built-in monitoring and orchestration of complex data pipelines at scale—all in the cloud and with no additional hardware required.
+
+### Loading Data
+
+* Best files sizes to be uploaded 100-250 MB in size.
+* Loading large data sets can affect query performance. It is recommended using dedicated separate warehouses for loading and querying operations to optimize peformance for each.
+* Organize/Partition data in stages by paths
+
+* The data files contains load status meta data. (Expires after 64 days)
+* Snowflake maintains detailed metadata for each table into which data is loaded, including 
+  - Name of each file from which data was loaded
+  - File Size
+  - No. of rows parsed in the file
+  - Timestamp of the last load for the file
+  - Information about any errors encountered in the file during loading.
+
+* JSON data : Removing "null" values
+  - STIP_NULL_VALUES (option to TRUE)
+* CSV Data : Trimming Leading Spaces.
+  - fileds enclosed in quotes but has a leading space before opening quoattion character for each field , snowflake reads the leading space rather than the opening quotation character as the beginning of the field. The quotation characters are interpreted as string data.
+* Removing loaded data files
+
+  - Using PURGE copy option.
+  - Using REMOVE command
+    ```
+    REMOVE internalStage [ PATTERN = '<regex_pattern>' ]
+    ```
+      - Remove all files from the path1/subpath2 path in a named internal stage named mystage
+        ```
+        REMOVE @mystage/path1/subpath2;
+        ```
+      - Remove all files from the stage for the orders table:
+        ```
+        REMOVE @%orders;
+        ```
+
+  ```
+  "value1", "value2", "value3"
+
+  
+  COPY INTO mytable
+  FROM @%mytable
+  FILE_FORMAT = (TYPE = CSV TRIM_SPACE=true FIELD_OPTIONALLY_ENCLOSED_BY = '0x22');
+
+  # the above cmd, trims the leading space and removes the quotation marks enclosing each field:
+
+  SELECT * FROM mytable;
+
+  +--------+--------+--------+
+  | col1   | col2   | col3   |
+  +--------+--------+--------+
+  | value1 | value2 | value3 |
+  +--------+--------+--------+
+  ```
+* Creating file format
+  ```
+  create or replace file format my_csv_format
+  type = csv
+  field_delimiter = "|"
+  skip_header = 1
+  null_if = ('NULL','null')
+  empty_field_as_null = true
+  compression = gzip;
+
+  create or replace file format my_json_format 
+  type = json;
+  ```
+* Validating our data
+  -  Before loading our data, we can validate that the data in the uploaded files will load correctly.
+  - **VALIDATION_MODE** parameter returns any errors that it encounters in a file. We can then modify the data in the file to ensure it loads without error.
+  - **ON_ERROR** copy option to indicate what action to perform if errors are encountered in a file during loading.
+
+* VALIDATE
+  - Validates the files loaded in a past execution of **COPY INTO** command and returns all the errors encountered during load
+
+  ```
+  select * from table(validate(mytable, job_id => '_last'));
+  select * from table(validate(mytable, job_id=>'5415fa1e-59c9-4dda-b652-533de02fdcf1'));
+  CREATE OR REPLACE TABLE save_copy_errors AS SELECT * FROM TABLE(VALIDATE(mytable, JOB_ID=>'5415fa1e-59c9-4dda-b652-533de02fdcf1'));
+  ``` 
+#### Spliting csv files
+
+```
+split [-l line_count ] [-p pattern] [file [name]]
+
+split -l 100000 file.csv pages
+```
+
+#### Snowpipe
+
+* Designed to load new data.
+* Creating smaller data files and staging them must not be more than once per minute.
+* Snowflake's continuous data ingestion service.
+* Loads data within minutes after files are added to a stage and submitted for ingestion.
+* Snowflake manages load capacity, ensuring optimal compute resources to meet demand.
+* Snowpipe provides "pipeline" for loading fresh data in micro-batches as soon as it is available.
+
+* Different mechanisms for detecting the staged files are:
+  - Automating Snowpipe using cloud messaging
+  - Calling Snowpipe REST endpoints.
+
+#### copy
+
+```
+COPY INTO load1 FROM @%load1/data1/ FILES=('test1.csv', 'test2.csv', 'test3.csv');
+
+COPY INTO people_data FROM @%people_data/data1/
+   PATTERN='.*person_data[^0-9{1,3}$$].csv';
+
+```
+#### Stages
+
+A stage specifies where data files are stored (i.e "staged") so that data in the files can be loaded into a table.
+
+Types of Internal Stages.
+- User
+  - Referenced using **@~**
+  - Cannot be altered or dropped.
+  ```
+  PUT file:///data/data.csv @~/staged;
+  LIST @~;
+  COPY INTO mytable from @~/staged FILE_FORMAT = (FORMAT_NAME = 'my_csv_format');
+  ```
+- Table
+  - Convenient option if our files need to be accessible to multiple users and only need to be copied into a single table.
+  - Referenced using **@%mytable** 
+  ```
+  PUT file:///data/data.csv @%mytable;
+  LIST @%mytable;
+  ```
+  - The following command loads all files in the stage for the **mytable** table.
+    ```
+    copy into mytable file_format = (type = csv field_delimiter = '|' skip_header = 1)
+    ```
+- Named
+  - Provide greatest degree of flexibility for data loading.
+  - Recommended when we plan regular data loads that could involve multiple users and/or tables.
+
+    ```
+    create or replace stage my_stage file_format = my_csv_format;
+    PUT file:///data/data.csv @my_stage;
+    LIST @my_stage;
+    copy into mytable from @my_stage;
+    ```
+
+By default, each user and table in Snowflake is automatically allocated an internal stage for staging data files to be loaded.
