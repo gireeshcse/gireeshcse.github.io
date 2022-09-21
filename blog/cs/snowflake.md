@@ -167,7 +167,7 @@ To close connection
 
     - Reduces administrative work and frees up technical staff to focus on increasing analytics.
 * Faster data ingestion and transformation.
-* Snowflake delivers the Data Cloud - a global network where thousands of organizations mobilze data with near-unlimited scale, concurrency, and performance. Inside the Data Cloud, organizations unite their siloed data, easily discover and securely share governed data nad execute diverse analytic workloads.
+* Snowflake delivers the Data Cloud - a global network where thousands of organizations mobilze data with near-unlimited scale, concurrency, and performance. Inside the Data Cloud, organizations unite their siloed data, easily discover and securely share governed data and execute diverse analytic workloads.
 * Multi-cluster shared data architecture with per-second pricing.
 
 ### Snowpark
@@ -177,18 +177,18 @@ To close connection
 * Designed to make building complex data pipelines much easier and to allow developers to interact with Snowflake directly without having to move data.
 * Moving data outside of Snowflake introduces its own challenges; data security and privacy risks, data ingress egress charges , failed processing due to non-scalable resources and the outcomes are still inaccurate because they are based upon a sample of data. Processing the data inside snowflake using Snowpark UDF's is highly accurate, because outcomes are based upon the entire dataset not just sample.
 
-#### Data Augmentation
+##### Data Augmentation
 
 * Techniques used to increase the amount of data by adding slightly modified copies of already existing data.
 * Generating new data points from existing data. Includes minor alterations to data or using ML models to generate new points 
 * Acts as a regularizer and helps reduce overfitting when training a machine learning model.
-#### Possible usecases
+##### Possible usecases
 
 - Using machine learning to augment data by hosting trained models
 - Scanning for anomalies in our data
 - Developing a routine to identify PII(personal identifiable information)
 
-#### Usecase: Optimizing DataOps with StreamSets Engine for SNOWPARK
+##### Usecase: Optimizing DataOps with StreamSets Engine for SNOWPARK
 
 The StreamSets engine for Snowpark includes the benefits of the StreamSets DataOps Platform— built-in monitoring and orchestration of complex data pipelines at scale—all in the cloud and with no additional hardware required.
 
@@ -212,6 +212,7 @@ The StreamSets engine for Snowpark includes the benefits of the StreamSets DataO
   - fileds enclosed in quotes but has a leading space before opening quoattion character for each field , snowflake reads the leading space rather than the opening quotation character as the beginning of the field. The quotation characters are interpreted as string data.
 * Removing loaded data files
 
+  - Improves load performance, because it reduces the no. of files that COPY commands must scan to verify whether existing files in a stage were loaded already.
   - Using PURGE copy option.
   - Using REMOVE command
     ```
@@ -336,3 +337,22 @@ Types of Internal Stages.
     ```
 
 By default, each user and table in Snowflake is automatically allocated an internal stage for staging data files to be loaded.
+
+Data loading from Local File System
+![alt Data loading from Local File System image](https://docs.snowflake.com/en/_images/data-load-bulk-file-system.png)
+
+#### Allowing the Virtual Private Cloud IDs 
+
+```
+use role accountadmin;
+# to retrive the ids of the AWS virtual network in snowflake account
+select system$get_snowflake_platform_info();
+```
+
+* Allow the VPC IDs by creating an S3 policy for a specific vpc in our amazon account.
+* Provide IAM role to snowflake to access the allowed amazon s3 bucket.
+
+#### Configuring secure access to Amazon S3
+
+* Configure a storage integration object to delegate authentication responsibility for external cloud storage to a Snowflake IAM entity.
+* Configure an IAM role with the required policies and permissions to access our external S3 bucket.
