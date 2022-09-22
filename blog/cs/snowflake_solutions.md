@@ -413,4 +413,302 @@ CREATE OR REPLACE DATABASE nse;
 USE DATABASE nse;
 
 --CREATE SCHEMAS
+CREATE SCHEMA STG;
+CREATE SCHEMA CDC;
+CREATE SCHEMA TGT;
+
+--CREATE SEQUENCE
+CREATE OR REPLACE SEQUENCE SEQ_01
+START = 1
+INCREMENT = 1;
+
+--CREATE STAGING TABLE
+CREATE OR REPLACE TABLE STG.EQ_MAIN
+(
+    eq_id VARCHAR(100),
+    part_of_fo NUMBER(1),
+    part_of_index NUMBER(1),
+    face_value int,
+    industry VARCHAR(100),
+);
+
+--CREATE TARGET TABLE
+CREATE OR REPLACE TABLE TGT.EQ_MAIN
+(
+    eq_seq_key int default SEQ_01.nextval,
+    eq_id VARCHAR(100),
+    part_of_fo NUMBER(1),
+    part_of_index NUMBER(1),
+    face_value NUMBER(10),
+    industry VARCHAR(100),
+    date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+);
+
+--Creating a stage
+CREATE STAGE "nse"."PUBLIC".S3_STAGE URL = 's3://' CREDENTIALS = (AWS_KEY_ID = '' AWS_SECRET_KEY = '');
+
+--GRANT PERMISSIONS ON STAGE
+GRANT USAGE ON STAGE S3_STAGE TO SYSADMIN;
+
+--SHOW STAGES
+SHOW STAGES;
+
+--UNLOAD DATA TO S3 EXTERNAL STAGE
+COPY INTO @S3_STAGE/Customer FROM "SNOWFLAKE_SAMPLE_DATA"."TPCH_SF1"."CUSTOMER"
+HEADER=TRUE;
+
+--COPY INTO TABLE
+COPY INTO STG.EQ_MAIN (eq_id, part_of_fo,part_of_index, face_value, industry)
+FROM (SELECT $1, $2, $3, $4,$5 FROM @S3_STAGE/)
+FILE_FORMAT=(TYPE = 'CSV' FIELD_DELIMITER = ',' SKIP_HEADER = 1 COMPRESSION = 'GZIP');
+
+--CONFIRM WE HAVE SAME RECORDS AS IN CSV FILES
+SELECT COUNT(*) FROM STG.EQ_MAIN;
+
+--SEED TABLE
+INSERT INTO TGT.EQ_MAIN (eq_id, part_of_fo,part_of_index, face_value, industry)
+SELECT eq_id, part_of_fo,part_of_index, face_value, industry
+FROM STG.EQ_MAIN;
+
+--CREATE STREAM TO TRACK SUBSEQUENT CHANGES
+CREATE OR REPLACE STREAM CDC.EQ_MAIN
+ON TABLE STG.EQ_MAIN;
+
+--SHOW STREAMS
+SHOW STREAMS;
+
+--CHECKING CHANGE TABLE FOR METADATA COLUMNS
+SELECT * FROM CDC.EQ_MAIN;
+
+
+--DML ON STAGE TABLE
+UPDATE STG.EQ_MAIN
+SET face_value = 100
+WHERE eq_id = 'TCS';
+
+--TO SEE TWO RECORDS, A DELETE AND AN INSERT IN CDC WITH VALUE METADATA$ISUPDATE = TRUE
+SELECT * FROM CDC.EQ_MAIN;
+
+
+--TO CHECK IT THERE ARE RECORDS IN THE STREAM WAITING TO BE PROCESSED(RETURNS BOOLEAN)
+SELECT SYSTEM$STREAM_HAS_DATA('CDC.EQ_MAIN');
+
+--CREATE A TASK TO MERGE THESE CHANGES 
+CREATE OR REPLACE TASK CDC.MERGE_EQ_MAIN
+WAREHOUSE = COMPUTE_WH_FINANCE
+SCHEDULE = '5 minute'
+WHEN 
+    SYSTEM$STREAM_HAS_DATA('CDC.EQ_MAIN')
+AS
+MERGE INTO TGT.EQ_MAIN TGT
+USING CDC.EQ_MAIN CDC
+ON TGT.eq_id = CDC.eq_id
+
+WHEN NOT MATCHED AND METADATA$ACTION = 'INSERT' AND METADATA$ISUPDATE = 'FALSE' THEN
+INSERT (eq_id, part_of_fo,part_of_index, face_value, industry) VALUES (eq_id, part_of_fo,part_of_index, face_value, industry)
+
+WHEN MATCHED AND METADATA$ACTION = 'INSERT' AND METADATA$ISUPDATE = 'TRUE' THEN
+UPDATE SET TGT.part_of_fo = CDC.part_of_fo, TGT.part_of_index = CDC.part_of_index, TGT.face_valUE = CDC.face_value,TGT.industry = CDC.industry 
+
+WHEN MATCHED AND METADATA$ACTION = 'DELETE' AND METADATA$ISUPDATE = 'FALSE' THEN DELETE;
+
+--BY DEFAULT A TASK IS SET UP IN SUSPEND MODE
+SHOW TASKS;
+
+--ENSURE SYSADMIN CAN EXECUTE TASKS
+USE ROLE accountadmin;
+GRANT EXECUTE TASK ON ACCOUNT TO ROLE SYSADMIN;
+
+--WE NEED TO RESUME THE TASK TO ENABLE IT
+ALTER TASK CDC.MERGE_EQ_MAIN RESUME;
+
+--TO MONITOR TASK_HISTORY
+SHOW TASKS;
+SELECT * FROM TABLE(INFORMATION_SCHEMA.TASK_HISTORY(TASK_NAME=>'MERGE_EQ_MAIN'));
+
+--CHECKING TARGET TABLE
+SELECT * FROM TGT.EQ_MAIN
+WHERE eq_id = 'TCS';
+
+--INSERT A NEW RECORD TO STAGING TABLE
+INSERT INTO STG.EQ_MAIN (eq_id, part_of_fo,part_of_index, face_value, industry)
+SELECT 'INFY',1,1,10,'IT';
+
+--CHECKING TARGET TABLE
+SELECT * FROM TGT.EQ_MAIN
+WHERE eq_id = 'INFY';
+
+DELETE FROM STG.EQ_MAIN WHERE eq_id = 'INFY';
+
+DROP DATABASE nse;
+ALTER WAREHOUSE COMPUTE_WH_FINANCE SUSPEND;
 ```
+
+## CLONING
+
+* Cloning is a metadata-only operation, meaning no data movement or additional storage is required. We can create a fully working test database, complete with data, in minutes, all with zero cost!
+
+* Time effiency and cost savings are at the heart of what cloning is all about.
+
+* Eases the creation of dev or test environments.
+* We can use for experimental purposes.
+    - Ex: Creating new features/data
+
+
+### Performance Testing
+
+* We can use 50% of scaled down of production environment for testing
+
+#### Testing with Data
+
+* Generally, generating data for non-production environments was almost a project in itself.
+
+Testing a UAT environment against production data usually involves either restoring a backup of the production environment to UAT env or using ETL tool to extract data from production to populate the UAT environment.
+
+#### Time Travel Feature.
+
+* Snowflake automatically keeps a record of data(tables) versions in the background
+* User-configuratble maximum retention period of up to 90 days for permannent objects. 
+* Default is 24 hours
+
+```
+ALTER TABLE TABLE1 SET DATA_RETENTION_TIME_IN_DAYS = 60;
+
+SELECT * FROM TABLE AT(timestamp => '2022-09-22 13:00:10.00 +0530'::timestamp_tz)
+```
+
+* No need to take a backup or snapshot.
+* This feature is leveraged by cloning to replicate an object
+
+#### Sensitive Data
+
+* Risks are involved when using cloning to move data between environments.
+    - Sensitive information (PII)
+    - Ensuring General Data Protection Regulation(GDPR) and Health Insurance Portability and Accountability Act(HIPPA)
+
+* Solution - Data masking in conjunction with cloning.
+
+* **Data Masking**
+
+    - Column-level security feature that uses policies to mask plain-text data dynamically depending upon the role accessing the data.
+    - At query execution, the masking policy is applied to the column at every location where column appears.
+
+### Working with Clones
+
+* Cloned objects are also writable.Additional storage is needed to store these versions.(Performed Background)
+
+```
+CREATE OR REPLACE TABLE ClonedTable Clone Table; 
+```
+* List of objects that can be cloned.
+    - Databases
+    - Schemas
+    - Tables
+    - Streams
+        - Any unconsumed records are not available for clone
+        - Streams begins again at the time/point the clone was created
+    - Extenal named stages
+    - File formats
+    - Sequences
+        - when a table with a column with a default sequence is cloned, the cloned table still references the original sequence object.
+
+        ```
+        ALTER TABLE <table_name>
+        ALTER COLUMN <column_name> SET DEFAULT <new_sequence>.nextval;
+        ```
+    - Tasks
+        - Cloned tasks are suspended by default.we must execute ALTER TASK...RESUME
+
+    - Pipes
+        - A database or schema clone includes only pipe objects that reference external stages(AWS S3, GCP etc)
+
+* The following objects cannot be cloned
+
+    - Internal Stages
+    - Pipes 
+        - Internal pipes
+        - cloned pipe is paused by default.
+    - Views
+        - Cannot be cloned directly
+        - Cloned if it is contained within a database or schema we are cloning
+
+#### Clone Permissions.
+
+* Roles are not cloned with source database. Only the child objects of the original database (schemas and tables) would carry over their privileges to the cloned db.
+
+```
+CREATE OR REPLACE DATABASE DEMO;
+
+GRANT USAGE ON DATABASE DEMO TO SYSADIM;
+
+CREATE OR REPLACE DATABASE DEMO_CLONE CLONE DEMO;
+
+--USAGE GRANT WILL NOT APPEAR FOR DEMO_CLONE
+SHOW GRANTS ON DATABASE DEMO_CLONE;
+
+
+CREATE OR REPLACE TABLE DEMO.PUBLIC.TABLE1 (COL VARCHAR);
+
+GRANT SELECT ON TABLE ON DEMO.PUBLIC.TABLE1.SYSADMIN;
+
+--RE-CREATE 
+CREATE OR REPLACE DATABASE DEMO_CLONE CLONE DEMO;
+
+--SHOWS THE GRANTS ON TABLE1 - PERMISSIONS PRESERVED
+SHOW GRANTS ON TABLE DEMO_CLONE.PUBLIC.TABLE;
+
+CREATE OR REPLACE TABLE DEMO.PUBLIC.TABLE_CLONE CLONE DEMO.PUBLIC.TABLE1;
+
+-- SELECT PRIVILEGE DOESN'T CARRY OVER
+SHOW GRANTS ON TABLE DEMO.PUBLIC.TABLE_CLONE;
+```
+
+#### Example
+
+```
+CREATE OR REPLACE DATABASE SALES_DEV;
+
+CREATE TABLE ORDERS AS 
+SELECT * FROM "SNOWFLAKE_SAMPLE_DATA"."TPCH_SF1".ORDERS;
+
+CREATE OR REPLACE DATABASE SALES_PROD CLONE SALES_DEV;
+
+USE DATABASE SALES_DEV;
+UPDATE ORDERS
+SET O_TOTALPRICE = O_TOTALPRICE * 1.1;
+
+--AFTER VALIDATING THE CHANGES WE CAN PROMOTE THE CHANGE TO PRODUCTION
+USE DATABASE SALES_PROD;
+CREATE OR REPLACE TABLE ORDERS CLONE SALES_DEV.PUBLIC.ORDERS;
+
+
+--FINAL CHECKS BETWEEN SALES_DEV AND SALES_PROD
+SELECT DEV.O_ORDERKEY, DEV.O_TOTALPRICE, PROD.O_TOTALPRICE
+FROM SALES_DEV.PUBLIC.ORDERS DEV
+INNER JOIN SALES_PROD.PUBLIC.ORDERS PROD ON DEV.O_ORDERKEY =
+PROD.O_ORDERKEY
+LIMIT 10;
+
+SELECT DEV.O_ORDERKEY, DEV.O_TOTALPRICE - PROD.O_TOTALPRICE AS
+DIFFERENCE
+FROM SALES_DEV.PUBLIC.ORDERS DEV
+INNER JOIN SALES_PROD.PUBLIC.ORDERS PROD ON DEV.O_ORDERKEY =
+PROD.O_ORDERKEY
+HAVING DIFFERENCE <> 0;
+
+```
+
+* Address the following challenges
+
+    - To avoid the need to pay for storing the same data more than once.
+    - The time-consuming task of copying data to set up new environments for development and testing.
+    - As a way to keep production and non-production environments in sync
+
+### Advantages
+
+- We can create a clone in seconds as it’s a metadata-only operation.
+- We can update data in a clone independently of the source object.
+- We can promote changes to a Production environment quickly and easily, with low risk.
+
+## Managing Security and Access Control
+
