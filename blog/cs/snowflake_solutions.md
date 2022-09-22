@@ -712,3 +712,26 @@ HAVING DIFFERENCE <> 0;
 
 ## Managing Security and Access Control
 
+### Roles
+
+* Collection of privileges against one or more objects within our Snowflake account.
+* Predefined system roles
+    - ACCOUNTADMIN
+        - administers Snowflake account.
+        - can view all credit and billing information
+        - Sub Roles
+            - SYSADMIN
+            - SECURITYADMIN
+        - Configuring multi-factor authentication is strongly recommended for this account users.
+        - Snowflake recommends limiting the use of this account and restricting access to a minimum set of users.
+    - SYSADMIN
+        - Can create warehouses and databases and objects within a database.
+    - SECURITYADMIN
+        - designed for the administration of security
+        - management of granting or revoking privileges to roles
+    - USERADMIN
+        - For creating roles and users and managing the privileges assigned to them.
+        - Child of SECURITYADMIN
+    - PUBLIC
+        - Default role that all the users end up in automatically.
+        - Provides privileges to log into Snowflake and some basic object access
