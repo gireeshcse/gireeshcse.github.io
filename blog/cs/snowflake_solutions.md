@@ -736,6 +736,10 @@ HAVING DIFFERENCE <> 0;
         - Default role that all the users end up in automatically.
         - Provides privileges to log into Snowflake and some basic object access
 
+#### Objects
+
+When a user creates an object in Snowflake, they effectively own that object and can grant access to it. This is known as **discretionary access control (DAC).**
+
 Note: In Snowflake, a user may be member of more than just one role. He has to switch to the role for which an action/query is having access/permission.
 
 * Snowflake follows RBAC framework.
@@ -758,6 +762,26 @@ REVOKE ROLE HR_SCHEMA_READ_ONLY FROM ROLE MARKETING_INSIGHT;
 * Level 3
     - Access Roles
     - Used to assign privileges on the actual objects within Snowflake.
+
+Example
+
+* System Role (Level 0)
+    * SYSADMIN
+        - Domain Roles (Level 1)
+            * PROD_DEV
+                * FUNCTIONAL ROLES (LEVEL 2)
+                    * PROD_MARTKETING_INSIGHT
+                        - ACCESS ROLES (LEVEL 3)
+                            - HR_SCHEMA_READ_ONLY_ROLE
+                                - HR DATA
+                    * PROD_HR_DEPARTMENT
+                        - ACCESS ROLES (LEVEL 3)
+                            - HR_SCHEMA_READ_ONLY_ROLE
+                                - HR DATA
+            * TEST_DEV
+
+* Object access is controlled in one layer and user access is controlled in another.
+
 
 ### User and Application Authentication.
 
@@ -1289,4 +1313,175 @@ WHERE AGE BETWEEN $min AND $max;
 
 //DROP THE VARIABLES
 UNSET (min, max);
+```
+
+### Transactions
+
+* A collection of SQL statements executed against the database as a single unit.
+* By default, Snowflake has the AUTOCOMMIT setting set to On.
+
+* Pseudo-code
+```
+BEGIN TRANSACTION
+      SQL STATEMENTS GO HERE
+IF SUCCESSFUL
+      COMMIT TRANSACTION
+ELSE
+      ROLLBACK TRANSACTION
+```
+
+```
+
+CREATE PROCEDURE STORED_PROC_NAME()
+      AS
+$$
+      ...
+      SQL STATEMENT HERE;
+      BEGIN TRANSACTION;
+      SQL STATEMENTS HERE;
+      COMMIT;
+$$
+```
+
+```
+CREATE PROCEDURE STORED_PROC_NAME()
+      AS
+$$
+      ...
+      SQL STATEMENT A;
+      SQL STATEMENT B;
+      SQL STATEMENT C;
+$$;
+BEGIN TRANSACTION;
+CALL STORED_PROC_NAME();
+COMMIT;
+```
+
+### Locking and Deadlocks
+
+* Use of transactions, either implicit or explicit, can acquire locks on a table. This can occur with UPDATE, DELETE, and MERGE statements.
+* Most INSERT and COPY statements write into new partitions, meaning existing data is not modified which allows parallel table loading
+* If a query is blocked by another transaction running against a table, known as a deadlock, the most recent transaction will wait for a certain period of time. This is guided by a parameter setting called LOCK_TIMEOUT, which can be amended at a session level if required. If the LOCK_TIMEOUT duration is exceeded, the most recent transaction is selected as the “deadlock victim” and is rolled back.
+
+### Transaction Tips
+
+* Breaking a process down into discrete transactions not only makes it easier to read, maintain, and manage, but it also reduces the likelihood of locking a table for longer than required.
+* Another key point is to avoid very large transactions which could lock the table out for long periods unnecessarily.
+
+### Example
+
+```
+//CREATE DATABASE
+CREATE OR REPLACE DATABASE RAW;
+
+//CREATE SCHEMA
+CREATE OR REPLACE SCHEMA STAGE;
+
+//CREATE INITIAL TABLE FOR STATE 'CA' FROM SAMPLE DATA USING
+//CREATE TABLE AS SELECT
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER_CA
+AS SELECT C_SALUTATION,
+            C_FIRST_NAME,
+            C_LAST_NAME,
+            TO_DATE(CUST.C_BIRTH_YEAR || '-' || CUST.C_BIRTH_MONTH || '-'
+            || CUST.C_BIRTH_DAY) AS DOB,
+            CUST.C_EMAIL_ADDRESS,
+            DEM.CD_GENDER,
+            DEM.CD_MARITAL_STATUS,
+            DEM.CD_EDUCATION_STATUS
+    FROM SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER CUST
+    LEFT JOIN SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER_DEMOGRAPHICS
+    DEM ON CUST.C_CURRENT_CDEMO_SK = DEM.CD_DEMO_SK
+    LIMIT 100;
+
+//USE CREATE TABLE LIKE TO CREATE TABLES FOR STATES NY AND DE
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER_NY
+LIKE STAGE.LOAD_CUSTOMER_CA;
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER_DE
+LIKE STAGE.LOAD_CUSTOMER_CA;
+
+CREATE OR REPLACE PROCEDURE STAGE.LOAD_CUSTOMERS(VAR_SCHEMA VARCHAR, VAR_
+TABLE VARCHAR, VAR_STATE VARCHAR)
+returns string
+language javascript
+as
+$$
+var sql =
+    `INSERT OVERWRITE INTO RAW.` + VAR_SCHEMA + `.` + VAR_TABLE
++ ` SELECT C_SALUTATION,
+            C_FIRST_NAME,
+            C_LAST_NAME,
+            TO_DATE(CUST.C_BIRTH_YEAR || '-' || CUST.C_BIRTH_MONTH || '-'
+            || CUST.C_BIRTH_DAY) AS DOB,
+            CUST.C_EMAIL_ADDRESS,
+            DEM.CD_GENDER,
+            DEM.CD_MARITAL_STATUS,
+            DEM.CD_EDUCATION_STATUS
+    FROM SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER CUST
+    LEFT JOIN SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER_DEMOGRAPHICS
+    DEM ON CUST.C_CURRENT_CDEMO_SK = DEM.CD_DEMO_SK
+    LEFT JOIN SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER_ADDRESS ADDR ON
+    CUST.C_CURRENT_ADDR_SK = ADDR.CA_ADDRESS_SK
+    WHERE ADDR.CA_STATE = '` + VAR_STATE + `';`;
+
+try {
+    snowflake.execute (
+        {sqlText: sql}
+        );
+    return "Succeeded."; //Return a success
+    }
+catch (err) {
+    return "Failed: " + err; //Return error
+}
+$$;
+
+//TEST THE STORED PROCS WITH THE SCHEMA, TABLE AND STATE CODE
+CALL STAGE.LOAD_CUSTOMERS('STAGE', 'LOAD_CUSTOMER_CA', 'CA');
+CALL STAGE.LOAD_CUSTOMERS('STAGE', 'LOAD_CUSTOMER_NY', 'NY');
+CALL STAGE.LOAD_CUSTOMERS('STAGE', 'LOAD_CUSTOMER_DE', 'DE');
+
+//CHECK THE TABLES
+SELECT COUNT(*) FROM STAGE.LOAD_CUSTOMER_CA;
+SELECT COUNT(*) FROM STAGE.LOAD_CUSTOMER_NY;
+SELECT COUNT(*) FROM STAGE.LOAD_CUSTOMER_DE;
+
+//CREATE THE TASKS
+CREATE OR REPLACE TASK STAGE_LOAD_CUSTOMER_CA_TABLE
+  WAREHOUSE = COMPUTE_WH
+  SCHEDULE = '5 MINUTE'
+AS
+CALL STAGE.LOAD_CUSTOMERS('STAGE', 'LOAD_CUSTOMER_CA', 'CA');
+
+//CREATE THE TASKS
+CREATE OR REPLACE TASK STAGE_LOAD_CUSTOMER_NY_TABLE
+  WAREHOUSE = COMPUTE_WH
+  SCHEDULE = '5 MINUTE'
+AS
+CALL STAGE.LOAD_CUSTOMERS('STAGE', 'LOAD_CUSTOMER_NY', 'NY');
+
+//CREATE THE TASKS
+CREATE OR REPLACE TASK STAGE_LOAD_CUSTOMER_DE_TABLE
+  WAREHOUSE = COMPUTE_WH
+  SCHEDULE = '5 MINUTE'
+AS
+CALL STAGE.LOAD_CUSTOMERS('STAGE', 'LOAD_CUSTOMER_DE', 'DE');
+
+//CLEAR THE TABLES
+TRUNCATE TABLE STAGE.LOAD_CUSTOMER_CA;
+TRUNCATE TABLE STAGE.LOAD_CUSTOMER_NY;
+TRUNCATE TABLE STAGE.LOAD_CUSTOMER_DE;
+
+//RESUME THE TASKS
+USE ROLE ACCOUNTADMIN;
+
+ALTER TASK STAGE_LOAD_CUSTOMER_CA_TABLE RESUME;
+ALTER TASK STAGE_LOAD_CUSTOMER_NY_TABLE RESUME;
+ALTER TASK STAGE_LOAD_CUSTOMER_DE_TABLE RESUME;
+
+//AFTER 5 MINS THE TABLES SHOULD BE POPULATED
+USE ROLE SYSADMIN;
+
+SELECT COUNT(*) FROM STAGE.LOAD_CUSTOMER_CA;
+SELECT COUNT(*) FROM STAGE.LOAD_CUSTOMER_NY;
+SELECT COUNT(*) FROM STAGE.LOAD_CUSTOMER_DE;
 ```
