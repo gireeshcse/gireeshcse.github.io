@@ -1111,3 +1111,182 @@ object. To manage/restrict the grant ownerships priviliges to other roles, this 
 * To centrailze the management of privileges to only certain roles, such as schema owner or anyone with MANAGE GRANTS privilege, while preventing other users from making decisions on who to grant access to.
 * We use **WITH MANAGED ACCESS** keywords which execute the CREATE SCHEMA statement.
 * The ownership of objects is moved away from the object owner to the schema owner (Or anyone with MANAGE GRANTS priviledge)
+
+## Programming
+
+```
+//CREATE TABLE LIKE SAMPLE DATA
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER
+LIKE SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER;
+
+
+//CREATE TABLE AS SELECT SAMPLE DATA
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER
+AS
+SELECT C_CUSTOMER_ID
+FROM SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER
+LIMIT 100;
+
+//CREATE TABLE CLONE
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER_V2
+CLONE STAGE.LOAD_CUSTOMER;
+```
+
+### Copy Grants
+
+* This will inherit any existing permissions on the table you are cloning from.
+* It will not inherit any future grants
+
+```
+//CREATE TABLE LIKE SAMPLE DATA
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER
+LIKE SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER
+COPY_GRANTS;
+
+//CREATE TABLE AS SELECT SAMPLE DATA
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER
+COPY GRANTS
+AS
+SELECT C_CUSTOMER_ID
+FROM SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER
+LIMIT 100;
+
+//CREATE TABLE CLONE
+CREATE OR REPLACE TABLE STAGE.LOAD_CUSTOMER_V2
+CLONE STAGE.LOAD_CUSTOMER
+COPY GRANTS;
+```
+
+### Stored Procedures
+
+* Stored procedures allow for procedural logic, such as branching and looping. We can also create dynamic SQL statements and run them within the JavaScript API.
+* Stored procedures with the same name but with different input parameters are treated as different objects.Each input parameter you specify must have a data type associated with it.
+
+```
+CREATE OR REPLACE PROCEDURE sample_stored_procedure()
+returns float not null
+language javascript
+as
+$$
+var sql = `
+<SQL GOES HERE>
+`
+var stmt = snowflake.createStatement({sqlText: sql});
+var result = stmt.execute();
+return result;
+$$
+```
+
+### User-Defined Functions
+
+* Two primary types of functions in Snowflake:
+    - Scalar functions return one output value for each input value.
+    - Tabular (table) functions return a table of zero, one, or many rows for each input row.
+* Functions can be written in SQL or JavaScript or Java
+
+#### Scalar Functions
+
+```
+//SIMPLE USER-DEFINED SCALAR FUNCTION
+CREATE OR REPLACE FUNCTION PI_UDF()
+  RETURNS FLOAT
+  AS '3.141592654::FLOAT';
+
+SELECT PI_UDF();
+```
+
+* A typical example of a scalar function in the real world might be to add sales tax to a net sale value
+* If the sales tax changes (and believe me, it can and does!) it can turn into a huge piece of detective work to track down where it exists in your database. It’s far better to keep it in one place, and a function is the ideal place for this.
+
+```
+//SIMPLE USER-DEFINED SCALAR FUNCTION WITH INPUT PARAMETER
+CREATE OR REPLACE FUNCTION ADD_SALES_TAX(NET_SALES FLOAT)
+  RETURNS FLOAT
+  AS 'SELECT NET_SALES * 1.1';
+
+
+//CREATE A SIMPLE TABLE TO STORE NET SALES VALUES
+CREATE OR REPLACE TABLE SALES
+(NET_SALES DECIMAL);
+
+
+INSET INTO SALES
+SELECT 140.21
+UNION
+SELECT 130.00
+UNION
+SELECT 7899.30
+UNION
+SELECT 99.99;
+
+//CALL THE FUNCTION
+SELECT NET_SALES, ADD_SALES_TAX(NET_SALES)
+FROM SALES;
+```
+
+#### Table Functions
+
+```
+//CREATE TABLE FUNCTION
+CREATE OR REPLACE FUNCTION GET_ADDRESS_FOR_CUSTOMER(CUSTOMER_ID
+VARCHAR(16))
+RETURNS TABLE (STREET_NUMBER VARCHAR(10), STREET_NAME VARCHAR(60), CITY
+VARCHAR(60), STATE VARCHAR(2), ZIP VARCHAR(10))
+AS 'SELECT CA_STREET_NUMBER, CA_STREET_NAME, CA_CITY, CA_STATE, CA_ZIP
+    FROM SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER CUST
+    LEFT JOIN SNOWFLAKE_SAMPLE_DATA.TPCDS_SF100TCL.CUSTOMER_ADDRESS ADDR ON
+CUST.C_CURRENT_ADDR_SK = ADDR.CA_ADDRESS_SK
+    WHERE C_CUSTOMER_ID = CUSTOMER_ID';
+
+//CALL TABLE FUNCTION
+SELECT STREET_NUMBER, STREET_NAME, CITY, STATE, ZIP
+FROM TABLE(GET_ADDRESS_FOR_CUSTOMER('AAAAAAAAFMHIAGFA'));
+```
+
+### SQL Variables
+
+* Three specific DDL commands available:
+    - SET: Used to initialize variables
+    - UNSET: Used to drop or remove variables
+    - SHOW VARIABLES: Used to view variables within the current session
+
+```
+SET sales_schema = 'sales';
+SET (sales_schema, finance_schema) = ('sales', 'fin');
+SET (sales_schema, finance_schema) = (SELECT 'sales', 'fin');
+```
+
+* if We’re connecting to Snowflake from an application, We can initialize variables on the connection string by passing them in as arguments
+
+
+* To reference variables within your SQL code,
+```
+SELECT $min;
+```
+
+We can use variables to replace constants, but also as identifiers, such as database names, schema names, and table names. To use variables in this way, e need to make it clear to Snowflake this is your intention. You need to wrap the variable name within the IDENTIFIER() as follows:
+
+```
+//USING AN IDENTIFIER
+USE SNOWFLAKE_SAMPLE_DATA;
+SET TPC_DATE_DIM = 'TPCDS_SF100TCL.DATE_DIM';
+SELECT *
+FROM identifier($TPC_DATE_DIM);
+
+SHOW VARIABLES;
+```
+* Variables are scoped to a session, so when a user ends their session, all variables are dropped.
+
+```
+//SET VARIABLES
+SET (min, max) = (30, 70);
+SELECT $min;
+
+
+SELECT AVG(salary)
+FROM EMPLOYEE
+WHERE AGE BETWEEN $min AND $max;
+
+//DROP THE VARIABLES
+UNSET (min, max);
+```
