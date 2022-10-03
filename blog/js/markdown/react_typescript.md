@@ -685,12 +685,13 @@ const fetch = require('node-fetch');
 
 ```
 npx create-react-app try-react --template typescript
-``
+```
 
 * Adding routes 
 
 ```
 npm i react-router-dom
+
 ```
 * index.tsx
 ```
@@ -938,3 +939,140 @@ function App(){
     )
 }
 ```
+
+```
+interface GreetingProps {
+    enteredName: string;
+    message: string;
+    greetingDispatcher: React.Dispatch<{ type: string, payload: string }>;
+}
+
+export default function Greeting(props: GreetingProps) {
+
+    console.log("rendering Greeting")
+    const onChangeName = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        props.greetingDispatcher({
+            type: "enteredName",
+            payload: e.target.value
+        });
+
+        props.greetingDispatcher({
+            type: "message",
+            payload: e.target.value
+        });
+
+    }
+
+    return (<div>
+            <input value={props.enteredName} onChange={onChangeName} />
+            <div>
+                {props.message}
+            </div>
+        </div>);
+
+}
+
+import React, { FC, useEffect, useRef } from 'react';
+
+export interface ListItem {
+    id: number;
+}
+
+export interface ListItems {
+    listItems?: Array<ListItem>;
+}
+
+const ListCreator: FC<ListItems> = React.memo(({ listItems }: ListItems) => {
+
+    let renderItems = useRef<Array<JSX.Element> | undefined>();
+    useEffect(() => {
+        console.log("listItems updated");
+        renderItems.current = listItems?.map((item, index) => {
+            return <div key={item.id}>
+                {item.id}
+            </div>;
+        });
+    }, [listItems]);
+
+    console.log("ListCreator render");
+    return (
+        <React.Fragment>
+            {renderItems.current}
+        </React.Fragment>
+
+    );
+});
+
+export default ListCreator;
+
+
+function App() {
+
+  const [{ message, enteredName }, dispatch] = useReducer(reducer, initialState);
+  const [startCount, setStartCount] = useState(0);
+  const [count, setCount] = useState(0);
+
+  const setCountCallback = useCallback(() => {
+    const inc = count + 1 > startCount ? count + 1 :
+    Number(count + 1) + startCount;
+    setCount(inc);
+  }, [count, startCount]);
+
+  const [listItems, setListItems] = useState<Array<ListItem>>();
+
+    useEffect(() => {
+      const li = [];
+      for(let i = 0; i < count; i++) {
+        li.push({ id: i });
+      }
+      setListItems(li);
+    }, [count]);
+
+    const onWelcomeBtnClick = () => {
+      setCountCallback();
+    }
+
+  const onChangeStartCount = (e:React.ChangeEvent<HTMLInputElement>) => {
+    setStartCount(Number(e.target.value));
+  }
+
+  return (
+
+    <div className="App">
+      <header className="App-header">
+        <Greeting message={message}
+          enteredName={enteredName}
+          greetingDispatcher={dispatch} />
+
+          <div style={{marginTop: '10px'}}>
+              <label>Enter a number and we'll increment it</label>
+              <br/>
+              <input value={startCount}onChange={onChangeStartCount}
+              style={{width: '.75rem'}} />&nbsp;
+              <label>{count}</label>
+              <br/>
+              <button onClick={onWelcomeBtnClick}>Increment count</button>
+          </div>
+          <div>
+            <ListCreator listItems={listItems} />
+        </div>
+      </header>
+    </div>
+  )
+
+}
+```
+* Code reuse is much easier because the Hooks are not tied to any specific class
+
+### Testing
+
+
+'Failed to initialize watch plugin' when running tests for newly created app 
+
+[Issue Solution](https://github.com/facebook/create-react-app/issues/11792)
+
+```
+npm run test
+```
+
