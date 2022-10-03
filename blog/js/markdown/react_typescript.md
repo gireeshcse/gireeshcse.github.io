@@ -686,3 +686,255 @@ const fetch = require('node-fetch');
 ```
 npx create-react-app try-react --template typescript
 ``
+
+* Adding routes 
+
+```
+npm i react-router-dom
+```
+* index.tsx
+```
+import { BrowserRouter as Router } from "react-router-dom";
+
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <React.StrictMode>
+    <Router>
+      <App />
+    </Router>
+  </React.StrictMode>
+);
+```
+```
+import React, { FC } from "react";
+const Home: FC = () => {
+  return <div>Hello World! Home</div>;
+};
+export default Home;
+
+//app.tsx
+import { Route,Link,Routes } from "react-router-dom";
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h3>Sample App</h3>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/about' element={<About />} />
+        </Routes>
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+      </header>
+    </div>
+  );
+}
+```
+
+* Lifecycle Methods
+    - constructor
+    - getDerivedStateFromProps(props, state)
+    - render
+    - componentDidMount
+    - componentWillUnmount
+    - shouldComponentUpdate(nextProps,nextState)
+    - getSnapshotBeforeUpdate(prevProps, prevState)
+    - componentDidUpdate(prevProps, prevState, snapshot)
+
+```
+interface GreetingProps {
+    name?: string
+}
+
+interface GreetingState {
+    message:string
+}
+
+export default class Greeting extends React.Component<GreetingProps,GreetingState>{
+    constructor(props:GreetingProps){
+        super(props);
+        this.state = {
+            message: `Hello from, ${props.name}`
+        }
+    }
+    static getDerivedStateFromProps(props:GreetingProps,state:GreetingState){
+        console.log(props,state);
+        if(props.name){
+            let message = Greeting.getNewMessage(props.name);
+            if(message !== state.message){
+                const newState = {...state};
+                newState.message = message;
+                return newState;
+            }
+        }
+        return state;
+    }
+
+    static getNewMessage(name: string = "") {
+        return `Hello from, ${name}`;
+    }
+
+    render(){
+        console.log("Rendering Greeting");
+        if(!this.props.name){
+            return <div>
+                No name given
+            </div>
+        }
+
+        return <div>
+            {this.state.message}
+        </div>
+    }
+}
+
+class App extends React.Component{
+  state: {name: string}
+  constructor(props:any){
+    super(props);
+    this.state = {
+      name:""
+    }
+    this.onChangeName =  this.onChangeName.bind(this);
+  }
+  onChangeName(e:React.ChangeEvent<HTMLInputElement>){
+    this.setState({
+      name:e.target.value
+    })
+  }
+  // onChangeName = (e:React.ChangeEvent<HTMLInputElement>)=>{
+  //   this.setState({
+  //     name:e.target.value
+  //   })
+  // }
+  render() {
+    console.log("rendering app");
+    return (
+      <div className="App">
+        <header className="App-header">
+        <input value={this.state.name} onChange={this.onChangeName}/>
+        <Greeting name={this.state.name} />
+        </header>
+      </div>
+    )
+  }
+}
+```
+
+```
+import React from "react";
+interface GreetingProps {
+    message: string
+}
+export default function Greeting(props: GreetingProps) {
+    console.log("rendering Greeting")
+    return (<div>
+            {props.message}
+        </div>);    
+}
+```
+#### Hooks
+
+* No way of Sharing the logic in our lifecycle event methods to reuse them in other components. Hooks solves this.
+
+* useState
+    - Replaces the state and setState
+* useEffect
+    - Similar to componentDidMount and componentDidUpdate
+    - Run before rendering onto the screen happens.
+* useLayoutEffect
+    - This function runs synchronously, allowing us to get certain element values as they currently are on the screen and then do something with them in a synchronous manner. But, of course, this blocks our UI, so we need to only do things that are very fast or the user experience will suffer.
+* useCallback
+    - Creates an instance of a function once a set of parameters has been changed.
+    - Saves the instance in memory otherwise an instance of the function would be recreated on each render.
+    - Takes handler funtion as its first parameter and an array of items that may change as its second.If the items don't change, the callback doesn't get new instance.
+* useMemo
+    - To save the result of long-running task.(like caching)
+    - Only runs if the array of parameters has changed.
+    - Similar to useCallback
+    - Returns a value that is the result of some heavy computation.
+* useReducer
+    - Takes two parameters
+        - reducer
+        - initial state 
+    - returns a state object that will be updated by the reducer and dispatcher that receives updated state data, called an action, and passes it to the reducer.
+    - reducer
+        - acts as a filtering mechanism and determines how action data will be used to update the state.
+* useContext
+    - a way of having global state data that can be shared across components.
+* useRef
+    - used to hold any value in its current property.
+    - does not trigger a re-render if it changes and values lives as long as the component it was created in lives.
+    - To hold a DOM element.
+
+```
+const Greeting: FC<GreetingProps> = ({name}:GreetingProps) => {
+    const [message,setMessage] = useState("");
+
+    useEffect(() => {
+        if(name){
+            setMessage(`Hello from, ${name}`)
+        }
+    },[name])
+
+    return <div>
+        {message}
+    </div>
+}
+export default Greeting;
+```
+
+```
+const reducer = (state: any, action: any) => {
+
+    console.log("enteredNameReducer");
+    
+    switch(action.type) {
+        case "enteredName":
+          if(state.enteredName === action.payload) {
+            return state;
+          }
+          
+          return { ...state, enteredName: action.payload}
+        
+        case "message":
+          return { ...state, message: `Hello, ${action.payload}` }  
+        default:   
+            throw new Error("Invalid action type " + action.type);
+    }
+
+  }
+  
+  const initialState = {
+    enteredName: "",
+    message: "",
+  };
+
+function App(){
+  const [{message,enteredName},dispatch] = useReducer(reducer,initialState);
+  const onChangeName = (e:React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({
+      "type":"enteredName",
+      "payload":e.target.value
+    });
+
+    dispatch({
+      "type":"message",
+      "payload":e.target.value
+    });
+  }
+  console.log("rendering app");
+    return (
+      <div className="App">
+        <header className="App-header">
+        <input value={enteredName} onChange={onChangeName}/>
+        <Greeting name={message} />
+        </header>
+      </div>
+    )
+}
+```
