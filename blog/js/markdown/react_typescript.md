@@ -4,7 +4,7 @@
     - Is a method where code from one language is "compiled" or converted into another language.
 
 * **Static Typing**
-    - Type of vaiable is to be defined upfront.
+    - Type of variable is to be defined upfront.
 
 * **Four major principles of OOP**
     - Encapsulation
@@ -92,7 +92,7 @@ type Points = 20 | 30 | 40 | 50;
 let score: Points = 20;
 
 // object literal type declaration.
-type ComplexPersion = {
+type ComplexPerson = {
     name: string,
     age: number,
     birthday: Date,
@@ -194,7 +194,7 @@ const tom = new Person("hello");
 tom.speak();
 ```
 
-* **readonly** causes a filed to become read-only after it has set one time in the constructor
+* **readonly** causes a field to become read-only after it has set one time in the constructor
 
 ```
 class Person {
@@ -736,15 +736,36 @@ function App() {
 }
 ```
 
-* Lifecycle Methods
-    - constructor
-    - getDerivedStateFromProps(props, state)
-    - render
-    - componentDidMount
-    - componentWillUnmount
-    - shouldComponentUpdate(nextProps,nextState)
-    - getSnapshotBeforeUpdate(prevProps, prevState)
-    - componentDidUpdate(prevProps, prevState, snapshot)
+* Stages
+    - Mounting
+        * Simply the instantiation and initialization of a component
+        - Methods
+            - constructor
+            - getDerivedStateFromProps(props, state) - use with caution
+            - render
+            - componentDidMount
+                - If our component rendered state depends on the network call, this is where we can call the network call and update the state
+                - Runs only once on the components first load.
+
+    - Updating
+        * Rerendering
+        - Methods
+            - shouldComponentUpdate(nextProps, nextState)
+            - getSnapshotBeforeUpdate(prevProps, prevState)
+            - componentDidUpdate(prevProps, prevState, snapshot)
+                - State needs to change due to prop changes handled here generally
+    - Unmounting
+        * Removed from the DOM.
+        - Methods
+            - componentWillUnmount
+* Memorization
+    - Like caching
+    - Checks whether a props value is different from last time and only if it is different then it triggers a state update.
+    - React.memo
+        - Triggers a re-render only when a child's props change, not when the parent component re-renders
+
+Note: Using small or little local component state as possible is a best practice for React Development.
+
 
 ```
 interface GreetingProps {
@@ -840,6 +861,12 @@ export default function Greeting(props: GreetingProps) {
 ```
 #### Hooks
 
+* Hooks ar just Javascript funtions that provide certain capabilities to the component.
+    - Creation of State
+    - Access to network data
+    - anything component needs
+* Not component specific and therefore hooks can be used in any component.
+
 * No way of Sharing the logic in our lifecycle event methods to reuse them in other components. Hooks solves this.
 
 * useState
@@ -847,6 +874,9 @@ export default function Greeting(props: GreetingProps) {
 * useEffect
     - Similar to componentDidMount and componentDidUpdate
     - Run before rendering onto the screen happens.
+    - Runs after every completed screen rendering.
+    - Passing empty array as a parameter, we are forcing it to run only once.
+    - Runs asynchronously
 * useLayoutEffect
     - This function runs synchronously, allowing us to get certain element values as they currently are on the screen and then do something with them in a synchronous manner. But, of course, this blocks our UI, so we need to only do things that are very fast or the user experience will suffer.
 * useCallback
@@ -1065,6 +1095,13 @@ function App() {
 ```
 * Code reuse is much easier because the Hooks are not tied to any specific class
 
+* If we are seeing two renders, it may be because we are running in StrictMode for development purposes. so to debug, we can replace it with Fragment.Frament is only used to wrap a set of JSX elements that don't have a parent wrapping element such as div.
+
+```
+<React.Fragment>
+    <App />
+</React.Fragment>
+```
 ### Testing
 
 
