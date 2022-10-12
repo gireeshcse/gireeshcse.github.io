@@ -883,6 +883,20 @@ export default function Greeting(props: GreetingProps) {
     - Creates an instance of a function once a set of parameters has been changed.
     - Saves the instance in memory otherwise an instance of the function would be recreated on each render.
     - Takes handler funtion as its first parameter and an array of items that may change as its second.If the items don't change, the callback doesn't get new instance.
+
+    ```
+    const [startCount, setStartCount] = useState(0);
+    const [count, setCount] = useState(0);
+    const setCountCallback = useCallback(() => {
+
+         const inc = count + 1 > startCount ? count + 1 :
+
+         Number(count + 1) + startCount;
+
+         setCount(inc);
+    }, [count, startCount]);
+    ```
+    - count is updated each time is changed . if we remove count from the passed in array [startCount]. Then count is updated only once, on the first run, no matter is how many times we call setCountCallBack. even though setCount changes the count value, the count value this function takes only the initial value.So inc will be always computed as 1 only in this case.
 * useMemo
     - To save the result of long-running task.(like caching)
     - Only runs if the array of parameters has changed.
@@ -903,6 +917,7 @@ export default function Greeting(props: GreetingProps) {
     - To hold a DOM element.
 
 ```
+import React, { FC, useState, useEffect } from 'react';
 const Greeting: FC<GreetingProps> = ({name}:GreetingProps) => {
     const [message,setMessage] = useState("");
 
@@ -1097,6 +1112,7 @@ function App() {
 
 * If we are seeing two renders, it may be because we are running in StrictMode for development purposes. so to debug, we can replace it with Fragment.Frament is only used to wrap a set of JSX elements that don't have a parent wrapping element such as div.
 
+* Hook components and React in general priortize componentization over inheritance.
 ```
 <React.Fragment>
     <App />
@@ -1113,3 +1129,88 @@ function App() {
 npm run test
 ```
 
+Example:
+
+Note: **data-testid**  attibute for elements allows us easily find these elements in our tests.
+```
+import { render, fireEvent, screen } from '@testing-library/react';
+
+test('renders Enter a number link', () => {
+  render(<App />);
+  const linkElement = screen.getByText(/Enter a number/i);
+  expect(linkElement).toBeInTheDocument();
+});
+
+// for assertions such as toHaveValue to get value of input.
+import "@testing-library/jest-dom/extend-expect";
+
+describe("Test Component",()=>{
+    it("renders withcout crashing", ()=>{
+        const { baseElement } = render(<DisplayText />);
+        // console.log(baseElement.innerHTML)
+        expect(baseElement).toBeInTheDocument();
+    });
+
+    it("receives input text",()=>{
+        const testuser = "testuser";
+        const { getByTestId } = render(<DisplayText />);
+        const input = getByTestId("user-input");
+        fireEvent.change(input, {target: { value: testuser}});
+        expect(input).toBeInTheDocument();
+        expect(input).toHaveValue(textvalue);
+    });
+
+    it("shows welcome message", ()=>{
+        const testuser = "testuser";
+        const msg = `Welcome to React testing, ${testuser}`;
+        const { getByTestId } = render(<DisplayText />);
+        const input = getByTestId("user-input");
+        const label = getByTestId("final-msg");
+        fireEvent.change(input, {target: { value: testuser}});
+        const btn = getByTestId("input-submit");
+        fireEvent.click(btn);
+        expect(label).toBeInTheDocument();
+        expect(label.innerHTML).toBe(msg);
+    })
+
+    if("matches snapshot", ()=>{
+        const { baseElement } = render(<DisplayText />);
+        expect(baseElement).toMatchSnapshot();
+    });
+});
+```
+
+* toMatchSnapshot
+    - Firstime, it creates `__snapshot__` at the root of our src folder. 
+    - It then adds or updates a file that has the same nae as our test file and ends with the extension **.snap** whic contains the emitted HTML elements of our component.
+    - Now we have a snapshot and our first test run has succeedded. Now, we have changed our component file but not our test file.If we save our component and our test reruns and fails showing what is not matching which is our newly added code generated html.
+    - Now if we wanted this change, we can press **u** character under the **watch** usage  to update the snapshots created.
+
+#### Mocking
+
+* Simply replacing specific funtionality in our test with default values.
+
+* Useful for mocking n/w calls
+    - [https://jsonplaceholder.typicode.com/](https://jsonplaceholder.typicode.com/)
+
+```
+// wait to handle asynchronous calls.
+import { render, fireEvent, cleanup, wait } from   "@testing-library/react";
+import "@testing-library/jest-dom/extend-expect";
+
+afterEach(cleanup);
+describe("test displaytext",()=>{
+    const userFullName = "John Reese";
+    const getUserFullnameMock = (username:string): [Promise<string>, jest.Mock<Promise<string>,[string]>] => {
+        const promise = new Promise<string>((res,rej)=>{
+            res(userFullName);
+        });
+        const getUserFullname = jest.fn(
+            async (username: string) : Promise<string> => {
+                return promise;
+            }
+        );
+        return [promise, getUserFullname]
+    }
+})
+```
