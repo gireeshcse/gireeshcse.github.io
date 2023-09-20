@@ -1214,3 +1214,13 @@ describe("test displaytext",()=>{
     }
 })
 ```
+
+### Redux and React Router
+
+* Redux
+    - For creating and managing global state
+
+```
+npx create-react-app redux-sample --template typescript
+npm i redux react-redux @types/redux @types/react-redux
+```
