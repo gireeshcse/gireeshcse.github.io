@@ -27,12 +27,57 @@
         - leader election
             - a mechanism that decides which instance of the application should be active while the others remain idle but ready to take over if the active instance fails.
 
+    * Benefits
+
+        - Automatically adjusting to changing load.
+        - Simplifying Application Development
+            - Applications can query Kubernetes API to obtain info about their environment.
+
 - Computer Cluster
     - Machines are split into two groups.
         - Kubernetes Control Plane
             - Brain of cluster
+            - Master node(s)
+            - Components that control the cluster run on these nodes.
+            - One or more master nodes.
         - Kubernetes Workload Plane.
             - Runs our apps
+            - Worker nodes(s)
+            - Kubernetes components on worker nodes communicate with those running on the master, but never with each other.
+            - Each node also runs several kubernetes components that manage the apps running on the node.
+
+    - Components of the Kubernetes Control Plane
+        - etcd
+                * Distributed datastore persists the objects we create through API. The server is the only component that talks to etcd.
+
+            - Kubernetes API Server
+                    * Developers and operators create objects via the API
+                    * Kubernetes Components on worker nodes communicate only with API Server.
+                    * API Server stores objects in distributed data store. No other components access the store directly.
+
+                - Scheduler
+                    * Decides on which worker node eaach application instance should run.
+
+                - Controllers
+                    * Each controller has a different task. Most of them create objects from the objects we create.
+
+    - Worker Node Components
+
+            * Several Kubernetes components also run on these nodes. They perform the task of running, monitoring and providing connectivity between our applications.
+
+        - Kubelet
+            - Nodes agent.
+            - Manages the applications running on the node.
+            - Instructs the container runtime to run the apps and get their status.
+
+        - Kubelet Proxy
+
+            - Creates a virtual load balancer for each application that needs it.
+
+        - Container Runtime
+            - Typically Docker, but other runtimes are increasingly common.
+            - Applications run in containers and are started by the Container Runtime.
+
 
     - Non-production clusters can use a single master node, but highly avaliable clusters use at least three physical master nodes to host the Control Plane. 
     - The number of worker nodes depends on the number of application we will deploy.
@@ -61,6 +106,33 @@
 
     - Each microservice is an application which can be installed, configured and managed separately.
     - Require automated management due to their multiplicity and distributed nature.
+
+* How Kubernetes runs an application
+
+    - Everything in kubernetes is represented by objects.
+    - We create and retrieve these objects via Kubernetes API.
+    - Our application consists of several types of these objects.
+        - One type represents the application deployment as a whole.
+        - Another represents a running instance of our application.
+        - Another represents the service provided by a set of these instances and allows reaching them at a single IP address, and there are many others.
+
+    - Deploying the application
+        - We submit application manifest to the Kubernetes API. The API server writes the objects defined in the manifest to etcd. In addition, it notifies all interested components that these objects have been created.
+
+        - A controller notices the newly created objects and creates several new objects - one for each appplication instance.
+
+        - The scheduler assigns a node to each instance. It selects the best worker node for each new application instance object and assigns it to the instance - by modifying the object via the API.
+
+        - The Kubelet notices that an instance is assigned to the Kubelet's node. It runs the application instance via the container runtime.
+
+        - The Kube Proxy notices that the application instances are ready to accept connections from clients and configures a load balancer for them.Because an application deployment can consist of multiple application instances, a load balancer is required to expose them at a single IP address.
+
+
+        - The Kubelets and the controllers monitor the system and keep the applications running.
+
+* Kubernetes can run directly on our bare-metal machines or in virtual machines running in our data center.
+* Note: If our system has more than 20 microservices, we will most likely benefit from the integration of kubernetes. 
+
 
 # Kubernetes Application Developer
 

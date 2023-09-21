@@ -23,3 +23,7 @@ Ex: C = A + B C is AS and A,B are Input Space
 * Never do anything to input data (Manipulation of input data B = A + B)
 
 Generally : 1 sec = 10^8 Operations, 2 secs = 2 * 10^8 
+
+
+#### Patterns
+
