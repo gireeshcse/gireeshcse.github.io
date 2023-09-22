@@ -133,6 +133,40 @@
 * Kubernetes can run directly on our bare-metal machines or in virtual machines running in our data center.
 * Note: If our system has more than 20 microservices, we will most likely benefit from the integration of kubernetes. 
 
+* Understanding containers
+
+    * Containers are isolated processes running in the existing OS that consumes only the resources the app consumes.
+    * Containers start the application faster.
+    * Containers make system calls on the single kernel running in the host os.
+    - Differences
+        - Applications running on bare metal directly
+            - All applications use the same kernel and see the same hardware. They are not isolated.
+        - Applications running in virtual machines
+            - Applications A and B running one VM is strongly isolated from Application C running in another VM and each VM run separate kernels.
+            - Hypervisor splits the physical hardware resources into smaller sets of virtual resources that the operating system in each VM can use.
+        - Applications running in isolated containers
+            - Applications use the same kernel, but kernel isolates them from each other.
+            - Only one application per container.
+    - Security implications
+        - VMS provide complete isolation
+        - Containers share memory space, where as each VM uses its own chunk of memory.Therefore, if we don't limit the amount of memory that a container can use, this could cause other containers to run out of memory or cause their data to be swapped out to disk.
+    - Docker Platform
+        - It is a platform for packaging, distributing and running applications.
+        - It allows us to package our application along with its entire environment.
+        - Docker images
+            - Something we can package our application and its environment.
+            - It contains whole filesystem that the application will use and additional metadata, such as path to the executable file to run when the image is executed, the ports the application listen on, and other information about the image.
+        - Registries
+            - Repository of container images
+        - Containers
+            - A container is instantiated from a container image.
+            - Running containr is a normal process running in the host OS, but its environment is isolated from that of the host and the environments of other processes.
+            - Image Layers
+                - These layers are smaller and can be shared and reused across multiple images.
+                - The filesystems are isolated by Copy-on-Write(Cow) mechanism.The filesystem of a container consists of read-only layers from the container image and an additional read/write layer stacked on top.When an application running in cotainerer A changes a file in one of the read-only layers, the entire file is copied into the container's read/write layers and the file contents are changed there. Since each container has its own writable layer, changes to shared files are not visible in any other container. When we delete a file, it is only marked as deleted in the read/write layer, but it's still present in one or more of the layers below.
+            - Portability Limitations
+                - containers don't have their own kernel, If a containerized application requires a particular kernel version(pariticular kernel module), it may not work on every computer.
+                - Containerized app built for a specific hardware architecture can only run on computers with the same architecture. For this, we need a VM to emulate the architecture.
 
 # Kubernetes Application Developer
 
