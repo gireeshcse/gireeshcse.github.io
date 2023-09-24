@@ -320,8 +320,56 @@ void pattern20(int n){
 }
 
 
+void pattern21(int n){
+    for(int i=0;i<n;i++){
+        if(i%n == 0 || i % n == n-1){
+            for(int j=0;j<n;j++){
+                std::cout << "*";
+            }
+        }else{
+            std::cout << "*";
+            //print spaces
+            for(int j = 0;j<n-2;j++){
+                std::cout << " ";
+            }
+            std::cout << "*";
+        }
+        std::cout << "\n";
+    }
+}
+
+int minVal(int i,int j,int n){
+    int top = i;
+    int left = j;
+    int right = (2*n) - 2 - j;
+    int bottom = (2*n) - 2 - i;
+
+    int min = top;
+    if(left < min){
+        min = left;
+    }
+    if(right < min){
+        min = right;
+    }
+    if(bottom < min){
+        min = bottom;
+    }
+
+    return min;
+}
+
+void pattern22(int n){
+    for(int i = 0; i < (n*2)-1;i++){
+        for(int j = 0; j < (n*2)-1;j++){
+            
+            std::cout << (n - minVal(i,j,n));
+        }
+        std::cout << "\n";
+    }
+}
+
 int main(){
 
-pattern20(5);
+pattern22(4);
 
 }
