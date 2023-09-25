@@ -29,3 +29,25 @@ Credits: [Reference Link](https://takeuforward.org/strivers-a2z-dsa-course/striv
 #### Certified Kubernetes Application Developer (CKAD)
 
 
+* Day 1 - Sep 20, 2023
+    - Time Complexity
+    - Kubernetes basics - Features and about computer cluster
+
+* Day 2 - Sep 21, 2023
+    - Solved 6 patterns using loops
+    - Kubernetes Components and how it runs an application.
+
+* Day 3 - Sep 22, 2023
+    - Solved 14 patterns using loops
+    - Understanding basics of Containers
+
+* Day 4 - Sep 23, 2023
+    - Brisk Walked -  4 Kms
+    - Solved 2 pattens
+    - Read Indoc Chapter from Permenant Record by Edward Snowden.
+
+* Day 5 - Sep 25, 2023
+    - Jogged - 4.5 kms
+    - Basics about containers and how isolation is acheived
+
+* Day 6 - Sep 26, 2023

@@ -48,22 +48,23 @@
 
     - Components of the Kubernetes Control Plane
         - etcd
-                * Distributed datastore persists the objects we create through API. The server is the only component that talks to etcd.
 
-            - Kubernetes API Server
-                    * Developers and operators create objects via the API
-                    * Kubernetes Components on worker nodes communicate only with API Server.
-                    * API Server stores objects in distributed data store. No other components access the store directly.
+            * Distributed datastore persists the objects we create through API. The server is the only component that talks to etcd.
 
-                - Scheduler
-                    * Decides on which worker node eaach application instance should run.
+        - Kubernetes API Server
+            * Developers and operators create objects via the API
+            * Kubernetes Components on worker nodes communicate only with API Server.
+            * API Server stores objects in distributed data store. No other components access the store directly.
 
-                - Controllers
-                    * Each controller has a different task. Most of them create objects from the objects we create.
+        - Scheduler
+            * Decides on which worker node eaach application instance should run.
+
+        - Controllers
+            * Each controller has a different task. Most of them create objects from the objects we create.
 
     - Worker Node Components
 
-            * Several Kubernetes components also run on these nodes. They perform the task of running, monitoring and providing connectivity between our applications.
+        * Several Kubernetes components also run on these nodes. They perform the task of running, monitoring and providing connectivity between our applications.
 
         - Kubelet
             - Nodes agent.
@@ -167,6 +168,116 @@
             - Portability Limitations
                 - containers don't have their own kernel, If a containerized application requires a particular kernel version(pariticular kernel module), it may not work on every computer.
                 - Containerized app built for a specific hardware architecture can only run on computers with the same architecture. For this, we need a VM to emulate the architecture.
+            - **VMS are enabled through virualization support in CPU and by virtualization software on the host, containers are enabled by the Linux kernel itself.**
+
+    - Open Container Initiative (OCI)
+        - To create open industry standards around container formats and runtime.
+        - OCI Image Format Specification.
+            - Defines a standard interface for container runtimes with the aim of standardizing the creation, configuration and execution of containers.
+    
+    - Running hello world container
+        ```
+        docker run busybox echo "Hello World"
+        ```
+        - The above commands tells the Docker CLI to run the container.
+        - Docker CLI sends an API request to Docker Daemon
+        - Docker daemon checks if the busybox image is in the local cache
+        - If the busybox image isn't available locally, Docker pulls it from the image registry.
+        - Docker creates the hello-world container and runs the echo "Hello World" command inside it.
+    
+        - Note: If the local computer runs a Linux OS, the Docker CLI tool and the daemon both run in host OS. If it runs macOS or Windows, the daemon and the containers run in the Linux VM.
+    - Dockerfile
+
+        ```
+        FROM node:18
+        ADD app.js /app.js
+        ENTRYPOINT ["node","app.js"]
+        ```
+    - Building the image
+
+        ```
+        docker build -t myapp:latest .
+        ```
+
+        We tell Docker to build an image called myapp based on the contents of the current directory. Docker reads Dockerfile in the directory and builds the image based on the directive in the file.
+
+    - Listing locally stored images
+
+        ```
+        docker images
+        ```
+    - To see the layers of an image and their size by running
+
+        ```
+        docker history myapp:latest
+        ```
+
+        * ADD and ENTRYPOINT will be uppermost layers.
+
+    - Running the container image
+
+        ```
+        docker run --name myapp-container -p 7080:8080 -d myapp
+        ```
+
+        * -d flag : detached from the console.
+        * Port 7080 on the host computer is mapped to port 8080 in the container
+
+    - Listing all running containers
+
+        ```
+        docker ps
+        ```
+
+    - To see the additional information about the running container
+
+        ```
+        docker inspect myapp-container
+        ```
+
+    - Inspecting the application logs (standard o/p and error streams written by the application)
+
+        ```
+        docker logs myapp-container
+        ```
+
+    - Tagging an image under an additional tag
+
+        ```
+        docker tag myapp gireeshcse/myapp:1.0
+
+        docker images | head
+        ```
+
+    - Pushing the image to Docker Hub
+
+        ```
+        docker login -u myid -p mypassword docker.io
+        ```
+
+    - Once logged in, push the myid/myapp:1.0 image to docker hub
+
+        ```
+        docker push gireeshcse/myapp:1.0
+        ```
+
+    - Running the app on other hosts
+
+        ```
+        docker run -p 7090:8080 -d gireeshcse/myapp:1.0
+        ```
+
+    - Stopping and deleting containers
+
+        ```
+        docker stop myapp-container
+        docker rm myapp-container
+
+        docker ps -a
+        docker rmi myapp:latest
+        docker image prune # remove all dangling images
+        ```
+    
 
 # Kubernetes Application Developer
 
