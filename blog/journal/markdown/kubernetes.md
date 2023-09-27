@@ -278,6 +278,48 @@
         docker image prune # remove all dangling images
         ```
     
+    - Linux Namespaces
+        - Ensures that each process has its own view of the system.
+        - Process running in a container will only see some of the files, processes, and n/w interfaces on the system, as well as a different system hostname, just as if it is were running in a separate virtual machine.
+
+    - Running a Shell inside an existing container
+
+        ```
+        docker exec -it myapp-container bash
+        ```
+
+    - List the processes running in a container
+
+        ```
+        ps aux
+        ```
+    If you need even finer control over what sys-calls a program can make, you can use seccomp
+(Secure Computing Mode). You can create a custom seccomp profile by creating a JSON file
+that lists the sys-calls that the container using the profile is allowed to make. You then
+provide the file to Docker when you create the container.
+    - Limiting a process resource usage with Linux Control Groups
+        - Linux Namespaces make it possible for processes to access only some of the host's resources, but they don't limit how much of a single resource each process can consume.Ex: It can allow a process to access only a particular n/w interface, but we can't limit the n/w bandwidth the process consumes.
+        - **CGROUPS**
+            - Second Linux kernel feature that makes containers possible - **Linux Control Groups**
+            - It limits, accounts for and isolates system resources such as CPU, memory and disk or n/w bandwidth.
+            - Limiting a container's use of the resources
+                - To allow container to only use cores one and two.
+                    ```
+                    docker run --cpuset-cpus="1,2" ...
+                    ```
+                - To allow container to use only half of a cpu core,
+                    ```
+                    docker run --cpus="0.5" ...
+                    ```
+                - Options to limit container memory and swap usage:
+                    - --memory
+                    - --memory-reservation
+                    - --kernel-memory
+                    - --memory-swap
+                    - --memory-swappiness
+                    ```
+                    docker run --memory="100m" ...
+                    ```
 
 # Kubernetes Application Developer
 

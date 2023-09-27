@@ -46,8 +46,9 @@ Credits: [Reference Link](https://takeuforward.org/strivers-a2z-dsa-course/striv
     - Solved 2 pattens
     - Read Indoc Chapter from Permenant Record by Edward Snowden.
 
-* Day 5 - Sep 25, 2023
+* Day 5 - Sep 24, 2023
     - Jogged - 4.5 kms
     - Basics about containers and how isolation is acheived
 
-* Day 6 - Sep 26, 2023
+* Day 6 - Sep 27, 2023
+    - Containers isolation
