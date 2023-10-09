@@ -252,8 +252,336 @@ setUserInput((prevState)=>{
 * Child-to-Parent Component communication (Bottom-Up)
 * Passing state as props to  components
 
+#### ReactDOM
 
-* <Suspense />
+```
+import ReactDOM from 'react-dom/client';
+const root = ReactDOM.createRoot(document.getElementById('root'));
+rootElement.render(<Greet />);
+```
+
+#### React.Component
+
+[CodePen URL](https://codepen.io/gireeshcse/pen/OJrrKJN)
+
+```
+import React from "react";
+
+// Context: Global Variable for our components
+// use provider compenent to pass down.
+// the parameters here are default values
+// To pass down data child components user Consumer
+const ThemeContext = React.createContext({
+    "fg":"#fff",
+    "bg":"#222"
+})
+
+function Greet(){
+    return (
+        <p>
+            Have a good day!
+        </p>
+    )
+}
+
+// Context: Consumer
+function Header(props){
+    return (
+        <ThemeContext.Consumer>
+        {theme=>(
+            <p style={{color:theme.fg,backgroundColor:theme.bg}}>
+                {props.message}
+            </p>
+        )}
+        </ThemeContext.Consumer>
+    )
+}
+export default class ClassComponent extends React.Component{
+
+    constructor(props){
+        super(props)
+        // this.state is private. Updated using only this.setState.
+        // good practice to initialize components with 'empty' state
+        this.state = {
+            "info":"Initial Value",
+            "name":props.name === undefined ? "Class Component":props.name,
+            products:[],
+            theme:{
+                "fg":"green",
+                "bg":"yellow"
+            }
+        }
+        // In our own custom components methods, we have to manually bind this to the component
+        // Otherwise, this.state will not work.
+        this.addVote = this.addVote.bind(this);
+        this.changeTheme = this.changeTheme.bind(this);
+
+    }
+    componentDidMount(){
+        //called immediately after a component is mounted. Setting state here will trigger re-rendering.
+        this.setState({info:"component mounted"})
+        setTimeout(()=>{
+            this.setState({info:"component re-rendered"})
+            this.forceUpdateInterval = setInterval(()=>{
+                console.log("re-Render the component")
+                this.forceUpdate() // to render the component
+            },100)
+        },2000)
+    }
+
+    componentWillUnmount(){
+        clearInterval(this.forceUpdateInterval)
+    }
+
+    // since this is arrow function, this is automatically binded
+    handleClick = (evt) => {
+        // this.setState is asynchronous it is scheduled by react
+        this.setState(state => {
+            let i = state.products.length;
+            let limit = i+ 1;
+            let newProducts = [];
+            while(i<=limit){
+                newProducts.push({
+                    id:i,
+                    name:"Product "+i,
+                    "votes":0
+                })
+                i += 1;
+            }
+
+            return {products:[...state.products,...newProducts]}
+        })
+    }
+    addVote(evt){
+        let productId = evt.currentTarget.dataset.id;
+        if(productId !== undefined){
+            this.setState((prevState,props)=>{
+                //map returns new array
+                let newProducts = prevState.products.map(product=>{
+                    if(product.id === parseInt(productId)){
+                        return Object.assign({},product,{votes:product.votes+1})
+                    }
+                    return product
+                })
+                //sort based on votes
+                //a,b are subsequent elements
+                // result(b - a)
+                //result < 0 : a comes first
+                // result > 0: b comes first
+                newProducts = newProducts.sort((a,b)=>(b.votes - a.votes))
+                return {products:newProducts}
+            })
+        }
+    }
+
+    removeProduct = (evt) => {
+        let productId = evt.currentTarget.dataset.id;
+        if(productId !== undefined){
+            this.setState((prevState)=>{
+                let newProducts = prevState.products.filter(product=>{
+                    if(product.id === parseInt(productId)){
+                        return false
+                    }
+                    return true
+                })
+                return {products:newProducts}
+            })
+        }
+    }
+
+    changeTheme(){
+        this.setState({theme:{
+            fg:"red",
+            bg:"blue"
+        }})
+    }
+
+    // this is bound to the component. React binds this to the component for us.
+    render(){
+        
+        // this.props is immutable - 
+        // child can read its props, it can't modify. Parent owns it
+        let eleFooter = React.createElement("div",{className:"footer"},
+            React.createElement("p",{},"Footer Info")
+        )
+
+        const eleItems = this.state.products.map(ele=>{
+            return (
+                <div key={ele.id}>{ele.name} Votes - {ele.votes} 
+                    <button data-id={ele.id} onClick={this.addVote}>Add Vote</button>
+                    <button data-id={ele.id} onClick={this.removeProduct}>Remove</button>
+                </div>
+            )
+        })
+
+        return (
+        <div>
+            <ThemeContext.Provider value={this.state.theme}>
+                <Header message="React App"/>
+                <button onClick={this.changeTheme}>Change Theme</button>
+                <div id={this.props.id}>
+                    <Greet />
+                </div>
+                <p>This is a {this.state.name} - {this.state.info}</p>
+
+                <Header message="Products"/><button onClick={this.handleClick}>Add Product</button><hr />
+                {eleItems}
+                {eleFooter}
+            </ThemeContext.Provider>
+            <Header message="React App"/>
+        </div>
+        );
+    }
+}
+```
+
+#### Single Responsibility Principle
+
+- Only responsible for one piece of functionality
+- Improves reusability
+
+- Example
+    - TimersDashboard
+        - EditableTimerList
+            - EditableTimer
+                - Timer
+                - TimerForm
+            - EditableTimer
+                - Timer
+                - TimerForm
+            - EditableTimer
+                - Timer
+                - TimerForm
+        - Stats
+
+#### Developing a React App
+
+<ol>
+<li>Break the app into components</li>
+<li>Build a static version of the app</li>
+<li>Determine what should be stateful.</li>
+<li>Determine in which component each piece of state should live</li>
+<li>Hard-code initial states</li>
+<li>Add inverse data flow</li>
+<li>Add server communication</li>
+</ol>
+            
+* Bottom-level components
+    - Leaf components - contains majority of HTML
+* Top Level Components
+    - Concerned about the orchestraction.
+
+* **Not a State**
+    - Passed in from a parent via props. If it doesn't change over a time.
+    - Can we compute it based on any other state or props in our component.
+
+* **For each piece of state**
+    - Identify every component that renders something based on that state.
+    - Find a common owner component (In Hierarchy)
+    - Either the common owner or another component higher up in the hierarchy should own the state.
+    - If we can't find a component where it makes sense to own the state, create a new component simply for holding the state and add it some where in the hierarchy above the common owner component.
+
+* Props are states immutable accomplice.
+    - State is managed in some select parent components and then that data flows down through children as props.
+
+* React will compare the result of the render to the previous call to render() and if it sees that nothing has changed, it stops there - it won't attempt any DOM manipulation.
+
+* Data flows from top-down through the component tree to leaf components.Leaf components communicate events to state managers by calling prop functions.
+
+* React uses a Virtual DOM
+    - Tree of JS objects that represent actual DOM
+    - Actual DOM modification leads to
+        - Its hard to keep track of changes.
+        - it can be slow (modifying DOM on every change can cause significantly degrade the performance)
+
+    - Virtual DOM
+        - Use efficient diffing algorithms, in order to know what changed.
+        - update subtrees of the DOM simulataneously.
+        - Batch updates to the DOM.
+
+    - React's Virtual DOM
+        - Tree of React Elements.
+    
+    - Shadow DOM
+        - Ability of the browser to include subtree of DOM elements into rendering of a document, but not into the main document DOM tree.
+        - Form of encapsulation on our elements.
+        - Video Controls for video tag
+
+    - ReactElement is representation of DOM element in the virtual DOM.
+        - Stateless and immutable
+        ```
+        var boldElement = React.createElement('b');
+        ```
+
+* **JSX Javascript Extension Syntax**
+
+    - HTML tags starts with lowercase
+    - ReactComponents starts with uppercase
+    - Transformed into JS by using a pre-processor build tool before we load it with the browser.
+    - Attribute Expressions - wrap it in {}
+        ```
+        const level = 'debug';
+        const component = (
+            <Alert color={level === 'debug'? 'grey':'red'}> log={true}
+        )
+        ```
+    - Conditional Child Expressions
+
+        ```
+        const renderAdminMenu = function(){
+            return (
+                <MenuLink to="/users">User Accounts</MenuLink>
+            )
+        }
+
+        const userLevel = this.props.userLevel;
+        return(
+            <ul>
+                <li> Menu</li>
+                {userLevel === 'admin' && renderAdminMenu()}
+            </ul>
+        )
+
+        const Menu = (
+            <li>
+            {loggedInUser ? <UserMenu />: <LoginLink />}
+            </li>
+        )
+        ```
+    - Boolean Attributes
+        ```
+        <input name="name" disabled={true}>
+        ```
+    - JSX Comments
+        ```
+        {/*
+
+        */}
+        ```
+    - Spread Syntax
+        ```
+        const props = {msg:"hello",name:"world"}
+        <Component {...props}>
+        ```
+    - Others
+        ```
+        (
+            <div className={classNames.join(' ')}>
+                <label htmlFor="name">Name</label>
+            </div>
+        )
+        ```
+* this.state and this.props are updated asynchronously.
+* **The only info we should ever put in state are values that are not computed and do not need to be synced across the app.**
+* Minimize the number of components with state. Red flag in our application, if our state gets large or unmanageable.
+
+* Stateless Component
+    - React light weight way of building components that only need the render.
+    - Funtional components can have performance benefits.
+    - Try to pull our state to the parent components.
+    - Encourages the reuse.
+
+#### ```<Suspense />```
 
     - Allows react to "suspend" rendering a component subtree
         - Used when a child component is not ready to be rendered.
