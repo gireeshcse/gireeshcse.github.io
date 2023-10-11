@@ -512,6 +512,38 @@ export default class ClassComponent extends React.Component{
         ```
         var boldElement = React.createElement('b');
         ```
+* Template literals (Template Strings) - Javascript feature
+
+    ```
+    const user = {
+        'name': 'ram',
+        'isAdmin':true
+    }
+    const age = 30;
+
+    function userNotification(strings,userExp,ageExp){
+        const str0 = strings[0]; // "You "
+        const str1 = strings[1]; // " are a "
+        const str2 = strings[2]; // "."
+
+        const role = userExp.isAdmin ? " user with admin access": "standard user";
+
+        return `${str0}(${userExp.name})${str1}${role}${str2} whose age is ${ageExp}`;
+    }
+
+    const output = myTag`You ${user} are a ${age}.`;
+
+    console.log(output);
+    // You(ram) are a user with admin access whose age is 30.
+
+    function recursive(strings, ...values) {
+        console.log(strings, values);
+        return recursive;
+    }
+    recursive`Hello``World`;
+    // [ 'Hello' ] []
+    // [ 'World' ] []
+    ```
 
 * **JSX Javascript Extension Syntax**
 
@@ -567,10 +599,107 @@ export default class ClassComponent extends React.Component{
         ```
         (
             <div className={classNames.join(' ')}>
-                <label htmlFor="name">Name</label>
+                <label className={`form-control ${!isValid ? 'invalid':''}`} htmlFor="name">Name</label>
+                {filteredData.length === 0 && <p>No data found.</p>}
+                {
+                    filteredData.length > 0 && 
+                    filteredData.map((item)=>(
+                        <CustomComponent key={item.id} title={item.title}>
+                    ))
+                }
             </div>
         )
         ```
+    - **styled-components**
+        ```
+        import styled from 'styled-components';
+        const Button = styled.button`
+            color:white;
+            width:100%;
+            &:focus{
+                outline:none
+            }
+            &:hover{
+                cursor:pointer
+            }
+
+            @media (min-width:768px){
+                width:auto
+            }
+        `;
+        <Button>Click</Button>
+        const FormControl = styled.div`
+
+            margin: 0.5px;
+            &.invalid input{
+
+            }
+
+            &.invalid label{
+
+            }
+
+            & input:focus{
+
+            }
+        `;
+
+        const AdvFormControl = styled.div`
+            & input{
+                border: 1px solid ${props=> (props.valid ? "#ccc":"red")}
+            }
+        `;
+
+        <AdvFormControl valid={true}>
+            <label>Name</label>
+            <input type="text" />
+        </AdvFormControl>
+        ```
+
+    - CSS Modules
+        - Works directly for apps created using create-react-app. otherwise configuration is required
+
+    ```
+    File: Button.module.css
+
+    .button{
+
+    }
+
+    .button:focus{
+        
+    }
+
+    .button:hover,.button:active{
+        
+    }
+
+    .form-control{
+
+    }
+
+    .form-control.invalid{
+
+    }
+
+    File: Button.js
+    import React from 'react';
+    import styles from './Button.module.css'
+
+    const Button = props => {
+        return (
+            <button type={props.type} className={styles.button} onClick={props.onClick}>{props.children}</button>
+        )
+    }
+
+    File:Other.js
+
+    <div className={`styles['form-control'] ${!isValid} && styles.invalid}`}>
+    
+    <div>
+    ```
+        
+
 * this.state and this.props are updated asynchronously.
 * **The only info we should ever put in state are values that are not computed and do not need to be synced across the app.**
 * Minimize the number of components with state. Red flag in our application, if our state gets large or unmanageable.
