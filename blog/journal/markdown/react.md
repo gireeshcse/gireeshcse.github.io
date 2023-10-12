@@ -545,6 +545,20 @@ export default class ClassComponent extends React.Component{
     // [ 'World' ] []
     ```
 
+* Formatter - JS
+
+    ```
+    const formatter = new Intl.NumberFormat('en-US',{
+        style:'currency',
+        currency:'USD',
+        minimumFactionDigits:2,
+        maximumFactionDigits:2
+    });
+
+    fomatter.format(savingsAmount)
+    fomatter.format(interestPercentage)
+    ```
+
 * **JSX Javascript Extension Syntax**
 
     - HTML tags starts with lowercase
@@ -609,6 +623,24 @@ export default class ClassComponent extends React.Component{
                 }
             </div>
         )
+
+        const [userInput,setUserInput] = useState({
+            "name":"",
+            "age":""
+        })
+
+        const inputChangeHandler = (input, value) =>{
+            setUserInput((prevInput)=>{
+                return {
+                    ...prevInput,
+                    [input]: value
+                }
+            })
+        }
+
+        <input type="text" value={user["name"]} onClick={(evt)=>{
+            inputChangeHandler("name",evt.target.value)
+        }} />
         ```
     - **styled-components**
         ```
@@ -709,6 +741,96 @@ export default class ClassComponent extends React.Component{
     - Funtional components can have performance benefits.
     - Try to pull our state to the parent components.
     - Encourages the reuse.
+
+* Fragments,Portals and Refs
+
+    - Each component should return only one jsx element which will result in <div> soup.
+        ```
+        <div>
+            <div>
+                <div>
+                    <h2>Some content</h2>
+                </div>
+            </div>
+        </div>
+        ```
+
+        In bigger apps, we can easily end up with tons of unnecessary divs (or other elements) which add no semantic meaning or structure to the page but are only there because of React's JSX requirement.
+
+        sol:
+        ```
+        const Wrapper = (props) => {
+            return props.children;
+        }
+        export default Wrapper;
+
+        return (<Wrapper>
+            <Wrapper>
+                <h2>Some content</h2>
+            </Wrapper>
+        </Wrapper>)
+        ```
+
+        React Solution:
+        ```
+        return (
+            <React.Fragment>
+                <h2>Some content</h2>
+                <h2>Some content</h2>
+            </React.Fragment>
+        )
+
+        //or 
+        return (
+            <>
+                <h2>Some content</h2>
+                <h2>Some content</h2>
+            </>
+        )
+        ```
+
+    - React Portals
+
+        - This is used for overlay elements such modals.
+        ```
+        return (
+            <>
+                <MyModal>Some content</MyModal>
+                <h2>Some content</h2>
+            </>
+        )
+        ```
+
+        - Portals need the locations
+        
+        ```
+        File: index.html
+
+        <body>
+
+            <div id="backdrop-root"></div>
+            <div id="modal-root"></div>
+            <div id="root"></div>
+        </body>
+        ```
+
+        - Component logic
+
+        ```
+        import ReactDOM from 'react-dom';
+
+        <>
+            {ReactDOM.createPortal(<MyModal onClick={props.onClick}>Some content</MyModal>,document.getElementById('modal-root'))}
+        </>
+        ```
+
+    - Refs
+
+        
+
+
+
+
 
 #### ```<Suspense />```
 
