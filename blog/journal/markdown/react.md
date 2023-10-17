@@ -109,6 +109,9 @@ setTimeout(handleTimeout,1000);
     ```
 * Strings - Primitive
 
+* **target** is the innermost element in the DOM that triggered the event, while **currentTarget** is the element that the event listener is attached to.
+
+
 ### React Components
 
 All user interfaces in react are made up of components.
@@ -826,9 +829,219 @@ export default class ClassComponent extends React.Component{
 
     - Refs
 
+        - Helps to get access to other DOM elements.
         
+        ```
+        import {useRef} from 'react';
+
+        const nameInputRef = useRef(); // real dom element/node is connected here
+        // don't modify the element using this only read properties
+
+        <input type="text" id="name" ref={nameInputRef}> // uncontrolled components
+
+        const submitHandler = (evt) => {
+            console.log(nameInputRef.current.value)
+        }
+
+        ```
+
+* Effects, Reducers and Contexts
+
+    - Effect or Side Effect
+        - Store data in browser storage
+        - Send Http requests to backend servers
+        - Set and manage timers/intervals
+    
+    - useEffect() hook
+        - `useEffect(()=>{},[dependencies])`
+            - Here the function will be executed after every component evaluation if the specified dependencies changed.
+            
+        - Without useEffect the following code creates loops
+
+        ```
+        funtion App(){
+            const [isLoggedIn,setIsLoggedIn] = useState(false);
+
+            const storedUserLoggedInInformation = localstorage.getItem('isLoggedIn');
+            if(storedUserLoggedInInformation === '1'){
+                setIsLoggedIn(true);
+            }
+
+            const loginHandler = (username,password) => {
+                // API CALL
+
+                localstorage.setItem('isLoggedIn','1');
+            }
+        }
+        ```
+
+        - Modified version
+
+        ```
+        import {useEffect} from 'react';
+
+        funtion App(){
+            const [isLoggedIn,setIsLoggedIn] = useState(false);
+
+            useEffect(()=>{
+                const storedUserLoggedInInformation = localstorage.getItem('isLoggedIn');
+                if(storedUserLoggedInInformation === '1'){
+                    setIsLoggedIn(true);
+                }
+            },[]) // runs only once when app starts up
+
+            const loginHandler = (username,password) => {
+                // API CALL
+
+                localstorage.setItem('isLoggedIn','1');
+            }
+        }
+        ```
+        - Runs only if email or password is changed.
+        ```
+        useEffect(()=>{
+            setFormIsValid(
+                email.includes('@') && password.trim().length > 6
+            )
+        },[email,password])
+        ```
+
+        - Clean up function
+
+        ```
+
+         useEffect(()=>{
+            const formValidator = setTimeout(()=>{
+                setFormIsValid(
+                    email.includes('@') && password.trim().length > 6
+                )
+            },500) // called after 500ms
+
+            // called before every useEffect call except initial call
+            // also called before unmounting of component
+            return ()=>{
+                clearTimeout(formValidator);
+            }
+            
+        },[email,password])
+        // if email/password is changed 15 times continously, cleanup is called 15 times but timeout function is called once. 
+
+         useEffect(()=>{
+            console.log("RUNS everytime")
+         })
+
+        ```
+    - `useReducer()`
+        - Sometimes, we have more complex state - for example if it got multiple states, multiple ways of changing it or dependencies to other states. useState() then often becomes hard or error prone to use. its easy to write bad, inefficient or buggy code in such schenarios. 
+        - useReducer() can be used as a replacement for useState() if we need 'more powerful state management.'
+
+        ```
+        const [state,dispatchFn] = useReducer(reducerFn,initialState,initFn);
+        
+        // reducerFn =(prevState,action) => newState
+        ```
+
+        ```
+
+        import {useReducer} from 'react';
+        const userReducer = (state,action) => {
+            if(action.type === 'USER_INPUT"){
+                let val = {};
+                if(action.payload.fieldName === "email"){
+                    val["email"] = action.payload.val
+                    val["vaildEmail"] = action.payload.val.includes('@')
+                }else{
+                    val["password"] = action.payload.val
+                    val["validPassword"] = action.payload.val.includes('@')
+                }
+                return {
+                    ...state,...val
+                }
+            }
+
+            return state;
+
+        }
+
+        const initialState = {
+            "email":"",
+            "password":"",
+            "vaildEmail":false,
+            "validPassword":false
+        }
+
+        function Login(){
+            const [userState,dispatchUser] = useReducer(userReducer,initialState);
+        
+            const [formValid,setFormValid] = useState(false);
+
+            useEffect(()=>{
+                setFormValid(userState.validEmail && userState.validPassword)
+            },[userState.validEmail,userState.validPassword])
+
+            const emailChangeHandler = (evt) => {
+                dispathchUser({
+                   "type":"USER_INPUT",
+                    payload:{
+                        "val":evt.current.value,
+                        "fieldName":"username"
+                    }
+                })
+            }
+        }
+
+        ```
+
+        - useState()
+            - Main state management tool
+            - Great for independent piecies of state/data
+            - Great if state updates are easy and limited to a few kinds of updates
+        - useReducer()
+            - Should be considered if we have related piecies of state/data
+            - Can be helpful if we have more complex state updates
 
 
+    - Context
+
+    ```
+    //auth-context.js
+    const AuthContext = React.createContext({
+        isLoggedIn:false,
+        onLogout:()=>{}
+    })
+
+    export default AuthContext;
+
+
+    //JSX Code
+    const [isLoggedIn,setIsLoggedIn] = useState(false);
+
+    <AuthContext.Provider value={{isLoggedIn:isLoggedIn,onLogout:logoutHandler}}>
+        <Nav />
+        <Login />
+    <AuthContext.Provider>
+
+
+    //JSX Code
+    <AuthContext.Consumer>
+    {(ctx)=>{
+        return (
+            <div>
+            {
+                ctx.isLoggedIn ? "User Logged In": "Not Logged In"
+            }
+            </div>
+        )
+    }}
+    </AuthContext.Consumer>
+    ```
+    Note: The default value will be used if we use hook. for provider we need to provide the value
+
+    - Using hook
+
+    ```
+    const ctx = useContext(AuthContext);
+    ```
 
 
 
@@ -844,4 +1057,3 @@ export default class ClassComponent extends React.Component{
 
     - Rendering is suspended when a promise is thrown.
         - And resumed when the promise resolves.
-
