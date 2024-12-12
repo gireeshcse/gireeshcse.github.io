@@ -9,7 +9,7 @@
   "author": "Gireesh",
   "dependencies": {
     "rxjs": "^6.5.5",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.12"
   },
   "devDependencies": {
     "ts-loader": "^7.0.2",
